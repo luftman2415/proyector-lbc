@@ -247,7 +247,7 @@ function proyectarVersiculoSeleccionado() {
 }
 
 
-// ==================== LÓGICA DE CANCIONES (BLINDADA CONTRA NULOS) ====================
+// ==================== LÓGICA DE CANCIONES Y SETLISTS ====================
 async function cargarAmbosCancioneros() {
     repertorioCanciones = [];
     
@@ -271,7 +271,6 @@ async function cargarAmbosCancioneros() {
         console.log("No se pudo cargar Mi Cancionero.json");
     }
 
-    // Asegurar que cada canción tenga un título válido
     repertorioCanciones = repertorioCanciones.map((c, idx) => ({
         id: c.id || `cancion-${idx}`,
         title: c.title || c.nombre || c.titulo || "Canción sin título",
@@ -363,16 +362,47 @@ function agregarASetlistActual() {
     }
 }
 
+// NUEVO: Función para eliminar o gestionar canciones del Setlist actual
+function eliminarDeSetlist(index, event) {
+    event.stopPropagation(); // Evita que se seleccione la canción al hacer clic en eliminar
+    setlists[setlistActualNombre].splice(index, 1);
+    renderizarSetlistActual();
+}
+
 function renderizarSetlistActual() {
     const contenedor = document.getElementById('lista-setlist');
     contenedor.innerHTML = '';
 
+    if (setlists[setlistActualNombre].length === 0) {
+        contenedor.innerHTML = '<span style="font-size: 12px; color: #94a3b8; padding: 5px;">Setlist vacío.</span>';
+        return;
+    }
+
     setlists[setlistActualNombre].forEach((cancion, index) => {
+        const itemContainer = document.createElement('div');
+        itemContainer.style.display = 'flex';
+        itemContainer.style.alignItems = 'center';
+        itemContainer.style.gap = '5px';
+        itemContainer.style.marginBottom = '4px';
+
         const btn = document.createElement('button');
         btn.className = 'btn-libro';
+        btn.style.flex = '1';
         btn.innerText = `${index + 1}. ${cancion.title}`;
         btn.onclick = () => seleccionarCancion(cancion);
-        contenedor.appendChild(btn);
+
+        const btnEliminar = document.createElement('button');
+        btnEliminar.className = 'btn-clear';
+        btnEliminar.style.padding = '6px 10px';
+        btnEliminar.style.fontSize = '12px';
+        btnEliminar.style.flex = 'unset';
+        btnEliminar.innerText = '❌';
+        btnEliminar.title = 'Quitar del setlist';
+        btnEliminar.onclick = (e) => eliminarDeSetlist(index, e);
+
+        itemContainer.appendChild(btn);
+        itemContainer.appendChild(btnEliminar);
+        contenedor.appendChild(itemContainer);
     });
 }
 
@@ -384,6 +414,7 @@ function cerrarModalCancion() {
     document.getElementById('modal-cancion').style.display = 'none';
 }
 
+// NUEVO: Lógica inteligente para detectar Versos, Coros y Puentes al crear manualmente
 function guardarNuevaCancion() {
     const titulo = document.getElementById('nueva-titulo').value.trim();
     const textoLetra = document.getElementById('nueva-letra').value.trim();
@@ -394,13 +425,31 @@ function guardarNuevaCancion() {
     }
 
     const bloquesTexto = textoLetra.split('\n\n');
-    const sections = bloquesTexto.map((bloque, idx) => {
-        const lineas = bloque.split('\n');
+    const sections = bloquesTexto.map((bloque) => {
+        let lineas = bloque.split('\n');
+        let tipo = "verse";
+        let color = "#4fc3f7"; // Azul por defecto para versos
+
+        // Detectar etiquetas automáticas escritas por el usuario (ej: [Coro], [Puente], etc.)
+        const primeraLinea = lineas[0].toLowerCase();
+        if (primeraLinea.includes('coro') || primeraLinea.includes('chorus')) {
+            tipo = "chorus";
+            color = "#fff176"; // Amarillo para coros
+            lineas.shift(); // Quitar la etiqueta de la línea proyectada
+        } else if (primeraLinea.includes('puente') || primeraLinea.includes('bridge')) {
+            tipo = "bridge";
+            color = "#7986cb"; // Morado/Azul claro para puentes
+            lineas.shift();
+        } else if (primeraLinea.includes('verso') || primeraLinea.includes('estrofa')) {
+            tipo = "verse";
+            color = "#4fc3f7";
+            lineas.shift();
+        }
+
         return {
-            type: idx === 0 ? "verse" : "chorus",
-            lines: lineas,
-            atajo: idx + 1,
-            color: idx === 0 ? "#4fc3f7" : "#fff176"
+            type: tipo,
+            lines: lineas.filter(l => l.trim() !== ""),
+            color: color
         };
     });
 
@@ -419,7 +468,7 @@ function guardarNuevaCancion() {
     
     document.getElementById('nueva-titulo').value = '';
     document.getElementById('nueva-letra').value = '';
-    mostrarModal("Éxito", "Canción agregada al repertorio correctamente.");
+    mostrarModal("Éxito", "Canción agregada y organizada correctamente.");
 }
 
 
