@@ -105,12 +105,11 @@ function renderizarListasLibros(filtroAntiguo, filtroNuevo) {
     });
 
     filtroNuevo.forEach(libro => {
-        const btn.className = `btn-libro ${libro.archivo === libroActualArchivo ? 'seleccionado' : ''}`;
-        const btn2 = document.createElement('button');
-        btn2.className = `btn-libro ${libro.archivo === libroActualArchivo ? 'seleccionado' : ''}`;
-        btn2.innerText = libro.nombre;
-        btn2.onclick = () => seleccionarLibro(libro.archivo, libro.nombre);
-        contenedorNuevo.appendChild(btn2);
+        const btn = document.createElement('button');
+        btn.className = `btn-libro ${libro.archivo === libroActualArchivo ? 'seleccionado' : ''}`;
+        btn.innerText = libro.nombre;
+        btn.onclick = () => seleccionarLibro(libro.archivo, libro.nombre);
+        contenedorNuevo.appendChild(btn);
     });
 }
 
@@ -145,7 +144,7 @@ async function cargarDatosLibro() {
         if (!respuesta.ok) throw new Error("No se pudo cargar el libro");
         libroDataActual = await respuesta.json();
 
-        // Cargar Capítulos
+        // Cargar Capítulos dinámicamente
         const selectCap = document.getElementById('select-capitulo');
         selectCap.innerHTML = '';
         
