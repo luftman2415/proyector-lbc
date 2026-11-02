@@ -279,3 +279,39 @@ select:focus, input[type="number"]:focus {
     font-size: 14px;
     margin-bottom: 20px;
 }
+
+.grid-numeros {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 5px;
+    max-height: 150px;
+    overflow-y: auto;
+    background: #1e293b;
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.btn-num {
+    background: #0f172a;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #cbd5e1;
+    padding: 6px 0;
+    text-align: center;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: bold;
+    transition: all 0.1s ease;
+}
+
+.btn-num:hover {
+    background: #334155;
+    color: white;
+}
+
+.btn-num.seleccionado {
+    background: var(--accent-blue);
+    color: white;
+    border-color: var(--accent-blue);
+}
