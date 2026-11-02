@@ -102,7 +102,7 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('copyright-text').innerText = `${anioActual} Copyright © LuftmanDMauricio. Todos los derechos reservados.`;
     renderizarListasLibros(librosAntiguo, librosNuevo);
     cargarDatosLibro();
-    cargarAmbosCancioneros();
+    cargarCancionesLocal();
 });
 
 function cambiarModulo(modulo) {
@@ -247,10 +247,11 @@ function proyectarVersiculoSeleccionado() {
 }
 
 
-// ==================== LÓGICA DE CANCIONES Y SETLISTS ====================
-async function cargarAmbosCancioneros() {
+// ==================== LÓGICA DE CANCIONES Y BUSCADOR ARREGLADO ====================
+async function cargarCancionesLocal() {
     repertorioCanciones = [];
     
+    // Intentamos cargar Corario.json (en minúsculas o con su nombre original)
     try {
         const resp1 = await fetch('data/cancioneros/Corario.json');
         if (resp1.ok) {
@@ -258,19 +259,10 @@ async function cargarAmbosCancioneros() {
             if (Array.isArray(datos1)) repertorioCanciones = repertorioCanciones.concat(datos1);
         }
     } catch (e) {
-        console.log("No se pudo cargar Corario.json");
+        console.log("Corario no cargado por red, omitido.");
     }
 
-    try {
-        const resp2 = await fetch('data/cancioneros/Mi%20Cancionero.json');
-        if (resp2.ok) {
-            const datos2 = await resp2.json();
-            if (Array.isArray(datos2)) repertorioCanciones = repertorioCanciones.concat(datos2);
-        }
-    } catch (e) {
-        console.log("No se pudo cargar Mi Cancionero.json");
-    }
-
+    // Limpiamos y normalizamos los títulos para que el buscador nunca falle
     repertorioCanciones = repertorioCanciones.map((c, idx) => ({
         id: c.id || `cancion-${idx}`,
         title: c.title || c.nombre || c.titulo || "Canción sin título",
@@ -286,7 +278,7 @@ function renderizarListaCanciones() {
     contenedor.innerHTML = '';
 
     if (cancionesFiltradas.length === 0) {
-        contenedor.innerHTML = '<span style="font-size: 12px; color: #94a3b8; padding: 5px;">No hay canciones encontradas.</span>';
+        contenedor.innerHTML = '<span style="font-size: 12px; color: #94a3b8; padding: 5px;">No hay canciones disponibles. Usa "+ Nueva Canción" para agregar.</span>';
         return;
     }
 
@@ -301,11 +293,13 @@ function renderizarListaCanciones() {
 
 function filtrarCanciones() {
     const texto = normalizarTexto(document.getElementById('buscador-canciones').value);
+    
     if (texto === "") {
         cancionesFiltradas = [...repertorioCanciones];
     } else {
         cancionesFiltradas = repertorioCanciones.filter(c => normalizarTexto(c.title).includes(texto));
     }
+    
     renderizarListaCanciones();
 }
 
