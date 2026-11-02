@@ -1,11 +1,24 @@
 const canal = new BroadcastChannel('proyector_lbc');
 
+// Variables Biblia
 let versionActual = "rv1960";
 let libroActualArchivo = "genesis.json";
 let nombreLibroActual = "Génesis";
 let libroDataActual = null;
 let capituloActual = "1";
 let versiculoActual = "1";
+
+// Variables Canciones y Setlists
+let repertorioCanciones = [];
+let cancionesFiltradas = [];
+let cancionSeleccionada = null;
+let setlistActualNombre = "general";
+let setlists = {
+    general: [],
+    miercoles: [],
+    sabado: [],
+    domingo: []
+};
 
 const librosAntiguo = [
     { nombre: "Génesis", archivo: "genesis.json" },
@@ -88,8 +101,30 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('copyright-text').innerText = `${anioActual} Copyright © LuftmanDMauricio. Todos los derechos reservados.`;
     renderizarListasLibros(librosAntiguo, librosNuevo);
     cargarDatosLibro();
+    cargarCanciones();
 });
 
+// Navegación entre Pestañas (Módulos)
+function cambiarModulo(modulo) {
+    const secBiblia = document.getElementById('seccion-biblia');
+    const secCanciones = document.getElementById('seccion-canciones');
+    const btnBiblia = document.getElementById('btn-mod-biblia');
+    const btnCanciones = document.getElementById('btn-mod-canciones');
+
+    if (modulo === 'biblia') {
+        secBiblia.style.display = 'block';
+        secCanciones.style.display = 'none';
+        btnBiblia.classList.add('activo');
+        btnCanciones.classList.remove('activo');
+    } else {
+        secBiblia.style.display = 'none';
+        secCanciones.style.display = 'block';
+        btnBiblia.classList.remove('activo');
+        btnCanciones.classList.add('activo');
+    }
+}
+
+// ==================== LÓGICA DE BIBLIA ====================
 function renderizarListasLibros(filtroAntiguo, filtroNuevo) {
     const contenedorAntiguo = document.getElementById('lista-antiguo');
     const contenedorNuevo = document.getElementById('lista-nuevo');
@@ -131,7 +166,9 @@ async function seleccionarLibro(archivo, nombre) {
 
 async function cambiarVersion(nuevaVersion, elementoBtn) {
     versionActual = nuevaVersion;
-    document.querySelectorAll('.btn-version').forEach(b => b.classList.remove('activo'));
+    document.querySelectorAll('.btn-version').forEach(b => {
+        if(b.parentElement.classList.contains('versiones-grid')) b.classList.remove('activo');
+    });
     elementoBtn.classList.add('activo');
     await cargarDatosLibro();
 }
@@ -182,7 +219,6 @@ function cargarVersiculosCapitulo() {
         const versiculos = Object.keys(libroDataActual.chapters[capituloActual]);
         versiculos.sort((a, b) => parseInt(a) - parseInt(b));
 
-        // Si el versículo actual ya no existe en este capítulo, reiniciarlo al primero
         if (!versiculos.includes(versiculoActual)) {
             versiculoActual = versiculos[0] || "1";
         }
@@ -199,11 +235,7 @@ function cargarVersiculosCapitulo() {
 
 function seleccionarVersiculo(ver) {
     versiculoActual = ver;
-    cargarVersiculosCapitulo(); // Vuelve a renderizar para actualizar el botón seleccionado visualmente
-}
-
-function abrirProyector() {
-    window.open('display.html', 'ProyectorLBC', 'width=1024,height=768');
+    cargarVersiculosCapitulo();
 }
 
 function proyectarVersiculoSeleccionado() {
@@ -214,6 +246,162 @@ function proyectarVersiculoSeleccionado() {
     } else {
         mostrarModal("Aviso", "Por favor seleccione un capítulo y versículo válidos.");
     }
+}
+
+
+// ==================== LÓGICA DE CANCIONES Y SETLISTS ====================
+async function cargarCanciones() {
+    try {
+        const respuesta = await fetch('data/cancioneros/Corario.json');
+        if (!respuesta.ok) throw new Error("No se pudo cargar el cancionero");
+        repertorioCanciones = await respuesta.json();
+        cancionesFiltradas = [...repertorioCanciones];
+        renderizarListaCanciones();
+    } catch (error) {
+        console.error("Error cargando cancionero:", error);
+        repertorioCanciones = [];
+        cancionesFiltradas = [];
+    }
+}
+
+function renderizarListaCanciones() {
+    const contenedor = document.getElementById('lista-canciones');
+    contenedor.innerHTML = '';
+
+    cancionesFiltradas.forEach(cancion => {
+        const btn = document.createElement('button');
+        btn.className = `btn-libro ${cancionSeleccionada && cancionSeleccionada.id === cancion.id ? 'seleccionado' : ''}`;
+        btn.innerText = cancion.title;
+        btn.onclick = () => seleccionarCancion(cancion);
+        contenedor.appendChild(btn);
+    });
+}
+
+function filtrarCanciones() {
+    const texto = normalizarTexto(document.getElementById('buscador-canciones').value);
+    cancionesFiltradas = repertorioCanciones.filter(c => normalizarTexto(c.title).includes(texto));
+    renderizarListaCanciones();
+}
+
+function seleccionarCancion(cancion) {
+    cancionSeleccionada = cancion;
+    document.getElementById('cancion-titulo-activo').innerText = cancion.title;
+    renderizarListaCanciones();
+    renderizarEstrofasCancion(cancion);
+}
+
+function renderizarEstrofasCancion(cancion) {
+    const contenedor = document.getElementById('bloques-estrofas');
+    contenedor.innerHTML = '';
+
+    if (!cancion.sections) return;
+
+    cancion.sections.forEach((seccion, index) => {
+        const tarjeta = document.createElement('div');
+        tarjeta.style.background = seccion.color || '#1e293b';
+        tarjeta.style.color = '#0f172a';
+        tarjeta.style.padding = '10px';
+        tarjeta.style.borderRadius = '6px';
+        tarjeta.style.cursor = 'pointer';
+        tarjeta.style.fontWeight = 'bold';
+        tarjeta.style.fontSize = '12px';
+        tarjeta.style.transition = 'transform 0.1s';
+        
+        let textoHtml = `<u>${seccion.type.toUpperCase()}</u><br>`;
+        textoHtml += seccion.lines.join('<br>');
+        tarjeta.innerHTML = textoHtml;
+
+        tarjeta.onclick = () => proyectarSeccionCancion(seccion, cancion.title);
+        contenedor.appendChild(tarjeta);
+    });
+}
+
+function proyectarSeccionCancion(seccion, tituloCancion) {
+    const textoEstrofa = seccion.lines.join('\n');
+    const salidaFormatted = `${textoEstrofa}\n\n🎵 ${tituloCancion}`;
+    canal.postMessage({ accion: 'mostrar', texto: salidaFormatted });
+}
+
+function cambiarSetlist() {
+    setlistActualNombre = document.getElementById('select-setlist').value;
+    renderizarSetlistActual();
+}
+
+function agregarASetlistActual() {
+    if (!cancionSeleccionada) {
+        mostrarModal("Aviso", "Selecciona una canción primero para agregarla al setlist.");
+        return;
+    }
+    if (!setlists[setlistActualNombre].some(c => c.id === cancionSeleccionada.id)) {
+        setlists[setlistActualNombre].push(cancionSeleccionada);
+        renderizarSetlistActual();
+    }
+}
+
+function renderizarSetlistActual() {
+    const contenedor = document.getElementById('lista-setlist');
+    contenedor.innerHTML = '';
+
+    setlists[setlistActualNombre].forEach((cancion, index) => {
+        const btn = document.createElement('button');
+        btn.className = 'btn-libro';
+        btn.innerText = `${index + 1}. ${cancion.title}`;
+        btn.onclick = () => seleccionarCancion(cancion);
+        contenedor.appendChild(btn);
+    });
+}
+
+// Modal Nueva Canción
+function abrirModalNuevaCancion() {
+    document.getElementById('modal-cancion').style.display = 'flex';
+}
+
+function cerrarModalCancion() {
+    document.getElementById('modal-cancion').style.display = 'none';
+}
+
+function guardarNuevaCancion() {
+    const titulo = document.getElementById('nueva-titulo').value.trim();
+    const textoLetra = document.getElementById('nueva-letra').value.trim();
+
+    if (!titulo || !textoLetra) {
+        mostrarModal("Aviso", "Por favor completa el título y la letra de la canción.");
+        return;
+    }
+
+    const bloquesTexto = textoLetra.split('\n\n');
+    const sections = bloquesTexto.map((bloque, idx) => {
+        const lineas = bloque.split('\n');
+        return {
+            type: idx === 0 ? "verse" : "chorus",
+            lines: lineas,
+            atajo: idx + 1,
+            color: idx === 0 ? "#4fc3f7" : "#fff176"
+        };
+    });
+
+    const nuevaCancion = {
+        id: titulo.toLowerCase().replace(/[^a-z0-9]/g, '-'),
+        title: titulo,
+        author: "Propio",
+        key: "C",
+        sections: sections
+    };
+
+    repertorioCanciones.push(nuevaCancion);
+    cancionesFiltradas = [...repertorioCanciones];
+    renderizarListaCanciones();
+    cerrarModalCancion();
+    
+    document.getElementById('nueva-titulo').value = '';
+    document.getElementById('nueva-letra').value = '';
+    mostrarModal("Éxito", "Canción agregada al repertorio correctamente.");
+}
+
+
+// ==================== CONTROLES GENERALES ====================
+function abrirProyector() {
+    window.open('display.html', 'ProyectorLBC', 'width=1024,height=768');
 }
 
 function mostrarModal(titulo, mensaje) {
