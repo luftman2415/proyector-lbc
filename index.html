@@ -67,7 +67,7 @@
             </div>
         </div>
 
-        <!-- MÓDULO DE CANCIONES Y SETLISTS (Oculto por defecto hasta cambiar de pestaña) -->
+        <!-- MÓDULO DE CANCIONES Y SETLISTS -->
         <div id="seccion-canciones" style="display: none;">
             <div class="control-box">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -88,7 +88,7 @@
 
             <div class="biblia-layout" style="margin-top: 15px;">
                 <div class="testamento-col">
-                    <h3>Canciones Disponibles / Favoritas ⭐</h3>
+                    <h3>Canciones Disponibles ⭐</h3>
                     <div id="lista-canciones" class="lista-libros"></div>
                 </div>
                 <div class="testamento-col">
@@ -104,7 +104,7 @@
                     <button onclick="agregarASetlistActual()" class="btn-open" style="border-color: var(--accent-gold);">⭐ Agregar al Setlist</button>
                 </div>
                 <div id="bloques-estrofas" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; max-height: 200px; overflow-y: auto;">
-                    <!-- Aquí se cargan dinámicamente las estrofas -->
+                    <!-- Bloques de estrofas -->
                 </div>
             </div>
         </div>
@@ -135,7 +135,7 @@
             <input type="text" id="nueva-titulo" placeholder="Nombre de la alabanza" style="width: 100%; margin-bottom: 10px; padding: 8px; background: #0f172a; border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
             
             <label style="font-size: 11px;">Letra y Estrofas (Separa estrofas con doble salto de línea):</label>
-            <textarea id="nueva-letra" rows="6" placeholder="Estrofa 1 linea 1&#10;Estrofa 1 linea 2&#10;&#10;Coro linea 1&#10;Coro linea 2" style="width: 100%; margin-bottom: 15px; padding: 8px; background: #0f172a; border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;"></textarea>
+            <textarea id="nueva-letra" rows="6" placeholder="Estrofa 1 línea 1&#10;Estrofa 1 línea 2&#10;&#10;Coro línea 1&#10;Coro línea 2" style="width: 100%; margin-bottom: 15px; padding: 8px; background: #0f172a; border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;"></textarea>
             
             <div style="display: flex; gap: 10px;">
                 <button onclick="guardarNuevaCancion()" class="btn-project" style="flex: 1;">Guardar</button>
