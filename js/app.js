@@ -286,7 +286,7 @@ function renderizarListaCanciones() {
     contenedor.innerHTML = '';
 
     if (cancionesFiltradas.length === 0) {
-        contenedor.innerHTML = '<span style="font-size: 12px; color: #94a3b8; padding: 5px;">No hay canciones disponibles.</span>';
+        contenedor.innerHTML = '<span style="font-size: 12px; color: #94a3b8; padding: 5px;">No hay canciones encontradas.</span>';
         return;
     }
 
@@ -301,7 +301,11 @@ function renderizarListaCanciones() {
 
 function filtrarCanciones() {
     const texto = normalizarTexto(document.getElementById('buscador-canciones').value);
-    cancionesFiltradas = repertorioCanciones.filter(c => normalizarTexto(c.title).includes(texto));
+    if (texto === "") {
+        cancionesFiltradas = [...repertorioCanciones];
+    } else {
+        cancionesFiltradas = repertorioCanciones.filter(c => normalizarTexto(c.title).includes(texto));
+    }
     renderizarListaCanciones();
 }
 
@@ -362,9 +366,8 @@ function agregarASetlistActual() {
     }
 }
 
-// NUEVO: Función para eliminar o gestionar canciones del Setlist actual
 function eliminarDeSetlist(index, event) {
-    event.stopPropagation(); // Evita que se seleccione la canción al hacer clic en eliminar
+    event.stopPropagation();
     setlists[setlistActualNombre].splice(index, 1);
     renderizarSetlistActual();
 }
@@ -414,7 +417,6 @@ function cerrarModalCancion() {
     document.getElementById('modal-cancion').style.display = 'none';
 }
 
-// NUEVO: Lógica inteligente para detectar Versos, Coros y Puentes al crear manualmente
 function guardarNuevaCancion() {
     const titulo = document.getElementById('nueva-titulo').value.trim();
     const textoLetra = document.getElementById('nueva-letra').value.trim();
@@ -428,17 +430,16 @@ function guardarNuevaCancion() {
     const sections = bloquesTexto.map((bloque) => {
         let lineas = bloque.split('\n');
         let tipo = "verse";
-        let color = "#4fc3f7"; // Azul por defecto para versos
+        let color = "#4fc3f7"; 
 
-        // Detectar etiquetas automáticas escritas por el usuario (ej: [Coro], [Puente], etc.)
         const primeraLinea = lineas[0].toLowerCase();
         if (primeraLinea.includes('coro') || primeraLinea.includes('chorus')) {
             tipo = "chorus";
-            color = "#fff176"; // Amarillo para coros
-            lineas.shift(); // Quitar la etiqueta de la línea proyectada
+            color = "#fff176"; 
+            lineas.shift(); 
         } else if (primeraLinea.includes('puente') || primeraLinea.includes('bridge')) {
             tipo = "bridge";
-            color = "#7986cb"; // Morado/Azul claro para puentes
+            color = "#7986cb"; 
             lineas.shift();
         } else if (primeraLinea.includes('verso') || primeraLinea.includes('estrofa')) {
             tipo = "verse";
