@@ -122,8 +122,11 @@ button {
     background: transparent;
     border: 1px solid var(--accent-gold);
     color: var(--accent-gold);
-    padding: 10px 16px;
-    font-size: 13px;
+    padding: 8px 14px;
+    font-size: 12px;
+    border-radius: 6px;
+    flex: unset !important;
+    width: auto;
 }
 
 .btn-open:hover {
@@ -280,6 +283,7 @@ select:focus, input[type="number"]:focus {
     margin-bottom: 20px;
 }
 
+/* Cuadrículas para Capítulos y Versículos */
 .grid-numeros {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
@@ -314,4 +318,12 @@ select:focus, input[type="number"]:focus {
     background: var(--accent-blue);
     color: white;
     border-color: var(--accent-blue);
+}
+
+/* Botón de proyectar versículo adaptado */
+.control-box .btn-project {
+    flex: unset !important;
+    width: auto;
+    padding: 8px 16px;
+    font-size: 13px;
 }
