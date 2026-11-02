@@ -30,7 +30,7 @@
 
         <!-- BUSCADOR RÁPIDO DE LIBROS -->
         <div class="control-box" style="margin-top: 15px;">
-            <input type="text" id="buscador-libros" placeholder="🔍 Buscar libro por nombre (ej: Juan, Salmos, Corintios)..." oninput="filtrarLibros()">
+            <input type="text" id="buscador-libros" placeholder="🔍 Buscar libro por nombre (ej: galatas, salmos, corintios)..." oninput="filtrarLibros()">
         </div>
 
         <!-- CONTENEDOR DIVIDIDO: ANTIGUO Y NUEVO TESTAMENTO -->
@@ -45,22 +45,22 @@
             </div>
         </div>
 
-        <!-- CAPÍTULOS Y VERSÍCULOS -->
+        <!-- CAPÍTULOS Y VERSÍCULOS DINÁMICOS -->
         <div class="control-box" style="margin-top: 20px; background: #0f172a; padding: 15px; border-radius: 10px;">
-            <div style="display: flex; gap: 15px; align-items: center; justify-content: space-between;">
+            <div style="display: flex; gap: 15px; align-items: center; justify-content: space-between; flex-wrap: wrap;">
                 <div>
-                    <span id="libro-seleccionado" style="font-weight: bold; color: var(--accent-gold);">Génesis</span>
+                    <span id="libro-seleccionado" style="font-weight: bold; color: var(--accent-gold); font-size: 16px;">Génesis</span>
                 </div>
-                <div style="display: flex; gap: 10px;">
-                    <div>
-                        <label style="font-size: 10px;">Capítulo</label>
-                        <input type="number" id="input-capitulo" value="1" min="1" style="width: 70px;">
+                <div style="display: flex; gap: 10px; flex: 1; justify-content: flex-end; align-items: center;">
+                    <div style="min-width: 100px;">
+                        <label style="font-size: 10px; display: block;">Capítulo</label>
+                        <select id="select-capitulo" onchange="cargarVersiculosCapitulo()"></select>
                     </div>
-                    <div>
-                        <label style="font-size: 10px;">Versículo</label>
-                        <input type="number" id="input-versiculo" value="1" min="1" style="width: 70px;">
+                    <div style="min-width: 100px;">
+                        <label style="font-size: 10px; display: block;">Versículo</label>
+                        <select id="select-versiculo"></select>
                     </div>
-                    <button onclick="proyectarVersiculoSeleccionado()" class="btn-project" style="align-self: flex-end;">Proyectar</button>
+                    <button onclick="proyectarVersiculoSeleccionado()" class="btn-project" style="align-self: flex-end; padding: 10px 18px;">Proyectar</button>
                 </div>
             </div>
         </div>
@@ -92,7 +92,6 @@
         </div>
     </div>
 
-    <!-- Script Principal -->
     <script src="js/app.js"></script>
 </body>
 </html>
