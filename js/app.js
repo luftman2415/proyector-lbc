@@ -182,7 +182,10 @@ function cargarVersiculosCapitulo() {
         const versiculos = Object.keys(libroDataActual.chapters[capituloActual]);
         versiculos.sort((a, b) => parseInt(a) - parseInt(b));
 
-        versiculoActual = versiculos[0] || "1";
+        // Si el versículo actual ya no existe en este capítulo, reiniciarlo al primero
+        if (!versiculos.includes(versiculoActual)) {
+            versiculoActual = versiculos[0] || "1";
+        }
 
         versiculos.forEach(ver => {
             const btn = document.createElement('button');
@@ -196,7 +199,7 @@ function cargarVersiculosCapitulo() {
 
 function seleccionarVersiculo(ver) {
     versiculoActual = ver;
-    cargarVersiculosCapitulo();
+    cargarVersiculosCapitulo(); // Vuelve a renderizar para actualizar el botón seleccionado visualmente
 }
 
 function abrirProyector() {
