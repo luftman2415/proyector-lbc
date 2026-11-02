@@ -101,10 +101,9 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('copyright-text').innerText = `${anioActual} Copyright © LuftmanDMauricio. Todos los derechos reservados.`;
     renderizarListasLibros(librosAntiguo, librosNuevo);
     cargarDatosLibro();
-    cargarCanciones();
+    cargarAmbosCancioneros();
 });
 
-// Navegación entre Pestañas (Módulos)
 function cambiarModulo(modulo) {
     const secBiblia = document.getElementById('seccion-biblia');
     const secCanciones = document.getElementById('seccion-canciones');
@@ -166,9 +165,7 @@ async function seleccionarLibro(archivo, nombre) {
 
 async function cambiarVersion(nuevaVersion, elementoBtn) {
     versionActual = nuevaVersion;
-    document.querySelectorAll('.btn-version').forEach(b => {
-        if(b.parentElement.classList.contains('versiones-grid')) b.classList.remove('activo');
-    });
+    document.querySelectorAll('.versiones-grid .btn-version').forEach(b => b.classList.remove('activo'));
     elementoBtn.classList.add('activo');
     await cargarDatosLibro();
 }
@@ -249,28 +246,48 @@ function proyectarVersiculoSeleccionado() {
 }
 
 
-// ==================== LÓGICA DE CANCIONES Y SETLISTS ====================
-async function cargarCanciones() {
+// ==================== LÓGICA DE CANCIONES Y SETLISTS (CARGA AMBOS JSON) ====================
+async function cargarAmbosCancioneros() {
+    repertorioCanciones = [];
+    
+    // Cargar Corario.json
     try {
-        const respuesta = await fetch('data/cancioneros/Corario.json');
-        if (!respuesta.ok) throw new Error("No se pudo cargar el cancionero");
-        repertorioCanciones = await respuesta.json();
-        cancionesFiltradas = [...repertorioCanciones];
-        renderizarListaCanciones();
-    } catch (error) {
-        console.error("Error cargando cancionero:", error);
-        repertorioCanciones = [];
-        cancionesFiltradas = [];
+        const resp1 = await fetch('data/cancioneros/Corario.json');
+        if (resp1.ok) {
+            const datos1 = await resp1.json();
+            repertorioCanciones = repertorioCanciones.concat(datos1);
+        }
+    } catch (e) {
+        console.log("No se pudo cargar Corario.json");
     }
+
+    // Cargar Mi Cancionero.json (manejando espacios en la URL)
+    try {
+        const resp2 = await fetch('data/cancioneros/Mi%20Cancionero.json');
+        if (resp2.ok) {
+            const datos2 = await resp2.json();
+            repertorioCanciones = repertorioCanciones.concat(datos2);
+        }
+    } catch (e) {
+        console.log("No se pudo cargar Mi Cancionero.json");
+    }
+
+    cancionesFiltradas = [...repertorioCanciones];
+    renderizarListaCanciones();
 }
 
 function renderizarListaCanciones() {
     const contenedor = document.getElementById('lista-canciones');
     contenedor.innerHTML = '';
 
+    if (cancionesFiltradas.length === 0) {
+        contenedor.innerHTML = '<span style="font-size: 12px; color: #94a3b8; padding: 5px;">Cargando o sin canciones...</span>';
+        return;
+    }
+
     cancionesFiltradas.forEach(cancion => {
         const btn = document.createElement('button');
-        btn.className = `btn-libro ${cancionSeleccionada && cancionSeleccionada.id === cancion.id ? 'seleccionado' : ''}`;
+        btn.className = `btn-libro ${cancionSeleccionada && cancionSeleccionada.title === cancion.title ? 'seleccionado' : ''}`;
         btn.innerText = cancion.title;
         btn.onclick = () => seleccionarCancion(cancion);
         contenedor.appendChild(btn);
@@ -296,7 +313,7 @@ function renderizarEstrofasCancion(cancion) {
 
     if (!cancion.sections) return;
 
-    cancion.sections.forEach((seccion, index) => {
+    cancion.sections.forEach((seccion) => {
         const tarjeta = document.createElement('div');
         tarjeta.style.background = seccion.color || '#1e293b';
         tarjeta.style.color = '#0f172a';
@@ -305,7 +322,6 @@ function renderizarEstrofasCancion(cancion) {
         tarjeta.style.cursor = 'pointer';
         tarjeta.style.fontWeight = 'bold';
         tarjeta.style.fontSize = '12px';
-        tarjeta.style.transition = 'transform 0.1s';
         
         let textoHtml = `<u>${seccion.type.toUpperCase()}</u><br>`;
         textoHtml += seccion.lines.join('<br>');
@@ -332,7 +348,7 @@ function agregarASetlistActual() {
         mostrarModal("Aviso", "Selecciona una canción primero para agregarla al setlist.");
         return;
     }
-    if (!setlists[setlistActualNombre].some(c => c.id === cancionSeleccionada.id)) {
+    if (!setlists[setlistActualNombre].some(c => c.title === cancionSeleccionada.title)) {
         setlists[setlistActualNombre].push(cancionSeleccionada);
         renderizarSetlistActual();
     }
@@ -351,7 +367,6 @@ function renderizarSetlistActual() {
     });
 }
 
-// Modal Nueva Canción
 function abrirModalNuevaCancion() {
     document.getElementById('modal-cancion').style.display = 'flex';
 }
