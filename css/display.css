@@ -1,0 +1,46 @@
+body {
+    margin: 0;
+    padding: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: #030712;
+    color: #ffffff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    position: relative;
+}
+
+/* Marca de agua traslúcida del logo en la pantalla */
+body::before {
+    content: "";
+    position: absolute;
+    width: 450px;
+    height: 450px;
+    background-image: url('../assets/logo-lbc.png');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    opacity: 0.08; /* Muy tenue para no distraer */
+    z-index: 1;
+}
+
+#pantalla-contenido {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    padding: 40px;
+    width: 85%;
+}
+
+#texto-pantalla {
+    font-size: 54px;
+    font-weight: 700;
+    line-height: 1.35;
+    color: #ffffff;
+    text-shadow: 0 4px 15px rgba(0, 0, 0, 0.9);
+    white-space: pre-wrap;
+    margin: 0;
+}
