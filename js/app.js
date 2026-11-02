@@ -86,14 +86,15 @@ const librosNuevo = [
     { nombre: "1 Pedro", archivo: "1peter.json" },
     { nombre: "2 Pedro", archivo: "2peter.json" },
     { nombre: "1 Juan", archivo: "1john.json" },
-    { nombre: "2 Juan", archivo: "2john.json" },
-    { nombre: "3 Juan", archivo: "3john.json" },
+    { nombre: "2 Juan", archivo: "2json.json" },
+    { nombre: "3 Juan", archivo: "3json.json" },
     { nombre: "Judas", archivo: "jude.json" },
     { nombre: "Apocalipsis", archivo: "revelation.json" }
 ];
 
 function normalizarTexto(texto) {
-    return texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    if (!texto) return "";
+    return texto.toString().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 }
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -246,31 +247,36 @@ function proyectarVersiculoSeleccionado() {
 }
 
 
-// ==================== LÓGICA DE CANCIONES Y SETLISTS (CARGA AMBOS JSON) ====================
+// ==================== LÓGICA DE CANCIONES (BLINDADA CONTRA NULOS) ====================
 async function cargarAmbosCancioneros() {
     repertorioCanciones = [];
     
-    // Cargar Corario.json
     try {
         const resp1 = await fetch('data/cancioneros/Corario.json');
         if (resp1.ok) {
             const datos1 = await resp1.json();
-            repertorioCanciones = repertorioCanciones.concat(datos1);
+            if (Array.isArray(datos1)) repertorioCanciones = repertorioCanciones.concat(datos1);
         }
     } catch (e) {
         console.log("No se pudo cargar Corario.json");
     }
 
-    // Cargar Mi Cancionero.json (manejando espacios en la URL)
     try {
         const resp2 = await fetch('data/cancioneros/Mi%20Cancionero.json');
         if (resp2.ok) {
             const datos2 = await resp2.json();
-            repertorioCanciones = repertorioCanciones.concat(datos2);
+            if (Array.isArray(datos2)) repertorioCanciones = repertorioCanciones.concat(datos2);
         }
     } catch (e) {
         console.log("No se pudo cargar Mi Cancionero.json");
     }
+
+    // Asegurar que cada canción tenga un título válido
+    repertorioCanciones = repertorioCanciones.map((c, idx) => ({
+        id: c.id || `cancion-${idx}`,
+        title: c.title || c.nombre || c.titulo || "Canción sin título",
+        sections: c.sections || []
+    }));
 
     cancionesFiltradas = [...repertorioCanciones];
     renderizarListaCanciones();
@@ -281,13 +287,13 @@ function renderizarListaCanciones() {
     contenedor.innerHTML = '';
 
     if (cancionesFiltradas.length === 0) {
-        contenedor.innerHTML = '<span style="font-size: 12px; color: #94a3b8; padding: 5px;">Cargando o sin canciones...</span>';
+        contenedor.innerHTML = '<span style="font-size: 12px; color: #94a3b8; padding: 5px;">No hay canciones disponibles.</span>';
         return;
     }
 
     cancionesFiltradas.forEach(cancion => {
         const btn = document.createElement('button');
-        btn.className = `btn-libro ${cancionSeleccionada && cancionSeleccionada.title === cancion.title ? 'seleccionado' : ''}`;
+        btn.className = `btn-libro ${cancionSeleccionada && cancionSeleccionada.id === cancion.id ? 'seleccionado' : ''}`;
         btn.innerText = cancion.title;
         btn.onclick = () => seleccionarCancion(cancion);
         contenedor.appendChild(btn);
@@ -311,7 +317,10 @@ function renderizarEstrofasCancion(cancion) {
     const contenedor = document.getElementById('bloques-estrofas');
     contenedor.innerHTML = '';
 
-    if (!cancion.sections) return;
+    if (!cancion.sections || cancion.sections.length === 0) {
+        contenedor.innerHTML = '<span style="font-size: 12px; color: #94a3b8;">Esta canción no tiene estrofas registradas.</span>';
+        return;
+    }
 
     cancion.sections.forEach((seccion) => {
         const tarjeta = document.createElement('div');
@@ -323,17 +332,17 @@ function renderizarEstrofasCancion(cancion) {
         tarjeta.style.fontWeight = 'bold';
         tarjeta.style.fontSize = '12px';
         
-        let textoHtml = `<u>${seccion.type.toUpperCase()}</u><br>`;
-        textoHtml += seccion.lines.join('<br>');
-        tarjeta.innerHTML = textoHtml;
+        let tipo = seccion.type ? seccion.type.toUpperCase() : 'ESTROFA';
+        let lineas = seccion.lines ? seccion.lines.join('<br>') : '';
 
+        tarjeta.innerHTML = `<u>${tipo}</u><br>${lineas}`;
         tarjeta.onclick = () => proyectarSeccionCancion(seccion, cancion.title);
         contenedor.appendChild(tarjeta);
     });
 }
 
 function proyectarSeccionCancion(seccion, tituloCancion) {
-    const textoEstrofa = seccion.lines.join('\n');
+    const textoEstrofa = seccion.lines ? seccion.lines.join('\n') : '';
     const salidaFormatted = `${textoEstrofa}\n\n🎵 ${tituloCancion}`;
     canal.postMessage({ accion: 'mostrar', texto: salidaFormatted });
 }
@@ -348,7 +357,7 @@ function agregarASetlistActual() {
         mostrarModal("Aviso", "Selecciona una canción primero para agregarla al setlist.");
         return;
     }
-    if (!setlists[setlistActualNombre].some(c => c.title === cancionSeleccionada.title)) {
+    if (!setlists[setlistActualNombre].some(c => c.id === cancionSeleccionada.id)) {
         setlists[setlistActualNombre].push(cancionSeleccionada);
         renderizarSetlistActual();
     }
