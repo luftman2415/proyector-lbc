@@ -4,6 +4,8 @@ let versionActual = "rv1960";
 let libroActualArchivo = "genesis.json";
 let nombreLibroActual = "Génesis";
 let libroDataActual = null;
+let capituloActual = "1";
+let versiculoActual = "1";
 
 const librosAntiguo = [
     { nombre: "Génesis", archivo: "genesis.json" },
@@ -77,7 +79,6 @@ const librosNuevo = [
     { nombre: "Apocalipsis", archivo: "revelation.json" }
 ];
 
-// Función para remover tildes y caracteres especiales de la búsqueda
 function normalizarTexto(texto) {
     return texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 }
@@ -115,10 +116,8 @@ function renderizarListasLibros(filtroAntiguo, filtroNuevo) {
 
 function filtrarLibros() {
     const textoBuscado = normalizarTexto(document.getElementById('buscador-libros').value);
-    
     const filtradosAntiguo = librosAntiguo.filter(l => normalizarTexto(l.nombre).includes(textoBuscado));
     const filtradosNuevo = librosNuevo.filter(l => normalizarTexto(l.nombre).includes(textoBuscado));
-
     renderizarListasLibros(filtradosAntiguo, filtradosNuevo);
 }
 
@@ -144,43 +143,60 @@ async function cargarDatosLibro() {
         if (!respuesta.ok) throw new Error("No se pudo cargar el libro");
         libroDataActual = await respuesta.json();
 
-        // Cargar Capítulos dinámicamente
-        const selectCap = document.getElementById('select-capitulo');
-        selectCap.innerHTML = '';
-        
         const capitulos = Object.keys(libroDataActual.chapters);
         capitulos.sort((a, b) => parseInt(a) - parseInt(b));
 
-        capitulos.forEach(cap => {
-            const opt = document.createElement('option');
-            opt.value = cap;
-            opt.innerText = cap;
-            selectCap.appendChild(opt);
-        });
-
+        capituloActual = capitulos[0] || "1";
+        renderizarCapitulos(capitulos);
         cargarVersiculosCapitulo();
     } catch (error) {
         console.error(error);
-        mostrarModal("Error", "No se pudo cargar la versión de la Biblia seleccionada.");
+        mostrarModal("Error", "No se pudo cargar la versión del libro seleccionado.");
     }
 }
 
-function cargarVersiculosCapitulo() {
-    const capSeleccionado = document.getElementById('select-capitulo').value;
-    const selectVer = document.getElementById('select-versiculo');
-    selectVer.innerHTML = '';
+function renderizarCapitulos(capitulos) {
+    const gridCapitulos = document.getElementById('grid-capitulos');
+    gridCapitulos.innerHTML = '';
 
-    if (libroDataActual && libroDataActual.chapters[capSeleccionado]) {
-        const versiculos = Object.keys(libroDataActual.chapters[capSeleccionado]);
+    capitulos.forEach(cap => {
+        const btn = document.createElement('button');
+        btn.className = `btn-num ${cap === capituloActual ? 'seleccionado' : ''}`;
+        btn.innerText = cap;
+        btn.onclick = () => seleccionarCapitulo(cap);
+        gridCapitulos.appendChild(btn);
+    });
+}
+
+function seleccionarCapitulo(cap) {
+    capituloActual = cap;
+    renderizarCapitulos(Object.keys(libroDataActual.chapters));
+    cargarVersiculosCapitulo();
+}
+
+function cargarVersiculosCapitulo() {
+    const gridVersiculos = document.getElementById('grid-versiculos');
+    gridVersiculos.innerHTML = '';
+
+    if (libroDataActual && libroDataActual.chapters[capituloActual]) {
+        const versiculos = Object.keys(libroDataActual.chapters[capituloActual]);
         versiculos.sort((a, b) => parseInt(a) - parseInt(b));
 
+        versiculoActual = versiculos[0] || "1";
+
         versiculos.forEach(ver => {
-            const opt = document.createElement('option');
-            opt.value = ver;
-            opt.innerText = ver;
-            selectVer.appendChild(opt);
+            const btn = document.createElement('button');
+            btn.className = `btn-num ${ver === versiculoActual ? 'seleccionado' : ''}`;
+            btn.innerText = ver;
+            btn.onclick = () => seleccionarVersiculo(ver);
+            gridVersiculos.appendChild(btn);
         });
     }
+}
+
+function seleccionarVersiculo(ver) {
+    versiculoActual = ver;
+    cargarVersiculosCapitulo();
 }
 
 function abrirProyector() {
@@ -188,12 +204,9 @@ function abrirProyector() {
 }
 
 function proyectarVersiculoSeleccionado() {
-    const cap = document.getElementById('select-capitulo').value;
-    const ver = document.getElementById('select-versiculo').value;
-
-    if (libroDataActual && libroDataActual.chapters[cap] && libroDataActual.chapters[cap][ver]) {
-        const textoVersiculo = libroDataActual.chapters[cap][ver];
-        const salidaFormatted = `"${textoVersiculo}"\n\n— ${nombreLibroActual} ${cap}:${ver} (${versionActual.toUpperCase()})`;
+    if (libroDataActual && libroDataActual.chapters[capituloActual] && libroDataActual.chapters[capituloActual][versiculoActual]) {
+        const textoVersiculo = libroDataActual.chapters[capituloActual][versiculoActual];
+        const salidaFormatted = `"${textoVersiculo}"\n\n— ${nombreLibroActual} ${capituloActual}:${versiculoActual} (${versionActual.toUpperCase()})`;
         canal.postMessage({ accion: 'mostrar', texto: salidaFormatted });
     } else {
         mostrarModal("Aviso", "Por favor seleccione un capítulo y versículo válidos.");
