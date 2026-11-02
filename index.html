@@ -45,22 +45,23 @@
             </div>
         </div>
 
-        <!-- CAPÍTULOS Y VERSÍCULOS DINÁMICOS -->
+        <!-- SECCIÓN DE CAPÍTULOS Y VERSÍCULOS EN CUADRÍCULA (Estilo Proyecto RP) -->
         <div class="control-box" style="margin-top: 20px; background: #0f172a; padding: 15px; border-radius: 10px;">
-            <div style="display: flex; gap: 15px; align-items: center; justify-content: space-between; flex-wrap: wrap;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <span id="libro-seleccionado" style="font-weight: bold; color: var(--accent-gold); font-size: 16px;">Génesis</span>
+                <button onclick="proyectarVersiculoSeleccionado()" class="btn-project" style="padding: 8px 16px; font-size: 13px;">Proyectar Versículo</button>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <!-- Cuadrícula de Capítulos -->
                 <div>
-                    <span id="libro-seleccionado" style="font-weight: bold; color: var(--accent-gold); font-size: 16px;">Génesis</span>
+                    <label style="font-size: 11px; display: block; margin-bottom: 5px;">CAPÍTULOS</label>
+                    <div id="grid-capitulos" class="grid-numeros"></div>
                 </div>
-                <div style="display: flex; gap: 10px; flex: 1; justify-content: flex-end; align-items: center;">
-                    <div style="min-width: 100px;">
-                        <label style="font-size: 10px; display: block;">Capítulo</label>
-                        <select id="select-capitulo" onchange="cargarVersiculosCapitulo()"></select>
-                    </div>
-                    <div style="min-width: 100px;">
-                        <label style="font-size: 10px; display: block;">Versículo</label>
-                        <select id="select-versiculo"></select>
-                    </div>
-                    <button onclick="proyectarVersiculoSeleccionado()" class="btn-project" style="align-self: flex-end; padding: 10px 18px;">Proyectar</button>
+                <!-- Cuadrícula de Versículos -->
+                <div>
+                    <label style="font-size: 11px; display: block; margin-bottom: 5px;">VERSÍCULOS</label>
+                    <div id="grid-versiculos" class="grid-numeros"></div>
                 </div>
             </div>
         </div>
