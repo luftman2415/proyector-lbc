@@ -1,10 +1,10 @@
 :root {
-    --bg-main: #0f172a;        /* Azul oscuro institucional */
-    --card-bg: #1e293b;        /* Tarjeta gris/azul elegante */
-    --accent-blue: #2563eb;   /* Azul Cuadrangular */
-    --accent-red: #dc2626;    /* Rojo Cuadrangular */
-    --accent-gold: #eab308;   /* Dorado Cuadrangular */
-    --accent-purple: #9333ea; /* Morado Cuadrangular */
+    --bg-main: #0f172a;        
+    --card-bg: #1e293b;        
+    --accent-blue: #2563eb;   
+    --accent-red: #dc2626;    
+    --accent-gold: #eab308;   
+    --accent-purple: #9333ea; 
     --text-white: #f8fafc;
     --text-muted: #94a3b8;
 }
@@ -38,11 +38,6 @@ header {
     margin-bottom: 25px;
 }
 
-.logo-header {
-    max-height: 55px;
-    object-fit: contain;
-}
-
 h1 {
     font-size: 22px;
     font-weight: 600;
@@ -53,11 +48,11 @@ h1 {
 .control-box {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
 }
 
 label {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 600;
     color: var(--text-muted);
     text-transform: uppercase;
@@ -66,15 +61,14 @@ label {
 
 textarea {
     width: 100%;
-    padding: 16px;
-    font-size: 16px;
+    padding: 14px;
+    font-size: 15px;
     border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: 10px;
     background-color: #0f172a;
     color: #ffffff;
     resize: vertical;
     box-sizing: border-box;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 textarea:focus {
@@ -83,18 +77,18 @@ textarea:focus {
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.3);
 }
 
+/* GRUPO DE BOTONES UNIFORMES Y ESTÉTICOS */
 .btn-group {
     display: flex;
     gap: 12px;
 }
 
 button {
-    flex: 1;
-    padding: 14px 20px;
-    font-size: 15px;
+    padding: 10px 18px;
+    font-size: 14px;
     font-weight: 600;
     border: none;
-    border-radius: 10px;
+    border-radius: 8px;
     cursor: pointer;
     color: white;
     transition: all 0.2s ease-in-out;
@@ -105,8 +99,8 @@ button {
 }
 
 .btn-project:hover {
-    transform: translateY(-2px) scale(1.01);
-    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
 }
 
 .btn-clear {
@@ -114,8 +108,8 @@ button {
 }
 
 .btn-clear:hover {
-    transform: translateY(-2px) scale(1.01);
-    box-shadow: 0 6px 20px rgba(220, 38, 38, 0.4);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
 }
 
 .btn-open {
@@ -125,14 +119,11 @@ button {
     padding: 8px 14px;
     font-size: 12px;
     border-radius: 6px;
-    flex: unset !important;
-    width: auto;
 }
 
 .btn-open:hover {
     background: var(--accent-gold);
     color: #0f172a;
-    transform: translateY(-2px);
 }
 
 footer {
@@ -144,7 +135,7 @@ footer {
     padding-top: 20px;
 }
 
-select, input[type="number"] {
+select {
     width: 100%;
     padding: 10px;
     font-size: 14px;
@@ -155,7 +146,7 @@ select, input[type="number"] {
     box-sizing: border-box;
 }
 
-select:focus, input[type="number"]:focus {
+select:focus {
     outline: none;
     border-color: var(--accent-blue);
 }
@@ -213,7 +204,7 @@ select:focus, input[type="number"]:focus {
     background: #0f172a;
     border: none;
     color: #cbd5e1;
-    padding: 6px 10px;
+    padding: 8px 12px;
     text-align: left;
     border-radius: 6px;
     cursor: pointer;
@@ -231,7 +222,7 @@ select:focus, input[type="number"]:focus {
     font-weight: bold;
 }
 
-#buscador-libros {
+#buscador-libros, #buscador-canciones {
     width: 100%;
     padding: 12px 15px;
     font-size: 14px;
@@ -242,13 +233,12 @@ select:focus, input[type="number"]:focus {
     box-sizing: border-box;
 }
 
-#buscador-libros:focus {
+#buscador-libros:focus, #buscador-canciones:focus {
     outline: none;
     border-color: var(--accent-blue);
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
 }
 
-/* Estilos de la Modal Personalizada */
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -283,7 +273,6 @@ select:focus, input[type="number"]:focus {
     margin-bottom: 20px;
 }
 
-/* Cuadrículas para Capítulos y Versículos */
 .grid-numeros {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
@@ -306,7 +295,6 @@ select:focus, input[type="number"]:focus {
     cursor: pointer;
     font-size: 12px;
     font-weight: bold;
-    transition: all 0.1s ease;
 }
 
 .btn-num:hover {
@@ -318,12 +306,4 @@ select:focus, input[type="number"]:focus {
     background: var(--accent-blue);
     color: white;
     border-color: var(--accent-blue);
-}
-
-/* Botón de proyectar versículo adaptado */
-.control-box .btn-project {
-    flex: unset !important;
-    width: auto;
-    padding: 8px 16px;
-    font-size: 13px;
 }
