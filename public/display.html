@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <title>Proyector LBC - Pantalla de Proyección</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #020617;
+      color: #ffffff;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      user-select: none;
+    }
+    .projector-stage {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 5vw 8vw;
+      position: relative;
+      background: radial-gradient(ellipse at center, #0f172a 0%, #020617 100%);
+      transition: background 0.3s ease, background-color 0.3s ease;
+      overflow: hidden;
+    }
+    .projector-stage.blackout {
+      background: #000000 !important;
+    }
+    .projector-stage.blackout * {
+      opacity: 0 !important;
+    }
+
+    /* Background video layer for animated church backgrounds */
+    .bg-video-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      z-index: 1;
+      pointer-events: none;
+      opacity: 0.65;
+      transition: opacity 0.5s ease;
+    }
+    .bg-video-layer.hidden {
+      display: none !important;
+    }
+
+    /* Animated CSS Layers */
+    .bg-animated-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 2;
+      pointer-events: none;
+      transition: opacity 0.5s ease;
+    }
+    .bg-animated-layer.hidden {
+      display: none !important;
+    }
+
+    /* Capa de contraste oscuro (Scrim) para máxima legibilidad de letras sobre cualquier imagen */
+    .bg-scrim-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.45);
+      z-index: 3;
+      pointer-events: none;
+      transition: background 0.3s ease;
+    }
+
+    /* Keyframes for presets */
+    @keyframes auroraCelestial {
+      0% {
+        background-position: 0% 50%, 50% 0%;
+        filter: hue-rotate(0deg) brightness(1);
+      }
+      50% {
+        background-position: 100% 50%, 0% 100%;
+        filter: hue-rotate(25deg) brightness(1.15);
+      }
+      100% {
+        background-position: 0% 50%, 50% 0%;
+        filter: hue-rotate(0deg) brightness(1);
+      }
+    }
+
+    @keyframes rayosDoradosMotion {
+      0% {
+        background-position: 0% 0%, 50% 50%;
+        filter: brightness(0.95);
+      }
+      50% {
+        background-position: 100% 100%, 70% 30%;
+        filter: brightness(1.25);
+      }
+      100% {
+        background-position: 0% 0%, 50% 50%;
+        filter: brightness(0.95);
+      }
+    }
+
+    @keyframes pulsoHaloCuadrangular {
+      0% {
+        background-size: 100% 100%, 200% 200%;
+        filter: brightness(1);
+      }
+      50% {
+        background-size: 140% 140%, 260% 260%;
+        filter: brightness(1.3);
+      }
+      100% {
+        background-size: 100% 100%, 200% 200%;
+        filter: brightness(1);
+      }
+    }
+
+    @keyframes resplandorAltarMotion {
+      0% {
+        background-position: 50% 100%, 0% 50%;
+        filter: brightness(0.9);
+      }
+      50% {
+        background-position: 50% 40%, 100% 50%;
+        filter: brightness(1.2);
+      }
+      100% {
+        background-position: 50% 100%, 0% 50%;
+        filter: brightness(0.9);
+      }
+    }
+
+    .anim-cielo {
+      background: radial-gradient(circle at 50% 30%, rgba(56, 189, 248, 0.45) 0%, transparent 65%),
+                  linear-gradient(135deg, #020617 0%, #0f172a 25%, #1e1b4b 50%, #0369a1 75%, #020617 100%) !important;
+      background-size: 250% 250% !important;
+      animation: auroraCelestial 10s ease-in-out infinite !important;
+    }
+
+    .anim-rayos-dorados {
+      background: radial-gradient(circle at 50% 35%, rgba(245, 158, 11, 0.55) 0%, rgba(180, 83, 9, 0.3) 45%, #020617 80%),
+                  linear-gradient(45deg, #1e1b4b 0%, #78350f 30%, #0f172a 60%, #b45309 85%, #020617 100%) !important;
+      background-size: 220% 220% !important;
+      animation: rayosDoradosMotion 9s ease-in-out infinite !important;
+    }
+
+    .anim-cruz-halo {
+      background: radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.55) 0%, rgba(168, 85, 247, 0.35) 45%, #020617 75%),
+                  linear-gradient(225deg, #0f172a 0%, #312e81 35%, #581c87 70%, #020617 100%) !important;
+      background-size: 200% 200% !important;
+      animation: pulsoHaloCuadrangular 7s ease-in-out infinite !important;
+    }
+
+    .anim-amanecer {
+      background: radial-gradient(circle at 50% 100%, rgba(239, 68, 68, 0.5) 0%, rgba(245, 158, 11, 0.4) 40%, #020617 80%),
+                  linear-gradient(to top, #7f1d1d 0%, #7c2d12 40%, #1e1b4b 75%, #020617 100%) !important;
+      background-size: 200% 200% !important;
+      animation: resplandorAltarMotion 11s ease-in-out infinite !important;
+    }
+
+    /* Standby screen when waiting for operator */
+    .standby-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      max-width: 900px;
+      pointer-events: none;
+      z-index: 5;
+    }
+    .standby-box.hidden {
+      display: none !important;
+      opacity: 0;
+    }
+    .standby-logo {
+      width: 140px;
+      height: 140px;
+      margin-bottom: 24px;
+      object-fit: contain;
+      filter: drop-shadow(0 10px 25px rgba(0,0,0,0.7));
+    }
+    .standby-title {
+      font-size: clamp(26px, 3.8vw, 48px);
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      color: #f8fafc;
+      text-shadow: 0 4px 16px rgba(0,0,0,0.9);
+      margin-bottom: 8px;
+    }
+    .standby-subtitle {
+      font-size: clamp(16px, 1.8vw, 24px);
+      font-weight: 700;
+      color: #fbbf24;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.9);
+      margin-bottom: 16px;
+    }
+    .standby-verse {
+      font-size: clamp(14px, 1.4vw, 20px);
+      font-style: italic;
+      color: #cbd5e1;
+      max-width: 650px;
+      line-height: 1.5;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.9);
+    }
+
+    /* Live projected text content */
+    .content-box {
+      max-width: 1650px;
+      width: 100%;
+      text-align: center;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 5;
+    }
+    .content-box.hidden {
+      display: none !important;
+      opacity: 0;
+      transform: scale(0.98);
+    }
+    .lyrics-text {
+      font-size: clamp(28px, 4.6vw, 64px);
+      font-weight: 700;
+      line-height: 1.35;
+      letter-spacing: 0.5px;
+      white-space: pre-line;
+      text-shadow: 0 4px 22px rgba(0, 0, 0, 0.98), 0 2px 8px rgba(0,0,0,0.95);
+      color: #ffffff;
+      transition: font-size 0.15s ease, color 0.15s ease;
+    }
+    /* Citation footer ONLY shown for Bible verses (never for songs or images) */
+    .citation-footer {
+      margin-top: 36px;
+      font-size: clamp(16px, 1.8vw, 26px);
+      font-weight: 800;
+      color: #fbbf24;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.9);
+      display: inline-block;
+      padding: 8px 24px;
+      border-radius: 9999px;
+      background: rgba(15, 23, 42, 0.88);
+      border: 1.5px solid rgba(251, 191, 36, 0.5);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+    }
+
+    /* Fullscreen Media Stage (Imágenes / Flyers Canva / Videos / YouTube) */
+    .media-box {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      background: #000000;
+      z-index: 8;
+    }
+    .media-box.hidden {
+      display: none !important;
+    }
+    .projector-media-img {
+      max-width: 100vw;
+      max-height: 100vh;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      box-shadow: 0 0 40px rgba(0,0,0,0.8);
+      transition: opacity 0.3s ease;
+    }
+    .projector-media-img.hidden {
+      display: none !important;
+    }
+    .projector-media-video {
+      max-width: 100vw;
+      max-height: 100vh;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: #000000;
+    }
+    .projector-media-video.hidden {
+      display: none !important;
+    }
+    .projector-media-youtube {
+      width: 100vw;
+      height: 100vh;
+      border: none;
+      background: #000000;
+    }
+    .projector-media-youtube.hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+  <div id="stage" class="projector-stage">
+    
+    <!-- Background Video Layer for custom animated backgrounds -->
+    <video id="bg-video" class="bg-video-layer hidden" autoplay loop muted playsinline></video>
+    
+    <!-- Background Animated CSS Layer -->
+    <div id="bg-anim" class="bg-animated-layer hidden"></div>
+
+    <!-- Capa Oscurecedora de Contraste para garantizar 100% legibilidad de letras -->
+    <div id="bg-scrim" class="bg-scrim-layer"></div>
+
+    <!-- Standby screen when waiting for operator (Clean without status pills) -->
+    <div id="standby" class="standby-box">
+      <img src="assets/logo_cuadrangular_icono.png" alt="Cuadrangular" class="standby-logo" onerror="this.src='assets/logo_cuadrangular_4simbolos.png'; this.onerror=function(){this.style.display='none';};">
+      <h1 class="standby-title">Iglesia Cristiana Cuadrangular</h1>
+      <h2 class="standby-subtitle">Barrio Las Brisas • Proyector LBC</h2>
+      <p class="standby-verse">"Jesucristo es el mismo ayer, y hoy, y por los siglos." — Hebreos 13:8</p>
+      <div style="margin-top: 22px; font-size: 13px; color: #94a3b8; font-weight: 600; letter-spacing: 0.5px; opacity: 0.85;">Creado por: LuftmandMauricio</div>
+    </div>
+
+    <!-- Live projected text content -->
+    <div id="content" class="content-box hidden">
+      <div id="lyrics" class="lyrics-text"></div>
+      <div id="citation" class="citation-footer" style="display: none;"></div>
+    </div>
+
+    <!-- Live projected media (Imágenes / Canva Flyers / Videos / YouTube) -->
+    <div id="media-stage" class="media-box hidden">
+      <img id="projector-image" class="projector-media-img hidden" alt="Flyer Iglesia" />
+      <video id="projector-video" class="projector-media-video hidden" playsinline loop></video>
+      <iframe id="projector-youtube" class="projector-media-youtube hidden" referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+    </div>
+  </div>
+
+  <script>
+    const stageEl = document.getElementById('stage');
+    const standbyEl = document.getElementById('standby');
+    const contentEl = document.getElementById('content');
+    const lyricsEl = document.getElementById('lyrics');
+    const citationEl = document.getElementById('citation');
+    const bgScrimEl = document.getElementById('bg-scrim');
+
+    // Background video & anim elements
+    const bgVideoEl = document.getElementById('bg-video');
+    const bgAnimEl = document.getElementById('bg-anim');
+
+    // Media elements
+    const mediaStageEl = document.getElementById('media-stage');
+    const projectorImgEl = document.getElementById('projector-image');
+    const projectorVideoEl = document.getElementById('projector-video');
+    const projectorYoutubeEl = document.getElementById('projector-youtube');
+
+    let isBlackout = false;
+
+    // Dual-channel communication: BroadcastChannel + localStorage events
+    const canal = new BroadcastChannel('proyector_lbc');
+
+    function procesarMensaje(data) {
+      if (!data) return;
+
+      if (data.accion === 'mostrar') {
+        detenerMedia();
+        aplicarBlackout(false);
+        mostrarContenido(data.texto, data.pie, data.tipo);
+      } else if (data.accion === 'mostrarMedia') {
+        aplicarBlackout(false);
+        mostrarMedia(data);
+      } else if (data.accion === 'detenerMedia') {
+        detenerMedia();
+        mostrarStandby();
+      } else if (data.accion === 'controlVideo') {
+        if (projectorVideoEl && !projectorVideoEl.classList.contains('hidden')) {
+          if (data.reproducir !== undefined) {
+            if (data.reproducir) projectorVideoEl.play().catch(() => {});
+            else projectorVideoEl.pause();
+          }
+          if (data.volumen !== undefined) {
+            projectorVideoEl.volume = data.volumen;
+          }
+        }
+      } else if (data.accion === 'limpiar') {
+        limpiarPantalla();
+      } else if (data.accion === 'blackout') {
+        aplicarBlackout(data.activo);
+      } else if (data.accion === 'fondo') {
+        aplicarFondo(data.fondo, data.tipoFondo, { modoAjuste: data.modoAjuste, opacidadScrim: data.opacidadScrim });
+      } else if (data.accion === 'ajusteFondo') {
+        if (data.modoAjuste) localStorage.setItem('lbc_modo_ajuste_fondo', data.modoAjuste);
+        if (data.opacidadScrim !== undefined) localStorage.setItem('lbc_scrim_fondo', String(data.opacidadScrim));
+        const f = localStorage.getItem('lbc_fondo_activo');
+        const tf = localStorage.getItem('lbc_tipo_fondo');
+        aplicarFondo(f, tf, { modoAjuste: data.modoAjuste, opacidadScrim: data.opacidadScrim });
+      } else if (data.accion === 'tamanoFuente') {
+        if (data.tamano) {
+          lyricsEl.style.fontSize = data.tamano + 'px';
+        }
+      } else if (data.accion === 'ajustesProyector') {
+        aplicarAjustes(data);
+      } else if (data.accion === 'ping') {
+        canal.postMessage({ accion: 'pong', hora: Date.now() });
+      }
+    }
+
+    // 1. Listen on BroadcastChannel
+    canal.onmessage = (event) => {
+      procesarMensaje(event.data);
+    };
+
+    // 2. Listen on StorageEvent (Instant fallback)
+    window.addEventListener('storage', (event) => {
+      if (event.key === 'proyector_lbc_msg' && event.newValue) {
+        try {
+          const data = JSON.parse(event.newValue);
+          procesarMensaje(data);
+        } catch (e) {}
+      }
+    });
+
+    function aplicarAjustes(data) {
+      if (data.fuente) lyricsEl.style.fontFamily = data.fuente;
+      if (data.colorTexto) lyricsEl.style.color = data.colorTexto;
+      if (data.sombraTexto !== undefined) {
+        lyricsEl.style.textShadow = data.sombraTexto ? '0 4px 22px rgba(0, 0, 0, 0.98), 0 2px 8px rgba(0,0,0,0.95)' : 'none';
+      }
+      if (data.alineacion) {
+        contentEl.style.textAlign = data.alineacion;
+        lyricsEl.style.textAlign = data.alineacion;
+      }
+      if (data.tamano) {
+        lyricsEl.style.fontSize = data.tamano + 'px';
+      }
+    }
+
+    function aplicarFondo(fondo, tipoFondo, opciones = {}) {
+      if (!fondo) return;
+
+      const modoAjuste = opciones.modoAjuste || localStorage.getItem('lbc_modo_ajuste_fondo') || 'contain';
+      const opacidadScrim = opciones.opacidadScrim !== undefined ? opciones.opacidadScrim : (parseFloat(localStorage.getItem('lbc_scrim_fondo') || '0.45'));
+
+      if (bgScrimEl) {
+        bgScrimEl.style.background = `rgba(0, 0, 0, ${opacidadScrim})`;
+      }
+
+      // 1. Fondo de video animado (MP4 / WebM subido localmente)
+      if (tipoFondo === 'video' || fondo.startsWith('video:') || fondo.endsWith('.mp4') || fondo.startsWith('data:video/')) {
+        const videoSrc = fondo.replace(/^video:/, '');
+        bgAnimEl.className = 'bg-animated-layer hidden';
+        stageEl.style.backgroundImage = 'none';
+        stageEl.style.background = '#020617';
+
+        bgVideoEl.src = videoSrc;
+        bgVideoEl.classList.remove('hidden');
+        bgVideoEl.play().catch(() => {});
+        return;
+      }
+
+      // Si no es video, ocultar capa de video
+      bgVideoEl.pause();
+      bgVideoEl.src = '';
+      bgVideoEl.classList.add('hidden');
+
+      // 2. Fondos animados con CSS
+      if (tipoFondo === 'anim' || fondo.startsWith('anim-')) {
+        const claseAnim = fondo.replace(/^anim:/, '');
+        stageEl.style.backgroundImage = 'none';
+        stageEl.style.background = '#020617';
+
+        bgAnimEl.className = 'bg-animated-layer ' + claseAnim;
+        bgAnimEl.classList.remove('hidden');
+        return;
+      }
+
+      // 3. Fondos estáticos (imágenes subidas / logos / gradientes / colores)
+      bgAnimEl.className = 'bg-animated-layer hidden';
+      if (fondo.startsWith('http') || fondo.startsWith('data:') || fondo.includes('assets/')) {
+        stageEl.style.background = '#020617';
+        stageEl.style.backgroundImage = 'url("' + fondo + '")';
+        stageEl.style.backgroundSize = modoAjuste;
+        stageEl.style.backgroundRepeat = 'no-repeat';
+        stageEl.style.backgroundPosition = 'center center';
+      } else {
+        stageEl.style.backgroundImage = 'none';
+        stageEl.style.background = fondo;
+      }
+    }
+
+    function mostrarContenido(textoCompleto, pieOpcional, tipo) {
+      if (!textoCompleto) {
+        limpiarPantalla();
+        return;
+      }
+
+      let textoPrincipal = textoCompleto;
+      let pie = pieOpcional || "";
+
+      if (!pie && textoCompleto.includes('\n\n— ')) {
+        const partes = textoCompleto.split('\n\n— ');
+        textoPrincipal = partes[0].replace(/^["']|["']$/g, '');
+        if (tipo === 'biblia' || !tipo) {
+          pie = partes[1];
+        }
+      } else if (textoCompleto.includes('\n\n🎵 ')) {
+        const partes = textoCompleto.split('\n\n🎵 ');
+        textoPrincipal = partes[0];
+        pie = ''; // Omitir etiqueta de canción en proyector
+      }
+
+      lyricsEl.innerText = textoPrincipal;
+
+      // REQUISITO ESTRICTO: En canciones e imágenes NO debe salir la etiqueta/nombre en el proyector.
+      // SÓLO debe mostrarse en la BIBLIA (tipo === 'biblia') para que la iglesia sepa la cita leída.
+      if (tipo === 'biblia' && pie) {
+        citationEl.innerText = pie.replace(/^[—\-]\s*/, '');
+        citationEl.style.display = 'inline-block';
+      } else {
+        citationEl.innerText = '';
+        citationEl.style.display = 'none';
+      }
+
+      // Hide media and standby, show text content
+      detenerMedia();
+      standbyEl.classList.add('hidden');
+      contentEl.classList.remove('hidden');
+    }
+
+    function mostrarMedia(data) {
+      // Hide text & standby
+      contentEl.classList.add('hidden');
+      standbyEl.classList.add('hidden');
+      mediaStageEl.classList.remove('hidden');
+
+      if (data.tipo === 'imagen') {
+        detenerReproductoresVideo();
+        projectorImgEl.src = data.url;
+        projectorImgEl.classList.remove('hidden');
+      } else if (data.tipo === 'video') {
+        detenerReproductoresVideo();
+        projectorImgEl.classList.add('hidden');
+
+        projectorVideoEl.src = data.url;
+        projectorVideoEl.loop = data.loop !== false;
+        projectorVideoEl.muted = !data.conAudio;
+        if (data.volumen !== undefined) projectorVideoEl.volume = data.volumen;
+        projectorVideoEl.classList.remove('hidden');
+        projectorVideoEl.play().catch(() => {});
+      } else if (data.tipo === 'youtube') {
+        detenerReproductoresVideo();
+        projectorImgEl.classList.add('hidden');
+
+        if (projectorYoutubeEl && data.youtubeId) {
+          projectorYoutubeEl.src = 'https://www.youtube-nocookie.com/embed/' + data.youtubeId + '?autoplay=1&rel=0&controls=1&modestbranding=1&enablejsapi=1&origin=' + encodeURIComponent(window.location.origin.startsWith('http') ? window.location.origin : 'https://www.youtube.com');
+          projectorYoutubeEl.classList.remove('hidden');
+        }
+      }
+    }
+
+    function detenerReproductoresVideo() {
+      if (projectorVideoEl) {
+        projectorVideoEl.pause();
+        projectorVideoEl.src = '';
+        projectorVideoEl.classList.add('hidden');
+      }
+      if (projectorYoutubeEl) {
+        projectorYoutubeEl.src = '';
+        projectorYoutubeEl.classList.add('hidden');
+      }
+    }
+
+    function detenerMedia() {
+      detenerReproductoresVideo();
+      if (projectorImgEl) {
+        projectorImgEl.src = '';
+        projectorImgEl.classList.add('hidden');
+      }
+      if (mediaStageEl) {
+        mediaStageEl.classList.add('hidden');
+      }
+    }
+
+    function mostrarStandby() {
+      standbyEl.classList.remove('hidden');
+    }
+
+    function limpiarPantalla() {
+      detenerMedia();
+      contentEl.classList.add('hidden');
+      setTimeout(() => {
+        lyricsEl.innerText = '';
+        citationEl.style.display = 'none';
+        standbyEl.classList.remove('hidden');
+      }, 150);
+    }
+
+    // Blackout con manejo de booleano explícito para evitar doble alternancia por canal dual
+    function aplicarBlackout(activo) {
+      isBlackout = (activo !== undefined) ? activo : !isBlackout;
+      if (isBlackout) {
+        stageEl.classList.add('blackout');
+      } else {
+        stageEl.classList.remove('blackout');
+      }
+    }
+
+    function toggleBlackout() {
+      aplicarBlackout(!isBlackout);
+    }
+
+    // Inicializar estado previo desde localStorage para sincronización inmediata
+    try {
+      const fondoPrevio = localStorage.getItem('lbc_fondo_activo');
+      const tipoFondoPrevio = localStorage.getItem('lbc_tipo_fondo');
+      if (fondoPrevio) aplicarFondo(fondoPrevio, tipoFondoPrevio);
+
+      const fuentePrevia = localStorage.getItem('lbc_fuente');
+      const colorPrevio = localStorage.getItem('lbc_color_texto');
+      const sombraPrevia = localStorage.getItem('lbc_sombra');
+      const alineacionPrevia = localStorage.getItem('lbc_alineacion');
+      const tamanoPrevio = localStorage.getItem('lbc_tamano_fuente');
+
+      aplicarAjustes({
+        fuente: fuentePrevia,
+        colorTexto: colorPrevio,
+        sombraTexto: sombraPrevia !== null ? sombraPrevia !== 'false' : true,
+        alineacion: alineacionPrevia || 'center',
+        tamano: tamanoPrevio ? Number(tamanoPrevio) : 52
+      });
+
+      const actualGuardado = localStorage.getItem('proyector_lbc_actual');
+      if (actualGuardado) {
+        const obj = JSON.parse(actualGuardado);
+        if (obj && obj.texto) {
+          mostrarContenido(obj.texto, obj.pie, obj.tipo);
+        }
+      }
+    } catch (e) {}
+
+    // Double click to toggle Fullscreen
+    document.addEventListener('dblclick', () => {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen().catch(() => {});
+      }
+    });
+
+    // Keyboard shortcuts in projector window
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'b' || e.key === 'B' || e.key === 'F5') {
+        e.preventDefault();
+        toggleBlackout();
+      } else if (e.key === 'c' || e.key === 'C' || e.key === 'F4' || e.key === 'Escape') {
+        limpiarPantalla();
+      }
+    });
+
+    // Notify control panel that display is ready
+    canal.postMessage({ accion: 'proyector_abierto', timestamp: Date.now() });
+  </script>
+</body>
+</html>

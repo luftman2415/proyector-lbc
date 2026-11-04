@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Overlay OBS - Proyector LBC</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body, html {
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      background: transparent !important;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      user-select: none;
+    }
+
+    #obs-stage {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      background: transparent !important;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding-bottom: 55px;
+      padding-left: 80px;
+      padding-right: 80px;
+      pointer-events: none;
+    }
+
+    /* Lower Third Container */
+    .lower-third-wrap {
+      width: 100%;
+      max-width: 1760px;
+      margin: 0 auto;
+      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .lower-third-wrap.hidden {
+      opacity: 0;
+      transform: translateY(60px);
+      pointer-events: none;
+    }
+
+    .lower-third-card {
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.94) 0%, rgba(2, 6, 23, 0.96) 100%);
+      border: 2px solid rgba(251, 191, 36, 0.65);
+      border-radius: 20px;
+      padding: 24px 38px;
+      box-shadow: 0 16px 45px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(12px);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Decorative Cuadrangular accent bar on top */
+    .cuadrangular-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #dc2626 0%, #dc2626 25%, #2563eb 25%, #2563eb 50%, #d97706 50%, #d97706 75%, #7c3aed 75%, #7c3aed 100%);
+    }
+
+    .header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .citation-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(251, 191, 36, 0.18);
+      border: 1.5px solid rgba(251, 191, 36, 0.8);
+      color: #fbbf24;
+      font-size: 20px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      padding: 6px 18px;
+      border-radius: 9999px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+    }
+
+    .church-watermark {
+      font-size: 16px;
+      font-weight: 700;
+      color: #94a3b8;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .church-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #fbbf24;
+    }
+
+    .lyrics-text {
+      font-size: 38px;
+      font-weight: 800;
+      line-height: 1.35;
+      color: #ffffff;
+      white-space: pre-line;
+      text-shadow: 0 3px 12px rgba(0, 0, 0, 0.95), 0 1px 3px rgba(0, 0, 0, 0.9);
+      letter-spacing: 0.3px;
+    }
+
+    /* Speaker lower third banner (Pastor / Mensajero / Evento) */
+    .speaker-card {
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.94) 0%, rgba(2, 6, 23, 0.96) 100%);
+      border-left: 6px solid #fbbf24;
+      border-radius: 14px;
+      padding: 16px 28px;
+      box-shadow: 0 12px 35px rgba(0,0,0,0.8);
+      display: inline-block;
+      max-width: 900px;
+    }
+    .speaker-name {
+      font-size: 32px;
+      font-weight: 900;
+      color: #ffffff;
+      line-height: 1.2;
+    }
+    .speaker-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #fbbf24;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 4px;
+    }
+
+    /* Smooth Blackout */
+    .blackout {
+      opacity: 0 !important;
+      transition: opacity 0.2s ease;
+    }
+  </style>
+</head>
+<body>
+  <div id="obs-stage">
+    
+    <!-- Standard Lyrics / Bible Verses Lower Third -->
+    <div id="lower-third" class="lower-third-wrap hidden">
+      <div class="lower-third-card">
+        <div class="cuadrangular-bar"></div>
+        <div class="header-row">
+          <div id="citation-badge" class="citation-pill" style="display: none;">
+            <span>📖</span>
+            <span id="citation-label"></span>
+          </div>
+          <div class="church-watermark">
+            <span class="church-dot"></span>
+            <span>Iglesia Cristiana Cuadrangular Las Brisas</span>
+          </div>
+        </div>
+        <div id="lyrics-content" class="lyrics-text"></div>
+      </div>
+    </div>
+
+    <!-- Speaker Banner (Pastor / Invitado) -->
+    <div id="speaker-wrap" class="lower-third-wrap hidden">
+      <div class="speaker-card">
+        <div id="speaker-name" class="speaker-name"></div>
+        <div id="speaker-role" class="speaker-title"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const stageEl = document.getElementById('obs-stage');
+    const lowerThirdEl = document.getElementById('lower-third');
+    const lyricsEl = document.getElementById('lyrics-content');
+    const citationBadgeEl = document.getElementById('citation-badge');
+    const citationLabelEl = document.getElementById('citation-label');
+
+    const speakerWrapEl = document.getElementById('speaker-wrap');
+    const speakerNameEl = document.getElementById('speaker-name');
+    const speakerRoleEl = document.getElementById('speaker-role');
+
+    let isBlackout = false;
+
+    // Dual channel: BroadcastChannel + localStorage
+    const canal = new BroadcastChannel('proyector_lbc');
+
+    function procesarMensaje(data) {
+      if (!data) return;
+
+      if (data.accion === 'mostrar') {
+        aplicarBlackout(false);
+        mostrarContenido(data.texto, data.pie, data.tipo);
+      } else if (data.accion === 'mostrarSpeaker') {
+        aplicarBlackout(false);
+        mostrarSpeaker(data.nombre, data.cargo);
+      } else if (data.accion === 'limpiar' || data.accion === 'detenerMedia') {
+        limpiarOverlay();
+      } else if (data.accion === 'blackout') {
+        aplicarBlackout(data.activo);
+      } else if (data.accion === 'ajustesProyector' || data.accion === 'tamanoFuente') {
+        if (data.tamano) {
+          // Escalado proporcional para OBS
+          lyricsEl.style.fontSize = Math.min(Math.max(data.tamano * 0.75, 26), 46) + 'px';
+        }
+      }
+    }
+
+    canal.onmessage = (e) => procesarMensaje(e.data);
+
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'proyector_lbc_msg' && e.newValue) {
+        try {
+          procesarMensaje(JSON.parse(e.newValue));
+        } catch (err) {}
+      }
+    });
+
+    function mostrarContenido(textoCompleto, pieOpcional, tipo) {
+      if (!textoCompleto) {
+        limpiarOverlay();
+        return;
+      }
+
+      speakerWrapEl.classList.add('hidden');
+
+      let textoPrincipal = textoCompleto;
+      let pie = pieOpcional || "";
+
+      if (!pie && textoCompleto.includes('\n\n— ')) {
+        const partes = textoCompleto.split('\n\n— ');
+        textoPrincipal = partes[0].replace(/^["']|["']$/g, '');
+        pie = partes[1];
+      } else if (!pie && textoCompleto.includes('\n\n🎵 ')) {
+        const partes = textoCompleto.split('\n\n🎵 ');
+        textoPrincipal = partes[0];
+        pie = '🎵 ' + partes[1];
+      }
+
+      lyricsEl.innerText = textoPrincipal;
+
+      if (pie) {
+        citationLabelEl.innerText = pie;
+        citationBadgeEl.style.display = 'inline-flex';
+      } else {
+        citationBadgeEl.style.display = 'none';
+      }
+
+      lowerThirdEl.classList.remove('hidden');
+    }
+
+    function mostrarSpeaker(nombre, cargo) {
+      lowerThirdEl.classList.add('hidden');
+      speakerNameEl.innerText = nombre || '';
+      speakerRoleEl.innerText = cargo || 'MINISTERIO';
+      speakerWrapEl.classList.remove('hidden');
+    }
+
+    function limpiarOverlay() {
+      lowerThirdEl.classList.add('hidden');
+      speakerWrapEl.classList.add('hidden');
+      setTimeout(() => {
+        lyricsEl.innerText = '';
+        citationBadgeEl.style.display = 'none';
+      }, 350);
+    }
+
+    function aplicarBlackout(activo) {
+      isBlackout = (activo !== undefined) ? activo : !isBlackout;
+      if (isBlackout) {
+        stageEl.classList.add('blackout');
+      } else {
+        stageEl.classList.remove('blackout');
+      }
+    }
+
+    // Inicializar estado previo desde localStorage
+    try {
+      const actualGuardado = localStorage.getItem('proyector_lbc_actual');
+      if (actualGuardado) {
+        const obj = JSON.parse(actualGuardado);
+        if (obj && obj.texto && obj.tipo !== 'imagen' && obj.tipo !== 'video') {
+          mostrarContenido(obj.texto, obj.pie, obj.tipo);
+        }
+      }
+    } catch (e) {}
+  </script>
+</body>
+</html>

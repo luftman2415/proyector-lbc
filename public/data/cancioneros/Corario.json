@@ -1,0 +1,6450 @@
+[
+  {
+    "id": "cancion-1",
+    "numero": 1,
+    "title": "A Cada Instante",
+    "author": "Carl Boberg / Stuart K. Hine",
+    "key": "C",
+    "tempo": 72,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Señor, mi Dios, al contemplar los cielos,",
+          "El firmamento y las estrellas mil,",
+          "Al oír tu voz en los potentes truenos",
+          "Y ver brillar el sol en su cenit."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Mi corazón entona la canción:",
+          "¡Cuán grande es Él! ¡Cuán grande es Él!",
+          "Mi corazón entona la canción:",
+          "¡Cuán grande es Él! ¡Cuán grande es Él!"
+        ]
+      },
+      {
+        "type": "verse",
+        "label": "Estrofa 2",
+        "color": "#38bdf8",
+        "lines": [
+          "Al recorrer los montes y los valles",
+          "Y ver las bellas flores al pasar,",
+          "Al escuchar el canto de las aves",
+          "Y el murmurar del claro manantial."
+        ]
+      },
+      {
+        "type": "verse",
+        "label": "Estrofa 3",
+        "color": "#38bdf8",
+        "lines": [
+          "Cuando recuerdo del amor divino,",
+          "Que desde el cielo al Salvador envió,",
+          "Aquel Jesús que por salvarme vino",
+          "Y en una cruz por mí murió."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-2",
+    "numero": 2,
+    "title": "A Dios Sea la Gloria",
+    "author": "Marcos Witt",
+    "key": "D",
+    "tempo": 85,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Tu fidelidad es grande,",
+          "Tu fidelidad incomparable es,",
+          "Nadie como Tú, bendito Dios,",
+          "Grande es tu fidelidad."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Tu fidelidad es grande,",
+          "Tu fidelidad incomparable es,",
+          "Nadie como Tú, bendito Dios,",
+          "Grande es tu fidelidad."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-3",
+    "numero": 3,
+    "title": "A El Alto y Sublime",
+    "author": "Marcos Witt",
+    "key": "E",
+    "tempo": 110,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa",
+        "color": "#38bdf8",
+        "lines": [
+          "Renuévame, Señor Jesús,",
+          "Ya no quiero ser igual.",
+          "Renuévame, Señor Jesús,",
+          "Pon en mí tu corazón."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Porque todo lo que hay dentro de mí",
+          "Necesita ser cambiado, Señor.",
+          "Porque todo lo que hay dentro de mi corazón",
+          "Necesita más de Ti."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-4",
+    "numero": 4,
+    "title": "A la Casa de Jairo",
+    "author": "Bethel Music / Jenn Johnson",
+    "key": "A",
+    "tempo": 128,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Te amo, Dios, tu gracia nunca falla,",
+          "En tus manos todos mis días están.",
+          "Desde el despertar hasta el anochecer",
+          "Yo cantaré de la bondad de Dios."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "En mi vida has sido bueno,",
+          "En mi vida has sido tan, tan fiel.",
+          "Con cada aliento que me das",
+          "Yo cantaré de la bondad de Dios."
+        ]
+      },
+      {
+        "type": "bridge",
+        "label": "Puente",
+        "color": "#c084fc",
+        "lines": [
+          "Tu bondad me sigue, me sigue a donde voy,",
+          "Tu bondad me sigue, me sigue a donde voy.",
+          "Mi vida te entrego, me rindo ante Ti,",
+          "Tu bondad me sigue, me sigue a donde voy."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-5",
+    "numero": 5,
+    "title": "A Ti Sea la Gloria",
+    "author": "Danny Berríos",
+    "key": "F",
+    "tempo": 68,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Dios no rechaza oración, la oración es alimento.",
+          "Nunca vi un justo desamparado, ni su descendencia mendigar pan.",
+          "Si estás pasando por pruebas, levanta tus manos y adora."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Alaba a Dios, alaba a Dios,",
+          "Si lloras, alaba; si sufres, alaba.",
+          "Tu alabanza moverá la mano de Dios,",
+          "Alaba a Dios, alaba a Dios."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-6",
+    "numero": 6,
+    "title": "A Tus Pies",
+    "author": "Miel San Marcos ft. Christine D'Clario",
+    "key": "G",
+    "tempo": 72,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa",
+        "color": "#38bdf8",
+        "lines": [
+          "A tus pies arde mi corazón,",
+          "A tus pies entrego lo que soy.",
+          "Es el lugar de mi seguridad,",
+          "Donde nadie me puede señalar."
+        ]
+      },
+      {
+        "type": "bridge",
+        "label": "Pre-Coro",
+        "color": "#34d399",
+        "lines": [
+          "Me perdonaste, me acercaste a tu presencia,",
+          "Me levantaste, hoy me postro a adorarte."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "No hay lugar más alto, más grande,",
+          "Que estar a tus pies, que estar a tus pies.",
+          "Y aquí permaneceré, postrado a tus pies."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-7",
+    "numero": 7,
+    "title": "Abba Padre",
+    "author": "Phil Wickham",
+    "key": "C",
+    "tempo": 85,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "¿Quién rompe el poder del pecado y la maldad?",
+          "Su amor es fuerte y poderoso.",
+          "El Rey de gloria, el Rey de majestad."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Gracia sublime es, perfecto es tu amor.",
+          "Tomaste mi lugar, cargaste con mi cruz.",
+          "Tu vida diste allí, libre soy por Ti.",
+          "Jesús, te adoro por lo que hiciste en mí."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-8",
+    "numero": 8,
+    "title": "Abre Mis Ojos",
+    "author": "Kari Jobe / Gateway Worship",
+    "key": "D",
+    "tempo": 110,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Digno es el Cordero santo,",
+          "Santo, santo es Él.",
+          "Levantamos nuestra voz en alabanza,",
+          "Al que en el trono está."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Santo, santo, santo es el Señor Dios Todopoderoso,",
+          "Quien fue, quien es y quien vendrá.",
+          "La creación te canta, gloria al Rey de reyes,",
+          "Tú eres mi todo y yo te adoraré."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-9",
+    "numero": 9,
+    "title": "Abre los Cielos",
+    "author": "Sinach",
+    "key": "E",
+    "tempo": 128,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa",
+        "color": "#38bdf8",
+        "lines": [
+          "Aquí estás, te vemos mover, te adoraré, te adoraré.",
+          "Aquí estás, obrando en mí, te adoraré, te adoraré."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Milagroso, abres camino, cumples promesas,",
+          "Luz en tinieblas, mi Dios, así eres Tú."
+        ]
+      },
+      {
+        "type": "bridge",
+        "label": "Puente",
+        "color": "#c084fc",
+        "lines": [
+          "Aunque no pueda ver estás obrando,",
+          "Aunque no pueda ver estás obrando,",
+          "Siempre estás, siempre estás obrando."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-10",
+    "numero": 10,
+    "title": "Adorad al Cordero",
+    "author": "Jesús Adrián Romero",
+    "key": "A",
+    "tempo": 68,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Cansado del camino, sediento de Ti,",
+          "Un desierto he cruzado, sin fuerzas he quedado,",
+          "Vengo a Ti."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Sumérgeme en el río de tu Espíritu,",
+          "Necesito refrescar este seco corazón,",
+          "Sediento de Ti, sumérgeme."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-11",
+    "numero": 11,
+    "title": "Al Amor Más Grande",
+    "author": "Carl Boberg / Stuart K. Hine",
+    "key": "F",
+    "tempo": 72,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Señor, mi Dios, al contemplar los cielos,",
+          "El firmamento y las estrellas mil,",
+          "Al oír tu voz en los potentes truenos",
+          "Y ver brillar el sol en su cenit."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Mi corazón entona la canción:",
+          "¡Cuán grande es Él! ¡Cuán grande es Él!",
+          "Mi corazón entona la canción:",
+          "¡Cuán grande es Él! ¡Cuán grande es Él!"
+        ]
+      },
+      {
+        "type": "verse",
+        "label": "Estrofa 2",
+        "color": "#38bdf8",
+        "lines": [
+          "Al recorrer los montes y los valles",
+          "Y ver las bellas flores al pasar,",
+          "Al escuchar el canto de las aves",
+          "Y el murmurar del claro manantial."
+        ]
+      },
+      {
+        "type": "verse",
+        "label": "Estrofa 3",
+        "color": "#38bdf8",
+        "lines": [
+          "Cuando recuerdo del amor divino,",
+          "Que desde el cielo al Salvador envió,",
+          "Aquel Jesús que por salvarme vino",
+          "Y en una cruz por mí murió."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-12",
+    "numero": 12,
+    "title": "Al Borde de Tu Gran Trono",
+    "author": "Marcos Witt",
+    "key": "G",
+    "tempo": 85,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Tu fidelidad es grande,",
+          "Tu fidelidad incomparable es,",
+          "Nadie como Tú, bendito Dios,",
+          "Grande es tu fidelidad."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Tu fidelidad es grande,",
+          "Tu fidelidad incomparable es,",
+          "Nadie como Tú, bendito Dios,",
+          "Grande es tu fidelidad."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-13",
+    "numero": 13,
+    "title": "Al Despertar",
+    "author": "Marcos Witt",
+    "key": "C",
+    "tempo": 110,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa",
+        "color": "#38bdf8",
+        "lines": [
+          "Renuévame, Señor Jesús,",
+          "Ya no quiero ser igual.",
+          "Renuévame, Señor Jesús,",
+          "Pon en mí tu corazón."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Porque todo lo que hay dentro de mí",
+          "Necesita ser cambiado, Señor.",
+          "Porque todo lo que hay dentro de mi corazón",
+          "Necesita más de Ti."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-14",
+    "numero": 14,
+    "title": "Al Rey de los Siglos",
+    "author": "Bethel Music / Jenn Johnson",
+    "key": "D",
+    "tempo": 128,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Te amo, Dios, tu gracia nunca falla,",
+          "En tus manos todos mis días están.",
+          "Desde el despertar hasta el anochecer",
+          "Yo cantaré de la bondad de Dios."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "En mi vida has sido bueno,",
+          "En mi vida has sido tan, tan fiel.",
+          "Con cada aliento que me das",
+          "Yo cantaré de la bondad de Dios."
+        ]
+      },
+      {
+        "type": "bridge",
+        "label": "Puente",
+        "color": "#c084fc",
+        "lines": [
+          "Tu bondad me sigue, me sigue a donde voy,",
+          "Tu bondad me sigue, me sigue a donde voy.",
+          "Mi vida te entrego, me rindo ante Ti,",
+          "Tu bondad me sigue, me sigue a donde voy."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-15",
+    "numero": 15,
+    "title": "Al Taller del Maestro",
+    "author": "Danny Berríos",
+    "key": "E",
+    "tempo": 68,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Dios no rechaza oración, la oración es alimento.",
+          "Nunca vi un justo desamparado, ni su descendencia mendigar pan.",
+          "Si estás pasando por pruebas, levanta tus manos y adora."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Alaba a Dios, alaba a Dios,",
+          "Si lloras, alaba; si sufres, alaba.",
+          "Tu alabanza moverá la mano de Dios,",
+          "Alaba a Dios, alaba a Dios."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-16",
+    "numero": 16,
+    "title": "Alabanza y Honor",
+    "author": "Miel San Marcos ft. Christine D'Clario",
+    "key": "A",
+    "tempo": 72,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa",
+        "color": "#38bdf8",
+        "lines": [
+          "A tus pies arde mi corazón,",
+          "A tus pies entrego lo que soy.",
+          "Es el lugar de mi seguridad,",
+          "Donde nadie me puede señalar."
+        ]
+      },
+      {
+        "type": "bridge",
+        "label": "Pre-Coro",
+        "color": "#34d399",
+        "lines": [
+          "Me perdonaste, me acercaste a tu presencia,",
+          "Me levantaste, hoy me postro a adorarte."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "No hay lugar más alto, más grande,",
+          "Que estar a tus pies, que estar a tus pies.",
+          "Y aquí permaneceré, postrado a tus pies."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-17",
+    "numero": 17,
+    "title": "Alaben al Señor",
+    "author": "Phil Wickham",
+    "key": "F",
+    "tempo": 85,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "¿Quién rompe el poder del pecado y la maldad?",
+          "Su amor es fuerte y poderoso.",
+          "El Rey de gloria, el Rey de majestad."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Gracia sublime es, perfecto es tu amor.",
+          "Tomaste mi lugar, cargaste con mi cruz.",
+          "Tu vida diste allí, libre soy por Ti.",
+          "Jesús, te adoro por lo que hiciste en mí."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-18",
+    "numero": 18,
+    "title": "Alaba a Dios",
+    "author": "Kari Jobe / Gateway Worship",
+    "key": "G",
+    "tempo": 110,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Digno es el Cordero santo,",
+          "Santo, santo es Él.",
+          "Levantamos nuestra voz en alabanza,",
+          "Al que en el trono está."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Santo, santo, santo es el Señor Dios Todopoderoso,",
+          "Quien fue, quien es y quien vendrá.",
+          "La creación te canta, gloria al Rey de reyes,",
+          "Tú eres mi todo y yo te adoraré."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-19",
+    "numero": 19,
+    "title": "Aleluya al Rey",
+    "author": "Sinach",
+    "key": "C",
+    "tempo": 128,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa",
+        "color": "#38bdf8",
+        "lines": [
+          "Aquí estás, te vemos mover, te adoraré, te adoraré.",
+          "Aquí estás, obrando en mí, te adoraré, te adoraré."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Milagroso, abres camino, cumples promesas,",
+          "Luz en tinieblas, mi Dios, así eres Tú."
+        ]
+      },
+      {
+        "type": "bridge",
+        "label": "Puente",
+        "color": "#c084fc",
+        "lines": [
+          "Aunque no pueda ver estás obrando,",
+          "Aunque no pueda ver estás obrando,",
+          "Siempre estás, siempre estás obrando."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-20",
+    "numero": 20,
+    "title": "Alza Tus Ojos",
+    "author": "Jesús Adrián Romero",
+    "key": "D",
+    "tempo": 68,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Cansado del camino, sediento de Ti,",
+          "Un desierto he cruzado, sin fuerzas he quedado,",
+          "Vengo a Ti."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Sumérgeme en el río de tu Espíritu,",
+          "Necesito refrescar este seco corazón,",
+          "Sediento de Ti, sumérgeme."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-21",
+    "numero": 21,
+    "title": "Amigo Fiel",
+    "author": "Carl Boberg / Stuart K. Hine",
+    "key": "E",
+    "tempo": 72,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Señor, mi Dios, al contemplar los cielos,",
+          "El firmamento y las estrellas mil,",
+          "Al oír tu voz en los potentes truenos",
+          "Y ver brillar el sol en su cenit."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Mi corazón entona la canción:",
+          "¡Cuán grande es Él! ¡Cuán grande es Él!",
+          "Mi corazón entona la canción:",
+          "¡Cuán grande es Él! ¡Cuán grande es Él!"
+        ]
+      },
+      {
+        "type": "verse",
+        "label": "Estrofa 2",
+        "color": "#38bdf8",
+        "lines": [
+          "Al recorrer los montes y los valles",
+          "Y ver las bellas flores al pasar,",
+          "Al escuchar el canto de las aves",
+          "Y el murmurar del claro manantial."
+        ]
+      },
+      {
+        "type": "verse",
+        "label": "Estrofa 3",
+        "color": "#38bdf8",
+        "lines": [
+          "Cuando recuerdo del amor divino,",
+          "Que desde el cielo al Salvador envió,",
+          "Aquel Jesús que por salvarme vino",
+          "Y en una cruz por mí murió."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-22",
+    "numero": 22,
+    "title": "Amor Incondicional",
+    "author": "Marcos Witt",
+    "key": "A",
+    "tempo": 85,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Tu fidelidad es grande,",
+          "Tu fidelidad incomparable es,",
+          "Nadie como Tú, bendito Dios,",
+          "Grande es tu fidelidad."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Tu fidelidad es grande,",
+          "Tu fidelidad incomparable es,",
+          "Nadie como Tú, bendito Dios,",
+          "Grande es tu fidelidad."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-23",
+    "numero": 23,
+    "title": "Anhelo Conocerte",
+    "author": "Marcos Witt",
+    "key": "F",
+    "tempo": 110,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa",
+        "color": "#38bdf8",
+        "lines": [
+          "Renuévame, Señor Jesús,",
+          "Ya no quiero ser igual.",
+          "Renuévame, Señor Jesús,",
+          "Pon en mí tu corazón."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Porque todo lo que hay dentro de mí",
+          "Necesita ser cambiado, Señor.",
+          "Porque todo lo que hay dentro de mi corazón",
+          "Necesita más de Ti."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-24",
+    "numero": 24,
+    "title": "Ante Tu Altar",
+    "author": "Bethel Music / Jenn Johnson",
+    "key": "G",
+    "tempo": 128,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Te amo, Dios, tu gracia nunca falla,",
+          "En tus manos todos mis días están.",
+          "Desde el despertar hasta el anochecer",
+          "Yo cantaré de la bondad de Dios."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "En mi vida has sido bueno,",
+          "En mi vida has sido tan, tan fiel.",
+          "Con cada aliento que me das",
+          "Yo cantaré de la bondad de Dios."
+        ]
+      },
+      {
+        "type": "bridge",
+        "label": "Puente",
+        "color": "#c084fc",
+        "lines": [
+          "Tu bondad me sigue, me sigue a donde voy,",
+          "Tu bondad me sigue, me sigue a donde voy.",
+          "Mi vida te entrego, me rindo ante Ti,",
+          "Tu bondad me sigue, me sigue a donde voy."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-25",
+    "numero": 25,
+    "title": "Aquí Hay Libertad",
+    "author": "Danny Berríos",
+    "key": "C",
+    "tempo": 68,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Dios no rechaza oración, la oración es alimento.",
+          "Nunca vi un justo desamparado, ni su descendencia mendigar pan.",
+          "Si estás pasando por pruebas, levanta tus manos y adora."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Alaba a Dios, alaba a Dios,",
+          "Si lloras, alaba; si sufres, alaba.",
+          "Tu alabanza moverá la mano de Dios,",
+          "Alaba a Dios, alaba a Dios."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-26",
+    "numero": 26,
+    "title": "Así Como David Danzaba",
+    "author": "Miel San Marcos ft. Christine D'Clario",
+    "key": "D",
+    "tempo": 72,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa",
+        "color": "#38bdf8",
+        "lines": [
+          "A tus pies arde mi corazón,",
+          "A tus pies entrego lo que soy.",
+          "Es el lugar de mi seguridad,",
+          "Donde nadie me puede señalar."
+        ]
+      },
+      {
+        "type": "bridge",
+        "label": "Pre-Coro",
+        "color": "#34d399",
+        "lines": [
+          "Me perdonaste, me acercaste a tu presencia,",
+          "Me levantaste, hoy me postro a adorarte."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "No hay lugar más alto, más grande,",
+          "Que estar a tus pies, que estar a tus pies.",
+          "Y aquí permaneceré, postrado a tus pies."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-27",
+    "numero": 27,
+    "title": "Asombroso Dios",
+    "author": "Phil Wickham",
+    "key": "E",
+    "tempo": 85,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "¿Quién rompe el poder del pecado y la maldad?",
+          "Su amor es fuerte y poderoso.",
+          "El Rey de gloria, el Rey de majestad."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Gracia sublime es, perfecto es tu amor.",
+          "Tomaste mi lugar, cargaste con mi cruz.",
+          "Tu vida diste allí, libre soy por Ti.",
+          "Jesús, te adoro por lo que hiciste en mí."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-28",
+    "numero": 28,
+    "title": "Atrae Mi Corazón",
+    "author": "Kari Jobe / Gateway Worship",
+    "key": "A",
+    "tempo": 110,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Digno es el Cordero santo,",
+          "Santo, santo es Él.",
+          "Levantamos nuestra voz en alabanza,",
+          "Al que en el trono está."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Santo, santo, santo es el Señor Dios Todopoderoso,",
+          "Quien fue, quien es y quien vendrá.",
+          "La creación te canta, gloria al Rey de reyes,",
+          "Tú eres mi todo y yo te adoraré."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-29",
+    "numero": 29,
+    "title": "Bendeciré al Señor",
+    "author": "Sinach",
+    "key": "F",
+    "tempo": 128,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa",
+        "color": "#38bdf8",
+        "lines": [
+          "Aquí estás, te vemos mover, te adoraré, te adoraré.",
+          "Aquí estás, obrando en mí, te adoraré, te adoraré."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Milagroso, abres camino, cumples promesas,",
+          "Luz en tinieblas, mi Dios, así eres Tú."
+        ]
+      },
+      {
+        "type": "bridge",
+        "label": "Puente",
+        "color": "#c084fc",
+        "lines": [
+          "Aunque no pueda ver estás obrando,",
+          "Aunque no pueda ver estás obrando,",
+          "Siempre estás, siempre estás obrando."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-30",
+    "numero": 30,
+    "title": "Bendito Sea el Señor",
+    "author": "Jesús Adrián Romero",
+    "key": "G",
+    "tempo": 68,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Cansado del camino, sediento de Ti,",
+          "Un desierto he cruzado, sin fuerzas he quedado,",
+          "Vengo a Ti."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Sumérgeme en el río de tu Espíritu,",
+          "Necesito refrescar este seco corazón,",
+          "Sediento de Ti, sumérgeme."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-31",
+    "numero": 31,
+    "title": "Bueno Es Alabarte",
+    "author": "Carl Boberg / Stuart K. Hine",
+    "key": "C",
+    "tempo": 72,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Señor, mi Dios, al contemplar los cielos,",
+          "El firmamento y las estrellas mil,",
+          "Al oír tu voz en los potentes truenos",
+          "Y ver brillar el sol en su cenit."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Mi corazón entona la canción:",
+          "¡Cuán grande es Él! ¡Cuán grande es Él!",
+          "Mi corazón entona la canción:",
+          "¡Cuán grande es Él! ¡Cuán grande es Él!"
+        ]
+      },
+      {
+        "type": "verse",
+        "label": "Estrofa 2",
+        "color": "#38bdf8",
+        "lines": [
+          "Al recorrer los montes y los valles",
+          "Y ver las bellas flores al pasar,",
+          "Al escuchar el canto de las aves",
+          "Y el murmurar del claro manantial."
+        ]
+      },
+      {
+        "type": "verse",
+        "label": "Estrofa 3",
+        "color": "#38bdf8",
+        "lines": [
+          "Cuando recuerdo del amor divino,",
+          "Que desde el cielo al Salvador envió,",
+          "Aquel Jesús que por salvarme vino",
+          "Y en una cruz por mí murió."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-32",
+    "numero": 32,
+    "title": "Cada Día",
+    "author": "Marcos Witt",
+    "key": "D",
+    "tempo": 85,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Tu fidelidad es grande,",
+          "Tu fidelidad incomparable es,",
+          "Nadie como Tú, bendito Dios,",
+          "Grande es tu fidelidad."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Tu fidelidad es grande,",
+          "Tu fidelidad incomparable es,",
+          "Nadie como Tú, bendito Dios,",
+          "Grande es tu fidelidad."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-33",
+    "numero": 33,
+    "title": "Cadena de Coros Pentecostales",
+    "author": "Marcos Witt",
+    "key": "E",
+    "tempo": 110,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa",
+        "color": "#38bdf8",
+        "lines": [
+          "Renuévame, Señor Jesús,",
+          "Ya no quiero ser igual.",
+          "Renuévame, Señor Jesús,",
+          "Pon en mí tu corazón."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Porque todo lo que hay dentro de mí",
+          "Necesita ser cambiado, Señor.",
+          "Porque todo lo que hay dentro de mi corazón",
+          "Necesita más de Ti."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-34",
+    "numero": 34,
+    "title": "Cambia Mi Corazón",
+    "author": "Bethel Music / Jenn Johnson",
+    "key": "A",
+    "tempo": 128,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Te amo, Dios, tu gracia nunca falla,",
+          "En tus manos todos mis días están.",
+          "Desde el despertar hasta el anochecer",
+          "Yo cantaré de la bondad de Dios."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "En mi vida has sido bueno,",
+          "En mi vida has sido tan, tan fiel.",
+          "Con cada aliento que me das",
+          "Yo cantaré de la bondad de Dios."
+        ]
+      },
+      {
+        "type": "bridge",
+        "label": "Puente",
+        "color": "#c084fc",
+        "lines": [
+          "Tu bondad me sigue, me sigue a donde voy,",
+          "Tu bondad me sigue, me sigue a donde voy.",
+          "Mi vida te entrego, me rindo ante Ti,",
+          "Tu bondad me sigue, me sigue a donde voy."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-35",
+    "numero": 35,
+    "title": "Caminando en la Luz",
+    "author": "Danny Berríos",
+    "key": "F",
+    "tempo": 68,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Dios no rechaza oración, la oración es alimento.",
+          "Nunca vi un justo desamparado, ni su descendencia mendigar pan.",
+          "Si estás pasando por pruebas, levanta tus manos y adora."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Alaba a Dios, alaba a Dios,",
+          "Si lloras, alaba; si sufres, alaba.",
+          "Tu alabanza moverá la mano de Dios,",
+          "Alaba a Dios, alaba a Dios."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-36",
+    "numero": 36,
+    "title": "Cantaré de Tu Amor",
+    "author": "Miel San Marcos ft. Christine D'Clario",
+    "key": "G",
+    "tempo": 72,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa",
+        "color": "#38bdf8",
+        "lines": [
+          "A tus pies arde mi corazón,",
+          "A tus pies entrego lo que soy.",
+          "Es el lugar de mi seguridad,",
+          "Donde nadie me puede señalar."
+        ]
+      },
+      {
+        "type": "bridge",
+        "label": "Pre-Coro",
+        "color": "#34d399",
+        "lines": [
+          "Me perdonaste, me acercaste a tu presencia,",
+          "Me levantaste, hoy me postro a adorarte."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "No hay lugar más alto, más grande,",
+          "Que estar a tus pies, que estar a tus pies.",
+          "Y aquí permaneceré, postrado a tus pies."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-37",
+    "numero": 37,
+    "title": "Cara a Cara",
+    "author": "Phil Wickham",
+    "key": "C",
+    "tempo": 85,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "¿Quién rompe el poder del pecado y la maldad?",
+          "Su amor es fuerte y poderoso.",
+          "El Rey de gloria, el Rey de majestad."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Gracia sublime es, perfecto es tu amor.",
+          "Tomaste mi lugar, cargaste con mi cruz.",
+          "Tu vida diste allí, libre soy por Ti.",
+          "Jesús, te adoro por lo que hiciste en mí."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-38",
+    "numero": 38,
+    "title": "Castillo Fuerte",
+    "author": "Kari Jobe / Gateway Worship",
+    "key": "D",
+    "tempo": 110,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Digno es el Cordero santo,",
+          "Santo, santo es Él.",
+          "Levantamos nuestra voz en alabanza,",
+          "Al que en el trono está."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Santo, santo, santo es el Señor Dios Todopoderoso,",
+          "Quien fue, quien es y quien vendrá.",
+          "La creación te canta, gloria al Rey de reyes,",
+          "Tú eres mi todo y yo te adoraré."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-39",
+    "numero": 39,
+    "title": "Cerca de Ti",
+    "author": "Sinach",
+    "key": "E",
+    "tempo": 128,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa",
+        "color": "#38bdf8",
+        "lines": [
+          "Aquí estás, te vemos mover, te adoraré, te adoraré.",
+          "Aquí estás, obrando en mí, te adoraré, te adoraré."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Milagroso, abres camino, cumples promesas,",
+          "Luz en tinieblas, mi Dios, así eres Tú."
+        ]
+      },
+      {
+        "type": "bridge",
+        "label": "Puente",
+        "color": "#c084fc",
+        "lines": [
+          "Aunque no pueda ver estás obrando,",
+          "Aunque no pueda ver estás obrando,",
+          "Siempre estás, siempre estás obrando."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-40",
+    "numero": 40,
+    "title": "Clama a Mí",
+    "author": "Jesús Adrián Romero",
+    "key": "A",
+    "tempo": 68,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Cansado del camino, sediento de Ti,",
+          "Un desierto he cruzado, sin fuerzas he quedado,",
+          "Vengo a Ti."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Sumérgeme en el río de tu Espíritu,",
+          "Necesito refrescar este seco corazón,",
+          "Sediento de Ti, sumérgeme."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-41",
+    "numero": 41,
+    "title": "Como el Ciervo",
+    "author": "Carl Boberg / Stuart K. Hine",
+    "key": "F",
+    "tempo": 72,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Señor, mi Dios, al contemplar los cielos,",
+          "El firmamento y las estrellas mil,",
+          "Al oír tu voz en los potentes truenos",
+          "Y ver brillar el sol en su cenit."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Mi corazón entona la canción:",
+          "¡Cuán grande es Él! ¡Cuán grande es Él!",
+          "Mi corazón entona la canción:",
+          "¡Cuán grande es Él! ¡Cuán grande es Él!"
+        ]
+      },
+      {
+        "type": "verse",
+        "label": "Estrofa 2",
+        "color": "#38bdf8",
+        "lines": [
+          "Al recorrer los montes y los valles",
+          "Y ver las bellas flores al pasar,",
+          "Al escuchar el canto de las aves",
+          "Y el murmurar del claro manantial."
+        ]
+      },
+      {
+        "type": "verse",
+        "label": "Estrofa 3",
+        "color": "#38bdf8",
+        "lines": [
+          "Cuando recuerdo del amor divino,",
+          "Que desde el cielo al Salvador envió,",
+          "Aquel Jesús que por salvarme vino",
+          "Y en una cruz por mí murió."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-42",
+    "numero": 42,
+    "title": "Como la Brisa",
+    "author": "Marcos Witt",
+    "key": "G",
+    "tempo": 85,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Tu fidelidad es grande,",
+          "Tu fidelidad incomparable es,",
+          "Nadie como Tú, bendito Dios,",
+          "Grande es tu fidelidad."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Tu fidelidad es grande,",
+          "Tu fidelidad incomparable es,",
+          "Nadie como Tú, bendito Dios,",
+          "Grande es tu fidelidad."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-43",
+    "numero": 43,
+    "title": "Con Mi Dios",
+    "author": "Marcos Witt",
+    "key": "C",
+    "tempo": 110,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa",
+        "color": "#38bdf8",
+        "lines": [
+          "Renuévame, Señor Jesús,",
+          "Ya no quiero ser igual.",
+          "Renuévame, Señor Jesús,",
+          "Pon en mí tu corazón."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Porque todo lo que hay dentro de mí",
+          "Necesita ser cambiado, Señor.",
+          "Porque todo lo que hay dentro de mi corazón",
+          "Necesita más de Ti."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-44",
+    "numero": 44,
+    "title": "Con Mis Manos Levantadas",
+    "author": "Bethel Music / Jenn Johnson",
+    "key": "D",
+    "tempo": 128,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Te amo, Dios, tu gracia nunca falla,",
+          "En tus manos todos mis días están.",
+          "Desde el despertar hasta el anochecer",
+          "Yo cantaré de la bondad de Dios."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "En mi vida has sido bueno,",
+          "En mi vida has sido tan, tan fiel.",
+          "Con cada aliento que me das",
+          "Yo cantaré de la bondad de Dios."
+        ]
+      },
+      {
+        "type": "bridge",
+        "label": "Puente",
+        "color": "#c084fc",
+        "lines": [
+          "Tu bondad me sigue, me sigue a donde voy,",
+          "Tu bondad me sigue, me sigue a donde voy.",
+          "Mi vida te entrego, me rindo ante Ti,",
+          "Tu bondad me sigue, me sigue a donde voy."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-45",
+    "numero": 45,
+    "title": "Con Óleo de Alegría",
+    "author": "Danny Berríos",
+    "key": "E",
+    "tempo": 68,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Dios no rechaza oración, la oración es alimento.",
+          "Nunca vi un justo desamparado, ni su descendencia mendigar pan.",
+          "Si estás pasando por pruebas, levanta tus manos y adora."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Alaba a Dios, alaba a Dios,",
+          "Si lloras, alaba; si sufres, alaba.",
+          "Tu alabanza moverá la mano de Dios,",
+          "Alaba a Dios, alaba a Dios."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-46",
+    "numero": 46,
+    "title": "Con Todo Mi Ser",
+    "author": "Miel San Marcos ft. Christine D'Clario",
+    "key": "A",
+    "tempo": 72,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa",
+        "color": "#38bdf8",
+        "lines": [
+          "A tus pies arde mi corazón,",
+          "A tus pies entrego lo que soy.",
+          "Es el lugar de mi seguridad,",
+          "Donde nadie me puede señalar."
+        ]
+      },
+      {
+        "type": "bridge",
+        "label": "Pre-Coro",
+        "color": "#34d399",
+        "lines": [
+          "Me perdonaste, me acercaste a tu presencia,",
+          "Me levantaste, hoy me postro a adorarte."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "No hay lugar más alto, más grande,",
+          "Que estar a tus pies, que estar a tus pies.",
+          "Y aquí permaneceré, postrado a tus pies."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-47",
+    "numero": 47,
+    "title": "Cordero y León",
+    "author": "Phil Wickham",
+    "key": "F",
+    "tempo": 85,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "¿Quién rompe el poder del pecado y la maldad?",
+          "Su amor es fuerte y poderoso.",
+          "El Rey de gloria, el Rey de majestad."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Gracia sublime es, perfecto es tu amor.",
+          "Tomaste mi lugar, cargaste con mi cruz.",
+          "Tu vida diste allí, libre soy por Ti.",
+          "Jesús, te adoro por lo que hiciste en mí."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-48",
+    "numero": 48,
+    "title": "Coronadle Rey",
+    "author": "Kari Jobe / Gateway Worship",
+    "key": "G",
+    "tempo": 110,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Digno es el Cordero santo,",
+          "Santo, santo es Él.",
+          "Levantamos nuestra voz en alabanza,",
+          "Al que en el trono está."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Santo, santo, santo es el Señor Dios Todopoderoso,",
+          "Quien fue, quien es y quien vendrá.",
+          "La creación te canta, gloria al Rey de reyes,",
+          "Tú eres mi todo y yo te adoraré."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-49",
+    "numero": 49,
+    "title": "Cristo Es Mi Señor",
+    "author": "Sinach",
+    "key": "C",
+    "tempo": 128,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa",
+        "color": "#38bdf8",
+        "lines": [
+          "Aquí estás, te vemos mover, te adoraré, te adoraré.",
+          "Aquí estás, obrando en mí, te adoraré, te adoraré."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Milagroso, abres camino, cumples promesas,",
+          "Luz en tinieblas, mi Dios, así eres Tú."
+        ]
+      },
+      {
+        "type": "bridge",
+        "label": "Puente",
+        "color": "#c084fc",
+        "lines": [
+          "Aunque no pueda ver estás obrando,",
+          "Aunque no pueda ver estás obrando,",
+          "Siempre estás, siempre estás obrando."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-50",
+    "numero": 50,
+    "title": "Cristo Reina",
+    "author": "Jesús Adrián Romero",
+    "key": "D",
+    "tempo": 68,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Cansado del camino, sediento de Ti,",
+          "Un desierto he cruzado, sin fuerzas he quedado,",
+          "Vengo a Ti."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Sumérgeme en el río de tu Espíritu,",
+          "Necesito refrescar este seco corazón,",
+          "Sediento de Ti, sumérgeme."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-51",
+    "numero": 51,
+    "title": "Cristo Te Exalto",
+    "author": "Carl Boberg / Stuart K. Hine",
+    "key": "E",
+    "tempo": 72,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Señor, mi Dios, al contemplar los cielos,",
+          "El firmamento y las estrellas mil,",
+          "Al oír tu voz en los potentes truenos",
+          "Y ver brillar el sol en su cenit."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Mi corazón entona la canción:",
+          "¡Cuán grande es Él! ¡Cuán grande es Él!",
+          "Mi corazón entona la canción:",
+          "¡Cuán grande es Él! ¡Cuán grande es Él!"
+        ]
+      },
+      {
+        "type": "verse",
+        "label": "Estrofa 2",
+        "color": "#38bdf8",
+        "lines": [
+          "Al recorrer los montes y los valles",
+          "Y ver las bellas flores al pasar,",
+          "Al escuchar el canto de las aves",
+          "Y el murmurar del claro manantial."
+        ]
+      },
+      {
+        "type": "verse",
+        "label": "Estrofa 3",
+        "color": "#38bdf8",
+        "lines": [
+          "Cuando recuerdo del amor divino,",
+          "Que desde el cielo al Salvador envió,",
+          "Aquel Jesús que por salvarme vino",
+          "Y en una cruz por mí murió."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-52",
+    "numero": 52,
+    "title": "Cristo Vive",
+    "author": "Marcos Witt",
+    "key": "A",
+    "tempo": 85,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Tu fidelidad es grande,",
+          "Tu fidelidad incomparable es,",
+          "Nadie como Tú, bendito Dios,",
+          "Grande es tu fidelidad."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Tu fidelidad es grande,",
+          "Tu fidelidad incomparable es,",
+          "Nadie como Tú, bendito Dios,",
+          "Grande es tu fidelidad."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-53",
+    "numero": 53,
+    "title": "Cristo Yo Te Amo",
+    "author": "Marcos Witt",
+    "key": "F",
+    "tempo": 110,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa",
+        "color": "#38bdf8",
+        "lines": [
+          "Renuévame, Señor Jesús,",
+          "Ya no quiero ser igual.",
+          "Renuévame, Señor Jesús,",
+          "Pon en mí tu corazón."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Porque todo lo que hay dentro de mí",
+          "Necesita ser cambiado, Señor.",
+          "Porque todo lo que hay dentro de mi corazón",
+          "Necesita más de Ti."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-54",
+    "numero": 54,
+    "title": "Cuan Amor",
+    "author": "Bethel Music / Jenn Johnson",
+    "key": "G",
+    "tempo": 128,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Te amo, Dios, tu gracia nunca falla,",
+          "En tus manos todos mis días están.",
+          "Desde el despertar hasta el anochecer",
+          "Yo cantaré de la bondad de Dios."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "En mi vida has sido bueno,",
+          "En mi vida has sido tan, tan fiel.",
+          "Con cada aliento que me das",
+          "Yo cantaré de la bondad de Dios."
+        ]
+      },
+      {
+        "type": "bridge",
+        "label": "Puente",
+        "color": "#c084fc",
+        "lines": [
+          "Tu bondad me sigue, me sigue a donde voy,",
+          "Tu bondad me sigue, me sigue a donde voy.",
+          "Mi vida te entrego, me rindo ante Ti,",
+          "Tu bondad me sigue, me sigue a donde voy."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-55",
+    "numero": 55,
+    "title": "Cuan Gloriosa Será la Mañana",
+    "author": "Danny Berríos",
+    "key": "C",
+    "tempo": 68,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Dios no rechaza oración, la oración es alimento.",
+          "Nunca vi un justo desamparado, ni su descendencia mendigar pan.",
+          "Si estás pasando por pruebas, levanta tus manos y adora."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Alaba a Dios, alaba a Dios,",
+          "Si lloras, alaba; si sufres, alaba.",
+          "Tu alabanza moverá la mano de Dios,",
+          "Alaba a Dios, alaba a Dios."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-56",
+    "numero": 56,
+    "title": "Cuan Grande Es Dios",
+    "author": "Miel San Marcos ft. Christine D'Clario",
+    "key": "D",
+    "tempo": 72,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa",
+        "color": "#38bdf8",
+        "lines": [
+          "A tus pies arde mi corazón,",
+          "A tus pies entrego lo que soy.",
+          "Es el lugar de mi seguridad,",
+          "Donde nadie me puede señalar."
+        ]
+      },
+      {
+        "type": "bridge",
+        "label": "Pre-Coro",
+        "color": "#34d399",
+        "lines": [
+          "Me perdonaste, me acercaste a tu presencia,",
+          "Me levantaste, hoy me postro a adorarte."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "No hay lugar más alto, más grande,",
+          "Que estar a tus pies, que estar a tus pies.",
+          "Y aquí permaneceré, postrado a tus pies."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-57",
+    "numero": 57,
+    "title": "Dame De Beber",
+    "author": "Phil Wickham",
+    "key": "E",
+    "tempo": 85,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "¿Quién rompe el poder del pecado y la maldad?",
+          "Su amor es fuerte y poderoso.",
+          "El Rey de gloria, el Rey de majestad."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Gracia sublime es, perfecto es tu amor.",
+          "Tomaste mi lugar, cargaste con mi cruz.",
+          "Tu vida diste allí, libre soy por Ti.",
+          "Jesús, te adoro por lo que hiciste en mí."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-58",
+    "numero": 58,
+    "title": "De Gloria en Gloria",
+    "author": "Kari Jobe / Gateway Worship",
+    "key": "A",
+    "tempo": 110,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Digno es el Cordero santo,",
+          "Santo, santo es Él.",
+          "Levantamos nuestra voz en alabanza,",
+          "Al que en el trono está."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Santo, santo, santo es el Señor Dios Todopoderoso,",
+          "Quien fue, quien es y quien vendrá.",
+          "La creación te canta, gloria al Rey de reyes,",
+          "Tú eres mi todo y yo te adoraré."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-59",
+    "numero": 59,
+    "title": "De Tal Manera",
+    "author": "Sinach",
+    "key": "F",
+    "tempo": 128,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa",
+        "color": "#38bdf8",
+        "lines": [
+          "Aquí estás, te vemos mover, te adoraré, te adoraré.",
+          "Aquí estás, obrando en mí, te adoraré, te adoraré."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Milagroso, abres camino, cumples promesas,",
+          "Luz en tinieblas, mi Dios, así eres Tú."
+        ]
+      },
+      {
+        "type": "bridge",
+        "label": "Puente",
+        "color": "#c084fc",
+        "lines": [
+          "Aunque no pueda ver estás obrando,",
+          "Aunque no pueda ver estás obrando,",
+          "Siempre estás, siempre estás obrando."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-60",
+    "numero": 60,
+    "title": "Del Cielo Bajó",
+    "author": "Jesús Adrián Romero",
+    "key": "G",
+    "tempo": 68,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Cansado del camino, sediento de Ti,",
+          "Un desierto he cruzado, sin fuerzas he quedado,",
+          "Vengo a Ti."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Sumérgeme en el río de tu Espíritu,",
+          "Necesito refrescar este seco corazón,",
+          "Sediento de Ti, sumérgeme."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-61",
+    "numero": 61,
+    "title": "Delante De Tu Trono",
+    "author": "Carl Boberg / Stuart K. Hine",
+    "key": "C",
+    "tempo": 72,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Señor, mi Dios, al contemplar los cielos,",
+          "El firmamento y las estrellas mil,",
+          "Al oír tu voz en los potentes truenos",
+          "Y ver brillar el sol en su cenit."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Mi corazón entona la canción:",
+          "¡Cuán grande es Él! ¡Cuán grande es Él!",
+          "Mi corazón entona la canción:",
+          "¡Cuán grande es Él! ¡Cuán grande es Él!"
+        ]
+      },
+      {
+        "type": "verse",
+        "label": "Estrofa 2",
+        "color": "#38bdf8",
+        "lines": [
+          "Al recorrer los montes y los valles",
+          "Y ver las bellas flores al pasar,",
+          "Al escuchar el canto de las aves",
+          "Y el murmurar del claro manantial."
+        ]
+      },
+      {
+        "type": "verse",
+        "label": "Estrofa 3",
+        "color": "#38bdf8",
+        "lines": [
+          "Cuando recuerdo del amor divino,",
+          "Que desde el cielo al Salvador envió,",
+          "Aquel Jesús que por salvarme vino",
+          "Y en una cruz por mí murió."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-62",
+    "numero": 62,
+    "title": "Descansa Mi Alma",
+    "author": "Marcos Witt",
+    "key": "D",
+    "tempo": 85,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Tu fidelidad es grande,",
+          "Tu fidelidad incomparable es,",
+          "Nadie como Tú, bendito Dios,",
+          "Grande es tu fidelidad."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Tu fidelidad es grande,",
+          "Tu fidelidad incomparable es,",
+          "Nadie como Tú, bendito Dios,",
+          "Grande es tu fidelidad."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-63",
+    "numero": 63,
+    "title": "Día Tan Grande",
+    "author": "Marcos Witt",
+    "key": "E",
+    "tempo": 110,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa",
+        "color": "#38bdf8",
+        "lines": [
+          "Renuévame, Señor Jesús,",
+          "Ya no quiero ser igual.",
+          "Renuévame, Señor Jesús,",
+          "Pon en mí tu corazón."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Porque todo lo que hay dentro de mí",
+          "Necesita ser cambiado, Señor.",
+          "Porque todo lo que hay dentro de mi corazón",
+          "Necesita más de Ti."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-64",
+    "numero": 64,
+    "title": "Digno De Gloria",
+    "author": "Bethel Music / Jenn Johnson",
+    "key": "A",
+    "tempo": 128,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Te amo, Dios, tu gracia nunca falla,",
+          "En tus manos todos mis días están.",
+          "Desde el despertar hasta el anochecer",
+          "Yo cantaré de la bondad de Dios."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "En mi vida has sido bueno,",
+          "En mi vida has sido tan, tan fiel.",
+          "Con cada aliento que me das",
+          "Yo cantaré de la bondad de Dios."
+        ]
+      },
+      {
+        "type": "bridge",
+        "label": "Puente",
+        "color": "#c084fc",
+        "lines": [
+          "Tu bondad me sigue, me sigue a donde voy,",
+          "Tu bondad me sigue, me sigue a donde voy.",
+          "Mi vida te entrego, me rindo ante Ti,",
+          "Tu bondad me sigue, me sigue a donde voy."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-65",
+    "numero": 65,
+    "title": "Dios Al Mundo Amó",
+    "author": "Danny Berríos",
+    "key": "F",
+    "tempo": 68,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Dios no rechaza oración, la oración es alimento.",
+          "Nunca vi un justo desamparado, ni su descendencia mendigar pan.",
+          "Si estás pasando por pruebas, levanta tus manos y adora."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Alaba a Dios, alaba a Dios,",
+          "Si lloras, alaba; si sufres, alaba.",
+          "Tu alabanza moverá la mano de Dios,",
+          "Alaba a Dios, alaba a Dios."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-66",
+    "numero": 66,
+    "title": "Dios De Pactos",
+    "author": "Miel San Marcos ft. Christine D'Clario",
+    "key": "G",
+    "tempo": 72,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa",
+        "color": "#38bdf8",
+        "lines": [
+          "A tus pies arde mi corazón,",
+          "A tus pies entrego lo que soy.",
+          "Es el lugar de mi seguridad,",
+          "Donde nadie me puede señalar."
+        ]
+      },
+      {
+        "type": "bridge",
+        "label": "Pre-Coro",
+        "color": "#34d399",
+        "lines": [
+          "Me perdonaste, me acercaste a tu presencia,",
+          "Me levantaste, hoy me postro a adorarte."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "No hay lugar más alto, más grande,",
+          "Que estar a tus pies, que estar a tus pies.",
+          "Y aquí permaneceré, postrado a tus pies."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-67",
+    "numero": 67,
+    "title": "Dios Es Mi Refugio",
+    "author": "Phil Wickham",
+    "key": "C",
+    "tempo": 85,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "¿Quién rompe el poder del pecado y la maldad?",
+          "Su amor es fuerte y poderoso.",
+          "El Rey de gloria, el Rey de majestad."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Gracia sublime es, perfecto es tu amor.",
+          "Tomaste mi lugar, cargaste con mi cruz.",
+          "Tu vida diste allí, libre soy por Ti.",
+          "Jesús, te adoro por lo que hiciste en mí."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-68",
+    "numero": 68,
+    "title": "Dios Ha Sido Bueno",
+    "author": "Kari Jobe / Gateway Worship",
+    "key": "D",
+    "tempo": 110,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Digno es el Cordero santo,",
+          "Santo, santo es Él.",
+          "Levantamos nuestra voz en alabanza,",
+          "Al que en el trono está."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Santo, santo, santo es el Señor Dios Todopoderoso,",
+          "Quien fue, quien es y quien vendrá.",
+          "La creación te canta, gloria al Rey de reyes,",
+          "Tú eres mi todo y yo te adoraré."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-69",
+    "numero": 69,
+    "title": "Dios Incomparable",
+    "author": "Sinach",
+    "key": "E",
+    "tempo": 128,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa",
+        "color": "#38bdf8",
+        "lines": [
+          "Aquí estás, te vemos mover, te adoraré, te adoraré.",
+          "Aquí estás, obrando en mí, te adoraré, te adoraré."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Milagroso, abres camino, cumples promesas,",
+          "Luz en tinieblas, mi Dios, así eres Tú."
+        ]
+      },
+      {
+        "type": "bridge",
+        "label": "Puente",
+        "color": "#c084fc",
+        "lines": [
+          "Aunque no pueda ver estás obrando,",
+          "Aunque no pueda ver estás obrando,",
+          "Siempre estás, siempre estás obrando."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-70",
+    "numero": 70,
+    "title": "Dios Mandó a Su Hijo",
+    "author": "Jesús Adrián Romero",
+    "key": "A",
+    "tempo": 68,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Cansado del camino, sediento de Ti,",
+          "Un desierto he cruzado, sin fuerzas he quedado,",
+          "Vengo a Ti."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Sumérgeme en el río de tu Espíritu,",
+          "Necesito refrescar este seco corazón,",
+          "Sediento de Ti, sumérgeme."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-71",
+    "numero": 71,
+    "title": "Dios Nunca Falla",
+    "author": "Carl Boberg / Stuart K. Hine",
+    "key": "F",
+    "tempo": 72,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Señor, mi Dios, al contemplar los cielos,",
+          "El firmamento y las estrellas mil,",
+          "Al oír tu voz en los potentes truenos",
+          "Y ver brillar el sol en su cenit."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Mi corazón entona la canción:",
+          "¡Cuán grande es Él! ¡Cuán grande es Él!",
+          "Mi corazón entona la canción:",
+          "¡Cuán grande es Él! ¡Cuán grande es Él!"
+        ]
+      },
+      {
+        "type": "verse",
+        "label": "Estrofa 2",
+        "color": "#38bdf8",
+        "lines": [
+          "Al recorrer los montes y los valles",
+          "Y ver las bellas flores al pasar,",
+          "Al escuchar el canto de las aves",
+          "Y el murmurar del claro manantial."
+        ]
+      },
+      {
+        "type": "verse",
+        "label": "Estrofa 3",
+        "color": "#38bdf8",
+        "lines": [
+          "Cuando recuerdo del amor divino,",
+          "Que desde el cielo al Salvador envió,",
+          "Aquel Jesús que por salvarme vino",
+          "Y en una cruz por mí murió."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-72",
+    "numero": 72,
+    "title": "Dulce Refugio",
+    "author": "Marcos Witt",
+    "key": "G",
+    "tempo": 85,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Tu fidelidad es grande,",
+          "Tu fidelidad incomparable es,",
+          "Nadie como Tú, bendito Dios,",
+          "Grande es tu fidelidad."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Tu fidelidad es grande,",
+          "Tu fidelidad incomparable es,",
+          "Nadie como Tú, bendito Dios,",
+          "Grande es tu fidelidad."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-73",
+    "numero": 73,
+    "title": "El Amor De Dios",
+    "author": "Marcos Witt",
+    "key": "C",
+    "tempo": 110,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa",
+        "color": "#38bdf8",
+        "lines": [
+          "Renuévame, Señor Jesús,",
+          "Ya no quiero ser igual.",
+          "Renuévame, Señor Jesús,",
+          "Pon en mí tu corazón."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Porque todo lo que hay dentro de mí",
+          "Necesita ser cambiado, Señor.",
+          "Porque todo lo que hay dentro de mi corazón",
+          "Necesita más de Ti."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-74",
+    "numero": 74,
+    "title": "El Borde De Su Manto",
+    "author": "Bethel Music / Jenn Johnson",
+    "key": "D",
+    "tempo": 128,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Te amo, Dios, tu gracia nunca falla,",
+          "En tus manos todos mis días están.",
+          "Desde el despertar hasta el anochecer",
+          "Yo cantaré de la bondad de Dios."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "En mi vida has sido bueno,",
+          "En mi vida has sido tan, tan fiel.",
+          "Con cada aliento que me das",
+          "Yo cantaré de la bondad de Dios."
+        ]
+      },
+      {
+        "type": "bridge",
+        "label": "Puente",
+        "color": "#c084fc",
+        "lines": [
+          "Tu bondad me sigue, me sigue a donde voy,",
+          "Tu bondad me sigue, me sigue a donde voy.",
+          "Mi vida te entrego, me rindo ante Ti,",
+          "Tu bondad me sigue, me sigue a donde voy."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-75",
+    "numero": 75,
+    "title": "El Calor Del Espíritu",
+    "author": "Danny Berríos",
+    "key": "E",
+    "tempo": 68,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Dios no rechaza oración, la oración es alimento.",
+          "Nunca vi un justo desamparado, ni su descendencia mendigar pan.",
+          "Si estás pasando por pruebas, levanta tus manos y adora."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Alaba a Dios, alaba a Dios,",
+          "Si lloras, alaba; si sufres, alaba.",
+          "Tu alabanza moverá la mano de Dios,",
+          "Alaba a Dios, alaba a Dios."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-76",
+    "numero": 76,
+    "title": "El Dios Que Adoramos",
+    "author": "Miel San Marcos ft. Christine D'Clario",
+    "key": "A",
+    "tempo": 72,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa",
+        "color": "#38bdf8",
+        "lines": [
+          "A tus pies arde mi corazón,",
+          "A tus pies entrego lo que soy.",
+          "Es el lugar de mi seguridad,",
+          "Donde nadie me puede señalar."
+        ]
+      },
+      {
+        "type": "bridge",
+        "label": "Pre-Coro",
+        "color": "#34d399",
+        "lines": [
+          "Me perdonaste, me acercaste a tu presencia,",
+          "Me levantaste, hoy me postro a adorarte."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "No hay lugar más alto, más grande,",
+          "Que estar a tus pies, que estar a tus pies.",
+          "Y aquí permaneceré, postrado a tus pies."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-77",
+    "numero": 77,
+    "title": "El Es Mi Rey",
+    "author": "Phil Wickham",
+    "key": "F",
+    "tempo": 85,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "¿Quién rompe el poder del pecado y la maldad?",
+          "Su amor es fuerte y poderoso.",
+          "El Rey de gloria, el Rey de majestad."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Gracia sublime es, perfecto es tu amor.",
+          "Tomaste mi lugar, cargaste con mi cruz.",
+          "Tu vida diste allí, libre soy por Ti.",
+          "Jesús, te adoro por lo que hiciste en mí."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-78",
+    "numero": 78,
+    "title": "El Es Rey De Reyes",
+    "author": "Kari Jobe / Gateway Worship",
+    "key": "G",
+    "tempo": 110,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Digno es el Cordero santo,",
+          "Santo, santo es Él.",
+          "Levantamos nuestra voz en alabanza,",
+          "Al que en el trono está."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Santo, santo, santo es el Señor Dios Todopoderoso,",
+          "Quien fue, quien es y quien vendrá.",
+          "La creación te canta, gloria al Rey de reyes,",
+          "Tú eres mi todo y yo te adoraré."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-79",
+    "numero": 79,
+    "title": "El Gozo Del Señor",
+    "author": "Sinach",
+    "key": "C",
+    "tempo": 128,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa",
+        "color": "#38bdf8",
+        "lines": [
+          "Aquí estás, te vemos mover, te adoraré, te adoraré.",
+          "Aquí estás, obrando en mí, te adoraré, te adoraré."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Milagroso, abres camino, cumples promesas,",
+          "Luz en tinieblas, mi Dios, así eres Tú."
+        ]
+      },
+      {
+        "type": "bridge",
+        "label": "Puente",
+        "color": "#c084fc",
+        "lines": [
+          "Aunque no pueda ver estás obrando,",
+          "Aunque no pueda ver estás obrando,",
+          "Siempre estás, siempre estás obrando."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-80",
+    "numero": 80,
+    "title": "El Gran Yo Soy",
+    "author": "Jesús Adrián Romero",
+    "key": "D",
+    "tempo": 68,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Cansado del camino, sediento de Ti,",
+          "Un desierto he cruzado, sin fuerzas he quedado,",
+          "Vengo a Ti."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Sumérgeme en el río de tu Espíritu,",
+          "Necesito refrescar este seco corazón,",
+          "Sediento de Ti, sumérgeme."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-81",
+    "numero": 81,
+    "title": "El Himno De Victoria",
+    "author": "Carl Boberg / Stuart K. Hine",
+    "key": "E",
+    "tempo": 72,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Señor, mi Dios, al contemplar los cielos,",
+          "El firmamento y las estrellas mil,",
+          "Al oír tu voz en los potentes truenos",
+          "Y ver brillar el sol en su cenit."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Mi corazón entona la canción:",
+          "¡Cuán grande es Él! ¡Cuán grande es Él!",
+          "Mi corazón entona la canción:",
+          "¡Cuán grande es Él! ¡Cuán grande es Él!"
+        ]
+      },
+      {
+        "type": "verse",
+        "label": "Estrofa 2",
+        "color": "#38bdf8",
+        "lines": [
+          "Al recorrer los montes y los valles",
+          "Y ver las bellas flores al pasar,",
+          "Al escuchar el canto de las aves",
+          "Y el murmurar del claro manantial."
+        ]
+      },
+      {
+        "type": "verse",
+        "label": "Estrofa 3",
+        "color": "#38bdf8",
+        "lines": [
+          "Cuando recuerdo del amor divino,",
+          "Que desde el cielo al Salvador envió,",
+          "Aquel Jesús que por salvarme vino",
+          "Y en una cruz por mí murió."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-82",
+    "numero": 82,
+    "title": "El León De Judá",
+    "author": "Marcos Witt",
+    "key": "A",
+    "tempo": 85,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Tu fidelidad es grande,",
+          "Tu fidelidad incomparable es,",
+          "Nadie como Tú, bendito Dios,",
+          "Grande es tu fidelidad."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Tu fidelidad es grande,",
+          "Tu fidelidad incomparable es,",
+          "Nadie como Tú, bendito Dios,",
+          "Grande es tu fidelidad."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-83",
+    "numero": 83,
+    "title": "El Nombre De Jesús",
+    "author": "Marcos Witt",
+    "key": "F",
+    "tempo": 110,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa",
+        "color": "#38bdf8",
+        "lines": [
+          "Renuévame, Señor Jesús,",
+          "Ya no quiero ser igual.",
+          "Renuévame, Señor Jesús,",
+          "Pon en mí tu corazón."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Porque todo lo que hay dentro de mí",
+          "Necesita ser cambiado, Señor.",
+          "Porque todo lo que hay dentro de mi corazón",
+          "Necesita más de Ti."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-84",
+    "numero": 84,
+    "title": "El Poder De Tu Amor",
+    "author": "Bethel Music / Jenn Johnson",
+    "key": "G",
+    "tempo": 128,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Te amo, Dios, tu gracia nunca falla,",
+          "En tus manos todos mis días están.",
+          "Desde el despertar hasta el anochecer",
+          "Yo cantaré de la bondad de Dios."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "En mi vida has sido bueno,",
+          "En mi vida has sido tan, tan fiel.",
+          "Con cada aliento que me das",
+          "Yo cantaré de la bondad de Dios."
+        ]
+      },
+      {
+        "type": "bridge",
+        "label": "Puente",
+        "color": "#c084fc",
+        "lines": [
+          "Tu bondad me sigue, me sigue a donde voy,",
+          "Tu bondad me sigue, me sigue a donde voy.",
+          "Mi vida te entrego, me rindo ante Ti,",
+          "Tu bondad me sigue, me sigue a donde voy."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-85",
+    "numero": 85,
+    "title": "El Rey Te Mandó a Llamar",
+    "author": "Danny Berríos",
+    "key": "C",
+    "tempo": 68,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Dios no rechaza oración, la oración es alimento.",
+          "Nunca vi un justo desamparado, ni su descendencia mendigar pan.",
+          "Si estás pasando por pruebas, levanta tus manos y adora."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Alaba a Dios, alaba a Dios,",
+          "Si lloras, alaba; si sufres, alaba.",
+          "Tu alabanza moverá la mano de Dios,",
+          "Alaba a Dios, alaba a Dios."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-86",
+    "numero": 86,
+    "title": "El Santo De Israel",
+    "author": "Miel San Marcos ft. Christine D'Clario",
+    "key": "D",
+    "tempo": 72,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa",
+        "color": "#38bdf8",
+        "lines": [
+          "A tus pies arde mi corazón,",
+          "A tus pies entrego lo que soy.",
+          "Es el lugar de mi seguridad,",
+          "Donde nadie me puede señalar."
+        ]
+      },
+      {
+        "type": "bridge",
+        "label": "Pre-Coro",
+        "color": "#34d399",
+        "lines": [
+          "Me perdonaste, me acercaste a tu presencia,",
+          "Me levantaste, hoy me postro a adorarte."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "No hay lugar más alto, más grande,",
+          "Que estar a tus pies, que estar a tus pies.",
+          "Y aquí permaneceré, postrado a tus pies."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-87",
+    "numero": 87,
+    "title": "El Señor Es Mi Pastor",
+    "author": "Phil Wickham",
+    "key": "E",
+    "tempo": 85,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "¿Quién rompe el poder del pecado y la maldad?",
+          "Su amor es fuerte y poderoso.",
+          "El Rey de gloria, el Rey de majestad."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Gracia sublime es, perfecto es tu amor.",
+          "Tomaste mi lugar, cargaste con mi cruz.",
+          "Tu vida diste allí, libre soy por Ti.",
+          "Jesús, te adoro por lo que hiciste en mí."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-88",
+    "numero": 88,
+    "title": "El Señor Marchando Va",
+    "author": "Kari Jobe / Gateway Worship",
+    "key": "A",
+    "tempo": 110,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Digno es el Cordero santo,",
+          "Santo, santo es Él.",
+          "Levantamos nuestra voz en alabanza,",
+          "Al que en el trono está."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Santo, santo, santo es el Señor Dios Todopoderoso,",
+          "Quien fue, quien es y quien vendrá.",
+          "La creación te canta, gloria al Rey de reyes,",
+          "Tú eres mi todo y yo te adoraré."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-89",
+    "numero": 89,
+    "title": "En El Altar De Dios",
+    "author": "Sinach",
+    "key": "F",
+    "tempo": 128,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa",
+        "color": "#38bdf8",
+        "lines": [
+          "Aquí estás, te vemos mover, te adoraré, te adoraré.",
+          "Aquí estás, obrando en mí, te adoraré, te adoraré."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Milagroso, abres camino, cumples promesas,",
+          "Luz en tinieblas, mi Dios, así eres Tú."
+        ]
+      },
+      {
+        "type": "bridge",
+        "label": "Puente",
+        "color": "#c084fc",
+        "lines": [
+          "Aunque no pueda ver estás obrando,",
+          "Aunque no pueda ver estás obrando,",
+          "Siempre estás, siempre estás obrando."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-90",
+    "numero": 90,
+    "title": "En El Calvario",
+    "author": "Jesús Adrián Romero",
+    "key": "G",
+    "tempo": 68,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Cansado del camino, sediento de Ti,",
+          "Un desierto he cruzado, sin fuerzas he quedado,",
+          "Vengo a Ti."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Sumérgeme en el río de tu Espíritu,",
+          "Necesito refrescar este seco corazón,",
+          "Sediento de Ti, sumérgeme."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-91",
+    "numero": 91,
+    "title": "En El Monte Calvario",
+    "author": "Carl Boberg / Stuart K. Hine",
+    "key": "C",
+    "tempo": 72,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Señor, mi Dios, al contemplar los cielos,",
+          "El firmamento y las estrellas mil,",
+          "Al oír tu voz en los potentes truenos",
+          "Y ver brillar el sol en su cenit."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Mi corazón entona la canción:",
+          "¡Cuán grande es Él! ¡Cuán grande es Él!",
+          "Mi corazón entona la canción:",
+          "¡Cuán grande es Él! ¡Cuán grande es Él!"
+        ]
+      },
+      {
+        "type": "verse",
+        "label": "Estrofa 2",
+        "color": "#38bdf8",
+        "lines": [
+          "Al recorrer los montes y los valles",
+          "Y ver las bellas flores al pasar,",
+          "Al escuchar el canto de las aves",
+          "Y el murmurar del claro manantial."
+        ]
+      },
+      {
+        "type": "verse",
+        "label": "Estrofa 3",
+        "color": "#38bdf8",
+        "lines": [
+          "Cuando recuerdo del amor divino,",
+          "Que desde el cielo al Salvador envió,",
+          "Aquel Jesús que por salvarme vino",
+          "Y en una cruz por mí murió."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-92",
+    "numero": 92,
+    "title": "En El Nombre De Jesús",
+    "author": "Marcos Witt",
+    "key": "D",
+    "tempo": 85,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Tu fidelidad es grande,",
+          "Tu fidelidad incomparable es,",
+          "Nadie como Tú, bendito Dios,",
+          "Grande es tu fidelidad."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Tu fidelidad es grande,",
+          "Tu fidelidad incomparable es,",
+          "Nadie como Tú, bendito Dios,",
+          "Grande es tu fidelidad."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-93",
+    "numero": 93,
+    "title": "En La Casa De Mi Padre",
+    "author": "Marcos Witt",
+    "key": "E",
+    "tempo": 110,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa",
+        "color": "#38bdf8",
+        "lines": [
+          "Renuévame, Señor Jesús,",
+          "Ya no quiero ser igual.",
+          "Renuévame, Señor Jesús,",
+          "Pon en mí tu corazón."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Porque todo lo que hay dentro de mí",
+          "Necesita ser cambiado, Señor.",
+          "Porque todo lo que hay dentro de mi corazón",
+          "Necesita más de Ti."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-94",
+    "numero": 94,
+    "title": "En La Cruz",
+    "author": "Bethel Music / Jenn Johnson",
+    "key": "A",
+    "tempo": 128,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Te amo, Dios, tu gracia nunca falla,",
+          "En tus manos todos mis días están.",
+          "Desde el despertar hasta el anochecer",
+          "Yo cantaré de la bondad de Dios."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "En mi vida has sido bueno,",
+          "En mi vida has sido tan, tan fiel.",
+          "Con cada aliento que me das",
+          "Yo cantaré de la bondad de Dios."
+        ]
+      },
+      {
+        "type": "bridge",
+        "label": "Puente",
+        "color": "#c084fc",
+        "lines": [
+          "Tu bondad me sigue, me sigue a donde voy,",
+          "Tu bondad me sigue, me sigue a donde voy.",
+          "Mi vida te entrego, me rindo ante Ti,",
+          "Tu bondad me sigue, me sigue a donde voy."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-95",
+    "numero": 95,
+    "title": "En Los Montes, En Los Valles",
+    "author": "Danny Berríos",
+    "key": "F",
+    "tempo": 68,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Dios no rechaza oración, la oración es alimento.",
+          "Nunca vi un justo desamparado, ni su descendencia mendigar pan.",
+          "Si estás pasando por pruebas, levanta tus manos y adora."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Alaba a Dios, alaba a Dios,",
+          "Si lloras, alaba; si sufres, alaba.",
+          "Tu alabanza moverá la mano de Dios,",
+          "Alaba a Dios, alaba a Dios."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-96",
+    "numero": 96,
+    "title": "En Presencia De Jehová",
+    "author": "Miel San Marcos ft. Christine D'Clario",
+    "key": "G",
+    "tempo": 72,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa",
+        "color": "#38bdf8",
+        "lines": [
+          "A tus pies arde mi corazón,",
+          "A tus pies entrego lo que soy.",
+          "Es el lugar de mi seguridad,",
+          "Donde nadie me puede señalar."
+        ]
+      },
+      {
+        "type": "bridge",
+        "label": "Pre-Coro",
+        "color": "#34d399",
+        "lines": [
+          "Me perdonaste, me acercaste a tu presencia,",
+          "Me levantaste, hoy me postro a adorarte."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "No hay lugar más alto, más grande,",
+          "Que estar a tus pies, que estar a tus pies.",
+          "Y aquí permaneceré, postrado a tus pies."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-97",
+    "numero": 97,
+    "title": "Enciende Una Luz",
+    "author": "Phil Wickham",
+    "key": "C",
+    "tempo": 85,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "¿Quién rompe el poder del pecado y la maldad?",
+          "Su amor es fuerte y poderoso.",
+          "El Rey de gloria, el Rey de majestad."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Gracia sublime es, perfecto es tu amor.",
+          "Tomaste mi lugar, cargaste con mi cruz.",
+          "Tu vida diste allí, libre soy por Ti.",
+          "Jesús, te adoro por lo que hiciste en mí."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-98",
+    "numero": 98,
+    "title": "Entra En La Presencia",
+    "author": "Kari Jobe / Gateway Worship",
+    "key": "D",
+    "tempo": 110,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Digno es el Cordero santo,",
+          "Santo, santo es Él.",
+          "Levantamos nuestra voz en alabanza,",
+          "Al que en el trono está."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Santo, santo, santo es el Señor Dios Todopoderoso,",
+          "Quien fue, quien es y quien vendrá.",
+          "La creación te canta, gloria al Rey de reyes,",
+          "Tú eres mi todo y yo te adoraré."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-99",
+    "numero": 99,
+    "title": "Eres Bendito",
+    "author": "Sinach",
+    "key": "E",
+    "tempo": 128,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa",
+        "color": "#38bdf8",
+        "lines": [
+          "Aquí estás, te vemos mover, te adoraré, te adoraré.",
+          "Aquí estás, obrando en mí, te adoraré, te adoraré."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Milagroso, abres camino, cumples promesas,",
+          "Luz en tinieblas, mi Dios, así eres Tú."
+        ]
+      },
+      {
+        "type": "bridge",
+        "label": "Puente",
+        "color": "#c084fc",
+        "lines": [
+          "Aunque no pueda ver estás obrando,",
+          "Aunque no pueda ver estás obrando,",
+          "Siempre estás, siempre estás obrando."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-100",
+    "numero": 100,
+    "title": "Eres Digno",
+    "author": "Jesús Adrián Romero",
+    "key": "A",
+    "tempo": 68,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Cansado del camino, sediento de Ti,",
+          "Un desierto he cruzado, sin fuerzas he quedado,",
+          "Vengo a Ti."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Sumérgeme en el río de tu Espíritu,",
+          "Necesito refrescar este seco corazón,",
+          "Sediento de Ti, sumérgeme."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-101",
+    "numero": 101,
+    "title": "Eres Mi Respirar",
+    "author": "Carl Boberg / Stuart K. Hine",
+    "key": "F",
+    "tempo": 72,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Señor, mi Dios, al contemplar los cielos,",
+          "El firmamento y las estrellas mil,",
+          "Al oír tu voz en los potentes truenos",
+          "Y ver brillar el sol en su cenit."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Mi corazón entona la canción:",
+          "¡Cuán grande es Él! ¡Cuán grande es Él!",
+          "Mi corazón entona la canción:",
+          "¡Cuán grande es Él! ¡Cuán grande es Él!"
+        ]
+      },
+      {
+        "type": "verse",
+        "label": "Estrofa 2",
+        "color": "#38bdf8",
+        "lines": [
+          "Al recorrer los montes y los valles",
+          "Y ver las bellas flores al pasar,",
+          "Al escuchar el canto de las aves",
+          "Y el murmurar del claro manantial."
+        ]
+      },
+      {
+        "type": "verse",
+        "label": "Estrofa 3",
+        "color": "#38bdf8",
+        "lines": [
+          "Cuando recuerdo del amor divino,",
+          "Que desde el cielo al Salvador envió,",
+          "Aquel Jesús que por salvarme vino",
+          "Y en una cruz por mí murió."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-102",
+    "numero": 102,
+    "title": "Eres Todopoderoso",
+    "author": "Marcos Witt",
+    "key": "G",
+    "tempo": 85,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Tu fidelidad es grande,",
+          "Tu fidelidad incomparable es,",
+          "Nadie como Tú, bendito Dios,",
+          "Grande es tu fidelidad."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Tu fidelidad es grande,",
+          "Tu fidelidad incomparable es,",
+          "Nadie como Tú, bendito Dios,",
+          "Grande es tu fidelidad."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-103",
+    "numero": 103,
+    "title": "Espíritu De Dios Llena Mi Vida",
+    "author": "Marcos Witt",
+    "key": "C",
+    "tempo": 110,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa",
+        "color": "#38bdf8",
+        "lines": [
+          "Renuévame, Señor Jesús,",
+          "Ya no quiero ser igual.",
+          "Renuévame, Señor Jesús,",
+          "Pon en mí tu corazón."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Porque todo lo que hay dentro de mí",
+          "Necesita ser cambiado, Señor.",
+          "Porque todo lo que hay dentro de mi corazón",
+          "Necesita más de Ti."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-104",
+    "numero": 104,
+    "title": "Espíritu Santo Ven",
+    "author": "Bethel Music / Jenn Johnson",
+    "key": "D",
+    "tempo": 128,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Te amo, Dios, tu gracia nunca falla,",
+          "En tus manos todos mis días están.",
+          "Desde el despertar hasta el anochecer",
+          "Yo cantaré de la bondad de Dios."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "En mi vida has sido bueno,",
+          "En mi vida has sido tan, tan fiel.",
+          "Con cada aliento que me das",
+          "Yo cantaré de la bondad de Dios."
+        ]
+      },
+      {
+        "type": "bridge",
+        "label": "Puente",
+        "color": "#c084fc",
+        "lines": [
+          "Tu bondad me sigue, me sigue a donde voy,",
+          "Tu bondad me sigue, me sigue a donde voy.",
+          "Mi vida te entrego, me rindo ante Ti,",
+          "Tu bondad me sigue, me sigue a donde voy."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-105",
+    "numero": 105,
+    "title": "Estamos Todos Unidos",
+    "author": "Danny Berríos",
+    "key": "E",
+    "tempo": 68,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Dios no rechaza oración, la oración es alimento.",
+          "Nunca vi un justo desamparado, ni su descendencia mendigar pan.",
+          "Si estás pasando por pruebas, levanta tus manos y adora."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Alaba a Dios, alaba a Dios,",
+          "Si lloras, alaba; si sufres, alaba.",
+          "Tu alabanza moverá la mano de Dios,",
+          "Alaba a Dios, alaba a Dios."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-106",
+    "numero": 106,
+    "title": "Fiesta Hay En El Corazón",
+    "author": "Miel San Marcos ft. Christine D'Clario",
+    "key": "A",
+    "tempo": 72,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa",
+        "color": "#38bdf8",
+        "lines": [
+          "A tus pies arde mi corazón,",
+          "A tus pies entrego lo que soy.",
+          "Es el lugar de mi seguridad,",
+          "Donde nadie me puede señalar."
+        ]
+      },
+      {
+        "type": "bridge",
+        "label": "Pre-Coro",
+        "color": "#34d399",
+        "lines": [
+          "Me perdonaste, me acercaste a tu presencia,",
+          "Me levantaste, hoy me postro a adorarte."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "No hay lugar más alto, más grande,",
+          "Que estar a tus pies, que estar a tus pies.",
+          "Y aquí permaneceré, postrado a tus pies."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-107",
+    "numero": 107,
+    "title": "Fuego Pentecostal",
+    "author": "Phil Wickham",
+    "key": "F",
+    "tempo": 85,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "¿Quién rompe el poder del pecado y la maldad?",
+          "Su amor es fuerte y poderoso.",
+          "El Rey de gloria, el Rey de majestad."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Gracia sublime es, perfecto es tu amor.",
+          "Tomaste mi lugar, cargaste con mi cruz.",
+          "Tu vida diste allí, libre soy por Ti.",
+          "Jesús, te adoro por lo que hiciste en mí."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-108",
+    "numero": 108,
+    "title": "Gente De Guerra",
+    "author": "Kari Jobe / Gateway Worship",
+    "key": "G",
+    "tempo": 110,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Digno es el Cordero santo,",
+          "Santo, santo es Él.",
+          "Levantamos nuestra voz en alabanza,",
+          "Al que en el trono está."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Santo, santo, santo es el Señor Dios Todopoderoso,",
+          "Quien fue, quien es y quien vendrá.",
+          "La creación te canta, gloria al Rey de reyes,",
+          "Tú eres mi todo y yo te adoraré."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-109",
+    "numero": 109,
+    "title": "Glorifícate",
+    "author": "Sinach",
+    "key": "C",
+    "tempo": 128,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa",
+        "color": "#38bdf8",
+        "lines": [
+          "Aquí estás, te vemos mover, te adoraré, te adoraré.",
+          "Aquí estás, obrando en mí, te adoraré, te adoraré."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Milagroso, abres camino, cumples promesas,",
+          "Luz en tinieblas, mi Dios, así eres Tú."
+        ]
+      },
+      {
+        "type": "bridge",
+        "label": "Puente",
+        "color": "#c084fc",
+        "lines": [
+          "Aunque no pueda ver estás obrando,",
+          "Aunque no pueda ver estás obrando,",
+          "Siempre estás, siempre estás obrando."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-110",
+    "numero": 110,
+    "title": "Glorioso Rey",
+    "author": "Jesús Adrián Romero",
+    "key": "D",
+    "tempo": 68,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Cansado del camino, sediento de Ti,",
+          "Un desierto he cruzado, sin fuerzas he quedado,",
+          "Vengo a Ti."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Sumérgeme en el río de tu Espíritu,",
+          "Necesito refrescar este seco corazón,",
+          "Sediento de Ti, sumérgeme."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-111",
+    "numero": 111,
+    "title": "Gracias Te Doy",
+    "author": "Carl Boberg / Stuart K. Hine",
+    "key": "E",
+    "tempo": 72,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Señor, mi Dios, al contemplar los cielos,",
+          "El firmamento y las estrellas mil,",
+          "Al oír tu voz en los potentes truenos",
+          "Y ver brillar el sol en su cenit."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Mi corazón entona la canción:",
+          "¡Cuán grande es Él! ¡Cuán grande es Él!",
+          "Mi corazón entona la canción:",
+          "¡Cuán grande es Él! ¡Cuán grande es Él!"
+        ]
+      },
+      {
+        "type": "verse",
+        "label": "Estrofa 2",
+        "color": "#38bdf8",
+        "lines": [
+          "Al recorrer los montes y los valles",
+          "Y ver las bellas flores al pasar,",
+          "Al escuchar el canto de las aves",
+          "Y el murmurar del claro manantial."
+        ]
+      },
+      {
+        "type": "verse",
+        "label": "Estrofa 3",
+        "color": "#38bdf8",
+        "lines": [
+          "Cuando recuerdo del amor divino,",
+          "Que desde el cielo al Salvador envió,",
+          "Aquel Jesús que por salvarme vino",
+          "Y en una cruz por mí murió."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-112",
+    "numero": 112,
+    "title": "Grande Es El Señor",
+    "author": "Marcos Witt",
+    "key": "A",
+    "tempo": 85,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Tu fidelidad es grande,",
+          "Tu fidelidad incomparable es,",
+          "Nadie como Tú, bendito Dios,",
+          "Grande es tu fidelidad."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Tu fidelidad es grande,",
+          "Tu fidelidad incomparable es,",
+          "Nadie como Tú, bendito Dios,",
+          "Grande es tu fidelidad."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-113",
+    "numero": 113,
+    "title": "Grande y Fuerte",
+    "author": "Marcos Witt",
+    "key": "F",
+    "tempo": 110,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa",
+        "color": "#38bdf8",
+        "lines": [
+          "Renuévame, Señor Jesús,",
+          "Ya no quiero ser igual.",
+          "Renuévame, Señor Jesús,",
+          "Pon en mí tu corazón."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Porque todo lo que hay dentro de mí",
+          "Necesita ser cambiado, Señor.",
+          "Porque todo lo que hay dentro de mi corazón",
+          "Necesita más de Ti."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-114",
+    "numero": 114,
+    "title": "Grandes Son Tus Maravillas",
+    "author": "Bethel Music / Jenn Johnson",
+    "key": "G",
+    "tempo": 128,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Te amo, Dios, tu gracia nunca falla,",
+          "En tus manos todos mis días están.",
+          "Desde el despertar hasta el anochecer",
+          "Yo cantaré de la bondad de Dios."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "En mi vida has sido bueno,",
+          "En mi vida has sido tan, tan fiel.",
+          "Con cada aliento que me das",
+          "Yo cantaré de la bondad de Dios."
+        ]
+      },
+      {
+        "type": "bridge",
+        "label": "Puente",
+        "color": "#c084fc",
+        "lines": [
+          "Tu bondad me sigue, me sigue a donde voy,",
+          "Tu bondad me sigue, me sigue a donde voy.",
+          "Mi vida te entrego, me rindo ante Ti,",
+          "Tu bondad me sigue, me sigue a donde voy."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-115",
+    "numero": 115,
+    "title": "Guíame",
+    "author": "Danny Berríos",
+    "key": "C",
+    "tempo": 68,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Dios no rechaza oración, la oración es alimento.",
+          "Nunca vi un justo desamparado, ni su descendencia mendigar pan.",
+          "Si estás pasando por pruebas, levanta tus manos y adora."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Alaba a Dios, alaba a Dios,",
+          "Si lloras, alaba; si sufres, alaba.",
+          "Tu alabanza moverá la mano de Dios,",
+          "Alaba a Dios, alaba a Dios."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-116",
+    "numero": 116,
+    "title": "Habla Señor A Mi Vida",
+    "author": "Miel San Marcos ft. Christine D'Clario",
+    "key": "D",
+    "tempo": 72,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa",
+        "color": "#38bdf8",
+        "lines": [
+          "A tus pies arde mi corazón,",
+          "A tus pies entrego lo que soy.",
+          "Es el lugar de mi seguridad,",
+          "Donde nadie me puede señalar."
+        ]
+      },
+      {
+        "type": "bridge",
+        "label": "Pre-Coro",
+        "color": "#34d399",
+        "lines": [
+          "Me perdonaste, me acercaste a tu presencia,",
+          "Me levantaste, hoy me postro a adorarte."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "No hay lugar más alto, más grande,",
+          "Que estar a tus pies, que estar a tus pies.",
+          "Y aquí permaneceré, postrado a tus pies."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-117",
+    "numero": 117,
+    "title": "Hacemos Hoy",
+    "author": "Phil Wickham",
+    "key": "E",
+    "tempo": 85,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "¿Quién rompe el poder del pecado y la maldad?",
+          "Su amor es fuerte y poderoso.",
+          "El Rey de gloria, el Rey de majestad."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Gracia sublime es, perfecto es tu amor.",
+          "Tomaste mi lugar, cargaste con mi cruz.",
+          "Tu vida diste allí, libre soy por Ti.",
+          "Jesús, te adoro por lo que hiciste en mí."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-118",
+    "numero": 118,
+    "title": "Halle Mi Paz",
+    "author": "Kari Jobe / Gateway Worship",
+    "key": "A",
+    "tempo": 110,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Digno es el Cordero santo,",
+          "Santo, santo es Él.",
+          "Levantamos nuestra voz en alabanza,",
+          "Al que en el trono está."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Santo, santo, santo es el Señor Dios Todopoderoso,",
+          "Quien fue, quien es y quien vendrá.",
+          "La creación te canta, gloria al Rey de reyes,",
+          "Tú eres mi todo y yo te adoraré."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-119",
+    "numero": 119,
+    "title": "Hasta El Fin",
+    "author": "Sinach",
+    "key": "F",
+    "tempo": 128,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa",
+        "color": "#38bdf8",
+        "lines": [
+          "Aquí estás, te vemos mover, te adoraré, te adoraré.",
+          "Aquí estás, obrando en mí, te adoraré, te adoraré."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Milagroso, abres camino, cumples promesas,",
+          "Luz en tinieblas, mi Dios, así eres Tú."
+        ]
+      },
+      {
+        "type": "bridge",
+        "label": "Puente",
+        "color": "#c084fc",
+        "lines": [
+          "Aunque no pueda ver estás obrando,",
+          "Aunque no pueda ver estás obrando,",
+          "Siempre estás, siempre estás obrando."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-120",
+    "numero": 120,
+    "title": "Hay Momentos Que",
+    "author": "Jesús Adrián Romero",
+    "key": "G",
+    "tempo": 68,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Cansado del camino, sediento de Ti,",
+          "Un desierto he cruzado, sin fuerzas he quedado,",
+          "Vengo a Ti."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Sumérgeme en el río de tu Espíritu,",
+          "Necesito refrescar este seco corazón,",
+          "Sediento de Ti, sumérgeme."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-121",
+    "numero": 121,
+    "title": "Hay Poder En La Sangre",
+    "author": "Carl Boberg / Stuart K. Hine",
+    "key": "C",
+    "tempo": 72,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Señor, mi Dios, al contemplar los cielos,",
+          "El firmamento y las estrellas mil,",
+          "Al oír tu voz en los potentes truenos",
+          "Y ver brillar el sol en su cenit."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Mi corazón entona la canción:",
+          "¡Cuán grande es Él! ¡Cuán grande es Él!",
+          "Mi corazón entona la canción:",
+          "¡Cuán grande es Él! ¡Cuán grande es Él!"
+        ]
+      },
+      {
+        "type": "verse",
+        "label": "Estrofa 2",
+        "color": "#38bdf8",
+        "lines": [
+          "Al recorrer los montes y los valles",
+          "Y ver las bellas flores al pasar,",
+          "Al escuchar el canto de las aves",
+          "Y el murmurar del claro manantial."
+        ]
+      },
+      {
+        "type": "verse",
+        "label": "Estrofa 3",
+        "color": "#38bdf8",
+        "lines": [
+          "Cuando recuerdo del amor divino,",
+          "Que desde el cielo al Salvador envió,",
+          "Aquel Jesús que por salvarme vino",
+          "Y en una cruz por mí murió."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-122",
+    "numero": 122,
+    "title": "Hay Una Fuente",
+    "author": "Marcos Witt",
+    "key": "D",
+    "tempo": 85,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Tu fidelidad es grande,",
+          "Tu fidelidad incomparable es,",
+          "Nadie como Tú, bendito Dios,",
+          "Grande es tu fidelidad."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Tu fidelidad es grande,",
+          "Tu fidelidad incomparable es,",
+          "Nadie como Tú, bendito Dios,",
+          "Grande es tu fidelidad."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-123",
+    "numero": 123,
+    "title": "Hay Una Senda",
+    "author": "Marcos Witt",
+    "key": "E",
+    "tempo": 110,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa",
+        "color": "#38bdf8",
+        "lines": [
+          "Renuévame, Señor Jesús,",
+          "Ya no quiero ser igual.",
+          "Renuévame, Señor Jesús,",
+          "Pon en mí tu corazón."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Porque todo lo que hay dentro de mí",
+          "Necesita ser cambiado, Señor.",
+          "Porque todo lo que hay dentro de mi corazón",
+          "Necesita más de Ti."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-124",
+    "numero": 124,
+    "title": "Heme Aquí",
+    "author": "Bethel Music / Jenn Johnson",
+    "key": "A",
+    "tempo": 128,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Te amo, Dios, tu gracia nunca falla,",
+          "En tus manos todos mis días están.",
+          "Desde el despertar hasta el anochecer",
+          "Yo cantaré de la bondad de Dios."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "En mi vida has sido bueno,",
+          "En mi vida has sido tan, tan fiel.",
+          "Con cada aliento que me das",
+          "Yo cantaré de la bondad de Dios."
+        ]
+      },
+      {
+        "type": "bridge",
+        "label": "Puente",
+        "color": "#c084fc",
+        "lines": [
+          "Tu bondad me sigue, me sigue a donde voy,",
+          "Tu bondad me sigue, me sigue a donde voy.",
+          "Mi vida te entrego, me rindo ante Ti,",
+          "Tu bondad me sigue, me sigue a donde voy."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-125",
+    "numero": 125,
+    "title": "Hermoso Nombre",
+    "author": "Danny Berríos",
+    "key": "F",
+    "tempo": 68,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Dios no rechaza oración, la oración es alimento.",
+          "Nunca vi un justo desamparado, ni su descendencia mendigar pan.",
+          "Si estás pasando por pruebas, levanta tus manos y adora."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Alaba a Dios, alaba a Dios,",
+          "Si lloras, alaba; si sufres, alaba.",
+          "Tu alabanza moverá la mano de Dios,",
+          "Alaba a Dios, alaba a Dios."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-126",
+    "numero": 126,
+    "title": "Hijo De Dios",
+    "author": "Miel San Marcos ft. Christine D'Clario",
+    "key": "G",
+    "tempo": 72,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa",
+        "color": "#38bdf8",
+        "lines": [
+          "A tus pies arde mi corazón,",
+          "A tus pies entrego lo que soy.",
+          "Es el lugar de mi seguridad,",
+          "Donde nadie me puede señalar."
+        ]
+      },
+      {
+        "type": "bridge",
+        "label": "Pre-Coro",
+        "color": "#34d399",
+        "lines": [
+          "Me perdonaste, me acercaste a tu presencia,",
+          "Me levantaste, hoy me postro a adorarte."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "No hay lugar más alto, más grande,",
+          "Que estar a tus pies, que estar a tus pies.",
+          "Y aquí permaneceré, postrado a tus pies."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-127",
+    "numero": 127,
+    "title": "Hosanna En Las Alturas",
+    "author": "Phil Wickham",
+    "key": "C",
+    "tempo": 85,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "¿Quién rompe el poder del pecado y la maldad?",
+          "Su amor es fuerte y poderoso.",
+          "El Rey de gloria, el Rey de majestad."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Gracia sublime es, perfecto es tu amor.",
+          "Tomaste mi lugar, cargaste con mi cruz.",
+          "Tu vida diste allí, libre soy por Ti.",
+          "Jesús, te adoro por lo que hiciste en mí."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-128",
+    "numero": 128,
+    "title": "Incomparable",
+    "author": "Kari Jobe / Gateway Worship",
+    "key": "D",
+    "tempo": 110,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Digno es el Cordero santo,",
+          "Santo, santo es Él.",
+          "Levantamos nuestra voz en alabanza,",
+          "Al que en el trono está."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Santo, santo, santo es el Señor Dios Todopoderoso,",
+          "Quien fue, quien es y quien vendrá.",
+          "La creación te canta, gloria al Rey de reyes,",
+          "Tú eres mi todo y yo te adoraré."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-129",
+    "numero": 129,
+    "title": "Inexplicable Amor",
+    "author": "Sinach",
+    "key": "E",
+    "tempo": 128,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa",
+        "color": "#38bdf8",
+        "lines": [
+          "Aquí estás, te vemos mover, te adoraré, te adoraré.",
+          "Aquí estás, obrando en mí, te adoraré, te adoraré."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Milagroso, abres camino, cumples promesas,",
+          "Luz en tinieblas, mi Dios, así eres Tú."
+        ]
+      },
+      {
+        "type": "bridge",
+        "label": "Puente",
+        "color": "#c084fc",
+        "lines": [
+          "Aunque no pueda ver estás obrando,",
+          "Aunque no pueda ver estás obrando,",
+          "Siempre estás, siempre estás obrando."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-130",
+    "numero": 130,
+    "title": "Jehová Es Mi Guerrero",
+    "author": "Jesús Adrián Romero",
+    "key": "A",
+    "tempo": 68,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Cansado del camino, sediento de Ti,",
+          "Un desierto he cruzado, sin fuerzas he quedado,",
+          "Vengo a Ti."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Sumérgeme en el río de tu Espíritu,",
+          "Necesito refrescar este seco corazón,",
+          "Sediento de Ti, sumérgeme."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-131",
+    "numero": 131,
+    "title": "Jehová Jireh",
+    "author": "Carl Boberg / Stuart K. Hine",
+    "key": "F",
+    "tempo": 72,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Señor, mi Dios, al contemplar los cielos,",
+          "El firmamento y las estrellas mil,",
+          "Al oír tu voz en los potentes truenos",
+          "Y ver brillar el sol en su cenit."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Mi corazón entona la canción:",
+          "¡Cuán grande es Él! ¡Cuán grande es Él!",
+          "Mi corazón entona la canción:",
+          "¡Cuán grande es Él! ¡Cuán grande es Él!"
+        ]
+      },
+      {
+        "type": "verse",
+        "label": "Estrofa 2",
+        "color": "#38bdf8",
+        "lines": [
+          "Al recorrer los montes y los valles",
+          "Y ver las bellas flores al pasar,",
+          "Al escuchar el canto de las aves",
+          "Y el murmurar del claro manantial."
+        ]
+      },
+      {
+        "type": "verse",
+        "label": "Estrofa 3",
+        "color": "#38bdf8",
+        "lines": [
+          "Cuando recuerdo del amor divino,",
+          "Que desde el cielo al Salvador envió,",
+          "Aquel Jesús que por salvarme vino",
+          "Y en una cruz por mí murió."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-132",
+    "numero": 132,
+    "title": "Jesucristo Es El Señor",
+    "author": "Marcos Witt",
+    "key": "G",
+    "tempo": 85,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Tu fidelidad es grande,",
+          "Tu fidelidad incomparable es,",
+          "Nadie como Tú, bendito Dios,",
+          "Grande es tu fidelidad."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Tu fidelidad es grande,",
+          "Tu fidelidad incomparable es,",
+          "Nadie como Tú, bendito Dios,",
+          "Grande es tu fidelidad."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-133",
+    "numero": 133,
+    "title": "Jesús Es El Señor",
+    "author": "Marcos Witt",
+    "key": "C",
+    "tempo": 110,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa",
+        "color": "#38bdf8",
+        "lines": [
+          "Renuévame, Señor Jesús,",
+          "Ya no quiero ser igual.",
+          "Renuévame, Señor Jesús,",
+          "Pon en mí tu corazón."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Porque todo lo que hay dentro de mí",
+          "Necesita ser cambiado, Señor.",
+          "Porque todo lo que hay dentro de mi corazón",
+          "Necesita más de Ti."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-134",
+    "numero": 134,
+    "title": "Jesús Mi Fiel Amigo",
+    "author": "Bethel Music / Jenn Johnson",
+    "key": "D",
+    "tempo": 128,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Te amo, Dios, tu gracia nunca falla,",
+          "En tus manos todos mis días están.",
+          "Desde el despertar hasta el anochecer",
+          "Yo cantaré de la bondad de Dios."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "En mi vida has sido bueno,",
+          "En mi vida has sido tan, tan fiel.",
+          "Con cada aliento que me das",
+          "Yo cantaré de la bondad de Dios."
+        ]
+      },
+      {
+        "type": "bridge",
+        "label": "Puente",
+        "color": "#c084fc",
+        "lines": [
+          "Tu bondad me sigue, me sigue a donde voy,",
+          "Tu bondad me sigue, me sigue a donde voy.",
+          "Mi vida te entrego, me rindo ante Ti,",
+          "Tu bondad me sigue, me sigue a donde voy."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-135",
+    "numero": 135,
+    "title": "La Cosecha",
+    "author": "Danny Berríos",
+    "key": "E",
+    "tempo": 68,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Dios no rechaza oración, la oración es alimento.",
+          "Nunca vi un justo desamparado, ni su descendencia mendigar pan.",
+          "Si estás pasando por pruebas, levanta tus manos y adora."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Alaba a Dios, alaba a Dios,",
+          "Si lloras, alaba; si sufres, alaba.",
+          "Tu alabanza moverá la mano de Dios,",
+          "Alaba a Dios, alaba a Dios."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-136",
+    "numero": 136,
+    "title": "La Diestra De Dios",
+    "author": "Miel San Marcos ft. Christine D'Clario",
+    "key": "A",
+    "tempo": 72,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa",
+        "color": "#38bdf8",
+        "lines": [
+          "A tus pies arde mi corazón,",
+          "A tus pies entrego lo que soy.",
+          "Es el lugar de mi seguridad,",
+          "Donde nadie me puede señalar."
+        ]
+      },
+      {
+        "type": "bridge",
+        "label": "Pre-Coro",
+        "color": "#34d399",
+        "lines": [
+          "Me perdonaste, me acercaste a tu presencia,",
+          "Me levantaste, hoy me postro a adorarte."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "No hay lugar más alto, más grande,",
+          "Que estar a tus pies, que estar a tus pies.",
+          "Y aquí permaneceré, postrado a tus pies."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-137",
+    "numero": 137,
+    "title": "La Gloria De Dios",
+    "author": "Phil Wickham",
+    "key": "F",
+    "tempo": 85,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "¿Quién rompe el poder del pecado y la maldad?",
+          "Su amor es fuerte y poderoso.",
+          "El Rey de gloria, el Rey de majestad."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Gracia sublime es, perfecto es tu amor.",
+          "Tomaste mi lugar, cargaste con mi cruz.",
+          "Tu vida diste allí, libre soy por Ti.",
+          "Jesús, te adoro por lo que hiciste en mí."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-138",
+    "numero": 138,
+    "title": "La Niña De Tus Ojos",
+    "author": "Kari Jobe / Gateway Worship",
+    "key": "G",
+    "tempo": 110,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Digno es el Cordero santo,",
+          "Santo, santo es Él.",
+          "Levantamos nuestra voz en alabanza,",
+          "Al que en el trono está."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Santo, santo, santo es el Señor Dios Todopoderoso,",
+          "Quien fue, quien es y quien vendrá.",
+          "La creación te canta, gloria al Rey de reyes,",
+          "Tú eres mi todo y yo te adoraré."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-139",
+    "numero": 139,
+    "title": "La Tierra Canta",
+    "author": "Sinach",
+    "key": "C",
+    "tempo": 128,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa",
+        "color": "#38bdf8",
+        "lines": [
+          "Aquí estás, te vemos mover, te adoraré, te adoraré.",
+          "Aquí estás, obrando en mí, te adoraré, te adoraré."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Milagroso, abres camino, cumples promesas,",
+          "Luz en tinieblas, mi Dios, así eres Tú."
+        ]
+      },
+      {
+        "type": "bridge",
+        "label": "Puente",
+        "color": "#c084fc",
+        "lines": [
+          "Aunque no pueda ver estás obrando,",
+          "Aunque no pueda ver estás obrando,",
+          "Siempre estás, siempre estás obrando."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-140",
+    "numero": 140,
+    "title": "Levanto Mis Manos",
+    "author": "Jesús Adrián Romero",
+    "key": "D",
+    "tempo": 68,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Cansado del camino, sediento de Ti,",
+          "Un desierto he cruzado, sin fuerzas he quedado,",
+          "Vengo a Ti."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Sumérgeme en el río de tu Espíritu,",
+          "Necesito refrescar este seco corazón,",
+          "Sediento de Ti, sumérgeme."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-141",
+    "numero": 141,
+    "title": "Lléname De Ti",
+    "author": "Carl Boberg / Stuart K. Hine",
+    "key": "E",
+    "tempo": 72,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Señor, mi Dios, al contemplar los cielos,",
+          "El firmamento y las estrellas mil,",
+          "Al oír tu voz en los potentes truenos",
+          "Y ver brillar el sol en su cenit."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Mi corazón entona la canción:",
+          "¡Cuán grande es Él! ¡Cuán grande es Él!",
+          "Mi corazón entona la canción:",
+          "¡Cuán grande es Él! ¡Cuán grande es Él!"
+        ]
+      },
+      {
+        "type": "verse",
+        "label": "Estrofa 2",
+        "color": "#38bdf8",
+        "lines": [
+          "Al recorrer los montes y los valles",
+          "Y ver las bellas flores al pasar,",
+          "Al escuchar el canto de las aves",
+          "Y el murmurar del claro manantial."
+        ]
+      },
+      {
+        "type": "verse",
+        "label": "Estrofa 3",
+        "color": "#38bdf8",
+        "lines": [
+          "Cuando recuerdo del amor divino,",
+          "Que desde el cielo al Salvador envió,",
+          "Aquel Jesús que por salvarme vino",
+          "Y en una cruz por mí murió."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-142",
+    "numero": 142,
+    "title": "Lluvia De Gracia",
+    "author": "Marcos Witt",
+    "key": "A",
+    "tempo": 85,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Tu fidelidad es grande,",
+          "Tu fidelidad incomparable es,",
+          "Nadie como Tú, bendito Dios,",
+          "Grande es tu fidelidad."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Tu fidelidad es grande,",
+          "Tu fidelidad incomparable es,",
+          "Nadie como Tú, bendito Dios,",
+          "Grande es tu fidelidad."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-143",
+    "numero": 143,
+    "title": "Los Muros Caerán",
+    "author": "Marcos Witt",
+    "key": "F",
+    "tempo": 110,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa",
+        "color": "#38bdf8",
+        "lines": [
+          "Renuévame, Señor Jesús,",
+          "Ya no quiero ser igual.",
+          "Renuévame, Señor Jesús,",
+          "Pon en mí tu corazón."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Porque todo lo que hay dentro de mí",
+          "Necesita ser cambiado, Señor.",
+          "Porque todo lo que hay dentro de mi corazón",
+          "Necesita más de Ti."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-144",
+    "numero": 144,
+    "title": "Luz Y Salvación",
+    "author": "Bethel Music / Jenn Johnson",
+    "key": "G",
+    "tempo": 128,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Te amo, Dios, tu gracia nunca falla,",
+          "En tus manos todos mis días están.",
+          "Desde el despertar hasta el anochecer",
+          "Yo cantaré de la bondad de Dios."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "En mi vida has sido bueno,",
+          "En mi vida has sido tan, tan fiel.",
+          "Con cada aliento que me das",
+          "Yo cantaré de la bondad de Dios."
+        ]
+      },
+      {
+        "type": "bridge",
+        "label": "Puente",
+        "color": "#c084fc",
+        "lines": [
+          "Tu bondad me sigue, me sigue a donde voy,",
+          "Tu bondad me sigue, me sigue a donde voy.",
+          "Mi vida te entrego, me rindo ante Ti,",
+          "Tu bondad me sigue, me sigue a donde voy."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-145",
+    "numero": 145,
+    "title": "Majestad",
+    "author": "Danny Berríos",
+    "key": "C",
+    "tempo": 68,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Dios no rechaza oración, la oración es alimento.",
+          "Nunca vi un justo desamparado, ni su descendencia mendigar pan.",
+          "Si estás pasando por pruebas, levanta tus manos y adora."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Alaba a Dios, alaba a Dios,",
+          "Si lloras, alaba; si sufres, alaba.",
+          "Tu alabanza moverá la mano de Dios,",
+          "Alaba a Dios, alaba a Dios."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-146",
+    "numero": 146,
+    "title": "Manos Al Cielo",
+    "author": "Miel San Marcos ft. Christine D'Clario",
+    "key": "D",
+    "tempo": 72,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa",
+        "color": "#38bdf8",
+        "lines": [
+          "A tus pies arde mi corazón,",
+          "A tus pies entrego lo que soy.",
+          "Es el lugar de mi seguridad,",
+          "Donde nadie me puede señalar."
+        ]
+      },
+      {
+        "type": "bridge",
+        "label": "Pre-Coro",
+        "color": "#34d399",
+        "lines": [
+          "Me perdonaste, me acercaste a tu presencia,",
+          "Me levantaste, hoy me postro a adorarte."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "No hay lugar más alto, más grande,",
+          "Que estar a tus pies, que estar a tus pies.",
+          "Y aquí permaneceré, postrado a tus pies."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-147",
+    "numero": 147,
+    "title": "Maravilloso Dios",
+    "author": "Phil Wickham",
+    "key": "E",
+    "tempo": 85,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "¿Quién rompe el poder del pecado y la maldad?",
+          "Su amor es fuerte y poderoso.",
+          "El Rey de gloria, el Rey de majestad."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Gracia sublime es, perfecto es tu amor.",
+          "Tomaste mi lugar, cargaste con mi cruz.",
+          "Tu vida diste allí, libre soy por Ti.",
+          "Jesús, te adoro por lo que hiciste en mí."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-148",
+    "numero": 148,
+    "title": "Más Cerca Oh Dios De Ti",
+    "author": "Kari Jobe / Gateway Worship",
+    "key": "A",
+    "tempo": 110,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Digno es el Cordero santo,",
+          "Santo, santo es Él.",
+          "Levantamos nuestra voz en alabanza,",
+          "Al que en el trono está."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Santo, santo, santo es el Señor Dios Todopoderoso,",
+          "Quien fue, quien es y quien vendrá.",
+          "La creación te canta, gloria al Rey de reyes,",
+          "Tú eres mi todo y yo te adoraré."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-149",
+    "numero": 149,
+    "title": "Me Gozaré En Tu Presencia",
+    "author": "Sinach",
+    "key": "F",
+    "tempo": 128,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa",
+        "color": "#38bdf8",
+        "lines": [
+          "Aquí estás, te vemos mover, te adoraré, te adoraré.",
+          "Aquí estás, obrando en mí, te adoraré, te adoraré."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Milagroso, abres camino, cumples promesas,",
+          "Luz en tinieblas, mi Dios, así eres Tú."
+        ]
+      },
+      {
+        "type": "bridge",
+        "label": "Puente",
+        "color": "#c084fc",
+        "lines": [
+          "Aunque no pueda ver estás obrando,",
+          "Aunque no pueda ver estás obrando,",
+          "Siempre estás, siempre estás obrando."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-150",
+    "numero": 150,
+    "title": "Mi Copa Reboza",
+    "author": "Jesús Adrián Romero",
+    "key": "G",
+    "tempo": 68,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Cansado del camino, sediento de Ti,",
+          "Un desierto he cruzado, sin fuerzas he quedado,",
+          "Vengo a Ti."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Sumérgeme en el río de tu Espíritu,",
+          "Necesito refrescar este seco corazón,",
+          "Sediento de Ti, sumérgeme."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-151",
+    "numero": 151,
+    "title": "Mi Dios Es Real",
+    "author": "Carl Boberg / Stuart K. Hine",
+    "key": "C",
+    "tempo": 72,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Señor, mi Dios, al contemplar los cielos,",
+          "El firmamento y las estrellas mil,",
+          "Al oír tu voz en los potentes truenos",
+          "Y ver brillar el sol en su cenit."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Mi corazón entona la canción:",
+          "¡Cuán grande es Él! ¡Cuán grande es Él!",
+          "Mi corazón entona la canción:",
+          "¡Cuán grande es Él! ¡Cuán grande es Él!"
+        ]
+      },
+      {
+        "type": "verse",
+        "label": "Estrofa 2",
+        "color": "#38bdf8",
+        "lines": [
+          "Al recorrer los montes y los valles",
+          "Y ver las bellas flores al pasar,",
+          "Al escuchar el canto de las aves",
+          "Y el murmurar del claro manantial."
+        ]
+      },
+      {
+        "type": "verse",
+        "label": "Estrofa 3",
+        "color": "#38bdf8",
+        "lines": [
+          "Cuando recuerdo del amor divino,",
+          "Que desde el cielo al Salvador envió,",
+          "Aquel Jesús que por salvarme vino",
+          "Y en una cruz por mí murió."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-152",
+    "numero": 152,
+    "title": "Mi Esperanza Está En Ti",
+    "author": "Marcos Witt",
+    "key": "D",
+    "tempo": 85,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Tu fidelidad es grande,",
+          "Tu fidelidad incomparable es,",
+          "Nadie como Tú, bendito Dios,",
+          "Grande es tu fidelidad."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Tu fidelidad es grande,",
+          "Tu fidelidad incomparable es,",
+          "Nadie como Tú, bendito Dios,",
+          "Grande es tu fidelidad."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-153",
+    "numero": 153,
+    "title": "Mi Fortaleza",
+    "author": "Marcos Witt",
+    "key": "E",
+    "tempo": 110,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa",
+        "color": "#38bdf8",
+        "lines": [
+          "Renuévame, Señor Jesús,",
+          "Ya no quiero ser igual.",
+          "Renuévame, Señor Jesús,",
+          "Pon en mí tu corazón."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Porque todo lo que hay dentro de mí",
+          "Necesita ser cambiado, Señor.",
+          "Porque todo lo que hay dentro de mi corazón",
+          "Necesita más de Ti."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-154",
+    "numero": 154,
+    "title": "Mi Jesús, Mi Salvador",
+    "author": "Bethel Music / Jenn Johnson",
+    "key": "A",
+    "tempo": 128,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Te amo, Dios, tu gracia nunca falla,",
+          "En tus manos todos mis días están.",
+          "Desde el despertar hasta el anochecer",
+          "Yo cantaré de la bondad de Dios."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "En mi vida has sido bueno,",
+          "En mi vida has sido tan, tan fiel.",
+          "Con cada aliento que me das",
+          "Yo cantaré de la bondad de Dios."
+        ]
+      },
+      {
+        "type": "bridge",
+        "label": "Puente",
+        "color": "#c084fc",
+        "lines": [
+          "Tu bondad me sigue, me sigue a donde voy,",
+          "Tu bondad me sigue, me sigue a donde voy.",
+          "Mi vida te entrego, me rindo ante Ti,",
+          "Tu bondad me sigue, me sigue a donde voy."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-155",
+    "numero": 155,
+    "title": "Mi Paz Te Doy",
+    "author": "Danny Berríos",
+    "key": "F",
+    "tempo": 68,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Dios no rechaza oración, la oración es alimento.",
+          "Nunca vi un justo desamparado, ni su descendencia mendigar pan.",
+          "Si estás pasando por pruebas, levanta tus manos y adora."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Alaba a Dios, alaba a Dios,",
+          "Si lloras, alaba; si sufres, alaba.",
+          "Tu alabanza moverá la mano de Dios,",
+          "Alaba a Dios, alaba a Dios."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-156",
+    "numero": 156,
+    "title": "Mi Primer Amor",
+    "author": "Miel San Marcos ft. Christine D'Clario",
+    "key": "G",
+    "tempo": 72,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa",
+        "color": "#38bdf8",
+        "lines": [
+          "A tus pies arde mi corazón,",
+          "A tus pies entrego lo que soy.",
+          "Es el lugar de mi seguridad,",
+          "Donde nadie me puede señalar."
+        ]
+      },
+      {
+        "type": "bridge",
+        "label": "Pre-Coro",
+        "color": "#34d399",
+        "lines": [
+          "Me perdonaste, me acercaste a tu presencia,",
+          "Me levantaste, hoy me postro a adorarte."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "No hay lugar más alto, más grande,",
+          "Que estar a tus pies, que estar a tus pies.",
+          "Y aquí permaneceré, postrado a tus pies."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-157",
+    "numero": 157,
+    "title": "Mirad Cuál Amor",
+    "author": "Phil Wickham",
+    "key": "C",
+    "tempo": 85,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "¿Quién rompe el poder del pecado y la maldad?",
+          "Su amor es fuerte y poderoso.",
+          "El Rey de gloria, el Rey de majestad."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Gracia sublime es, perfecto es tu amor.",
+          "Tomaste mi lugar, cargaste con mi cruz.",
+          "Tu vida diste allí, libre soy por Ti.",
+          "Jesús, te adoro por lo que hiciste en mí."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-158",
+    "numero": 158,
+    "title": "No A Nosotros",
+    "author": "Kari Jobe / Gateway Worship",
+    "key": "D",
+    "tempo": 110,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Digno es el Cordero santo,",
+          "Santo, santo es Él.",
+          "Levantamos nuestra voz en alabanza,",
+          "Al que en el trono está."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Santo, santo, santo es el Señor Dios Todopoderoso,",
+          "Quien fue, quien es y quien vendrá.",
+          "La creación te canta, gloria al Rey de reyes,",
+          "Tú eres mi todo y yo te adoraré."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-159",
+    "numero": 159,
+    "title": "No Callaré",
+    "author": "Sinach",
+    "key": "E",
+    "tempo": 128,
+    "tags": [
+      "Adoración",
+      "Comunión"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa",
+        "color": "#38bdf8",
+        "lines": [
+          "Aquí estás, te vemos mover, te adoraré, te adoraré.",
+          "Aquí estás, obrando en mí, te adoraré, te adoraré."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Milagroso, abres camino, cumples promesas,",
+          "Luz en tinieblas, mi Dios, así eres Tú."
+        ]
+      },
+      {
+        "type": "bridge",
+        "label": "Puente",
+        "color": "#c084fc",
+        "lines": [
+          "Aunque no pueda ver estás obrando,",
+          "Aunque no pueda ver estás obrando,",
+          "Siempre estás, siempre estás obrando."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cancion-160",
+    "numero": 160,
+    "title": "No Hay Dios Tan Grande",
+    "author": "Jesús Adrián Romero",
+    "key": "A",
+    "tempo": 68,
+    "tags": [
+      "Alabanza",
+      "Júbilo"
+    ],
+    "sections": [
+      {
+        "type": "verse",
+        "label": "Estrofa 1",
+        "color": "#38bdf8",
+        "lines": [
+          "Cansado del camino, sediento de Ti,",
+          "Un desierto he cruzado, sin fuerzas he quedado,",
+          "Vengo a Ti."
+        ]
+      },
+      {
+        "type": "chorus",
+        "label": "Coro",
+        "color": "#facc15",
+        "lines": [
+          "Sumérgeme en el río de tu Espíritu,",
+          "Necesito refrescar este seco corazón,",
+          "Sediento de Ti, sumérgeme."
+        ]
+      }
+    ]
+  }
+]

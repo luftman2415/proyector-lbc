@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proyector LBC - Panel de Control</title>
+    <link rel="stylesheet" href="css/control.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div>
+                <h1>Proyector LBC</h1>
+                <small style="color: #94a3b8;">Iglesia Cristiana Cuadrangular Las Brisas</small>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <button onclick="cambiarModulo('canciones')" id="btn-mod-canciones" class="btn-version activo" style="padding: 8px 12px;">🎵 Canciones</button>
+                <button onclick="cambiarModulo('biblia')" id="btn-mod-biblia" class="btn-version" style="padding: 8px 12px;">📖 Biblia</button>
+                <button onclick="toggleBlackout()" class="btn-clear" style="padding: 8px 12px; font-size: 12px;" title="Presiona B para pantalla negra">◼️ Blackout (B)</button>
+                <button onclick="abrirProyector()" class="btn-open">🖥️ Abrir Proyector</button>
+            </div>
+        </header>
+
+        <!-- INPUT OCULTO PARA CARGA DE ARCHIVOS LOCALES (BYPASS DE CORS) -->
+        <input type="file" id="input-archivo-json" multiple accept=".json" style="display: none;" onchange="procesarArchivosJSONLocales(this.files)">
+
+        <!-- MÓDULO DE CANCIONES Y SETLISTS -->
+        <div id="seccion-canciones">
+            <div class="control-box">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                    <div>
+                        <label>🎵 Repertorio y Setlists de Culto</label>
+                        <div id="contador-canciones" style="font-size: 11px; color: #eab308; margin-top: 2px;">Cargando base de datos...</div>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button onclick="seleccionarArchivoLocalJSON()" class="btn-open" style="border-color: #38bdf8; color: #38bdf8;">📁 Cargar JSON Local</button>
+                        <button onclick="abrirModalNuevaCancion()" class="btn-open" style="border-color: var(--accent-blue); color: #fff; background: var(--accent-blue);">+ Nueva Canción</button>
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <input type="text" id="buscador-canciones" placeholder="🔍 Buscar por título, autor o número (ej: cuan grande, 23)..." oninput="filtrarCanciones()" style="flex: 1; padding: 10px; background: #0f172a; border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; color: white;">
+                    <select id="select-setlist" onchange="cambiarSetlist()" style="width: 180px;">
+                        <option value="domingo">Culto Domingo</option>
+                        <option value="miercoles">Culto Miércoles</option>
+                        <option value="sabado">Culto Sábado</option>
+                        <option value="general">Repertorio General</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="biblia-layout" style="margin-top: 15px;">
+                <div class="testamento-col">
+                    <h3>Canciones Disponibles ⭐</h3>
+                    <div id="lista-canciones" class="lista-libros"></div>
+                </div>
+                <div class="testamento-col">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <h3>Setlist del Culto Actual 📋</h3>
+                    </div>
+                    <div id="lista-setlist" class="lista-libros"></div>
+                </div>
+            </div>
+
+            <!-- Panel de Estrofas de la Canción Seleccionada -->
+            <div class="control-box" style="margin-top: 20px; background: #0f172a; padding: 15px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 6px;">
+                    <span id="cancion-titulo-activo" style="font-weight: bold; color: var(--accent-gold); font-size: 16px;">Selecciona una canción</span>
+                    <div style="display: flex; gap: 6px;">
+                        <button onclick="retrocederEstrofa()" class="btn-version" style="padding: 4px 10px;" title="Tecla Flecha Izquierda">⬅ Anterior</button>
+                        <button onclick="avanzarEstrofa()" class="btn-version" style="padding: 4px 10px;" title="Tecla Flecha Derecha">Siguiente ➡</button>
+                        <button onclick="agregarASetlistActual()" class="btn-open" style="border-color: var(--accent-gold);">⭐ Agregar al Setlist</button>
+                    </div>
+                </div>
+                <div id="bloques-estrofas" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; max-height: 250px; overflow-y: auto;">
+                    <!-- Bloques de estrofas diferenciados por color -->
+                </div>
+            </div>
+        </div>
+
+        <!-- MÓDULO BÍBLICO -->
+        <div id="seccion-biblia" style="display: none;">
+            <div class="control-box">
+                <label>📖 Selección de Versiones Bíblicas</label>
+                <div class="versiones-grid">
+                    <button class="btn-version activo" onclick="cambiarVersion('rv1960', this)">RV1960</button>
+                    <button class="btn-version" onclick="cambiarVersion('nvi', this)">NVI</button>
+                    <button class="btn-version" onclick="cambiarVersion('ntv', this)">NTV</button>
+                    <button class="btn-version" onclick="cambiarVersion('lbla', this)">LBLA</button>
+                    <button class="btn-version" onclick="cambiarVersion('dhh', this)">DHH</button>
+                    <button class="btn-version" onclick="cambiarVersion('tla', this)">TLA</button>
+                </div>
+            </div>
+
+            <div class="control-box" style="margin-top: 15px;">
+                <input type="text" id="buscador-libros" placeholder="🔍 Buscar libro por nombre (ej: salmos, juan, romanos)..." oninput="filtrarLibros()">
+            </div>
+
+            <div class="biblia-layout">
+                <div class="testamento-col">
+                    <h3>Antiguo Testamento</h3>
+                    <div id="lista-antiguo" class="lista-libros"></div>
+                </div>
+                <div class="testamento-col">
+                    <h3>Nuevo Testamento</h3>
+                    <div id="lista-nuevo" class="lista-libros"></div>
+                </div>
+            </div>
+
+            <div class="control-box" style="margin-top: 20px; background: #0f172a; padding: 15px; border-radius: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <span id="libro-seleccionado" style="font-weight: bold; color: var(--accent-gold); font-size: 16px;">Génesis</span>
+                    <button onclick="proyectarVersiculoSeleccionado()" class="btn-project">Proyectar Versículo</button>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div>
+                        <label style="font-size: 11px; display: block; margin-bottom: 5px;">CAPÍTULOS</label>
+                        <div id="grid-capitulos" class="grid-numeros"></div>
+                    </div>
+                    <div>
+                        <label style="font-size: 11px; display: block; margin-bottom: 5px;">VERSÍCULOS</label>
+                        <div id="grid-versiculos" class="grid-numeros"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 25px 0;">
+
+        <!-- MÓDULO DE TEXTO LIBRE / ANUNCIOS -->
+        <div class="control-box">
+            <label for="textoEnviar">Texto Manual / Anuncios:</label>
+            <textarea id="textoEnviar" rows="3" placeholder="Escribe un anuncio, punto de predicación o texto libre aquí..."></textarea>
+            
+            <div class="btn-group">
+                <button onclick="proyectarTexto()" class="btn-project">Proyectar Texto</button>
+                <button onclick="limpiarPantalla()" class="btn-clear">Limpiar Pantalla (C)</button>
+            </div>
+        </div>
+
+        <footer>
+            <p id="copyright-text"></p>
+        </footer>
+    </div>
+
+    <!-- MODAL NUEVA CANCIÓN -->
+    <div id="modal-cancion" class="modal-overlay" style="display: none;">
+        <div class="modal-box" style="width: 440px; text-align: left;">
+            <h3 style="color: var(--accent-gold);">Agregar Nueva Canción</h3>
+            <label style="font-size: 11px;">Título:</label>
+            <input type="text" id="nueva-titulo" placeholder="Nombre de la alabanza" style="width: 100%; margin-bottom: 10px; padding: 8px; background: #0f172a; border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;">
+            
+            <label style="font-size: 11px;">Letra y Estrofas (Separa estrofas con doble salto Enter):</label>
+            <p style="font-size: 10px; color: #94a3b8; margin: 2px 0 6px 0;">Tip: Pon "Coro:" o "Puente:" al inicio del bloque para asignarle color automático.</p>
+            <textarea id="nueva-letra" rows="6" placeholder="Estrofa 1 línea 1&#10;Estrofa 1 línea 2&#10;&#10;Coro:&#10;Coro línea 1&#10;Coro línea 2" style="width: 100%; margin-bottom: 15px; padding: 8px; background: #0f172a; border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;"></textarea>
+            
+            <div style="display: flex; gap: 10px;">
+                <button onclick="guardarNuevaCancion()" class="btn-project" style="flex: 1;">Guardar</button>
+                <button onclick="cerrarModalCancion()" class="btn-clear" style="flex: 1;">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- VENTANA MODAL GENERAL -->
+    <div id="custom-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-box">
+            <h3 id="modal-title">Aviso</h3>
+            <p id="modal-mensaje">Mensaje aquí</p>
+            <button onclick="cerrarModal()" class="btn-project">Aceptar</button>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
