@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import {
   HelpCircle, Search, X, BookOpen, Music, Image, Video, Mic,
   Radio, Keyboard, Settings, AlertTriangle, Monitor, ExternalLink,
-  CheckCircle2, Sparkles
+  CheckCircle2, Sparkles, ScrollText, Play, Trash2
 } from 'lucide-react';
 
 interface HelpTopic {
@@ -24,42 +24,42 @@ const TEMAS_AYUDA: HelpTopic[] = [
   {
     id: 'portada-proyector',
     numero: 1,
-    titulo: 'Proyector y Pantalla Independiente',
-    subtitulo: 'Apertura de la ventana de proyección y monitor de salida',
+    titulo: 'Proyector Automático en TV (Pantalla 2)',
+    subtitulo: 'Detección automática de HDMI sin arrastrar ventanas',
     icono: Monitor,
-    resumen: 'Conexión en dos pantallas: panel de control para el operador y ventana limpia para la congregación.',
+    resumen: 'Con 1 solo clic detecta el televisor o proyector externo y abre a pantalla completa.',
     contenido: {
-      paraQueSirve: 'Permite que el operador en el templo elija canciones, versículos o diapositivas en su monitor sin que la congregación vea la interfaz del sistema. En el proyector de la iglesia solo aparece el resultado limpio a pantalla completa.',
+      paraQueSirve: 'Evita tener que arrastrar ventanas con el mouse de una pantalla a otra. Con un solo clic proyecta directamente en el televisor del templo en pantalla completa.',
       comoSeUsa: [
-        'Haz clic en el botón amarillo "🖥️ Proyector" en la barra superior.',
-        'Se abrirá una ventana nueva llamada Proyector LBC.',
-        'Arrastra esa ventana a la segunda pantalla conectada al proyector de tu iglesia o al televisor.',
-        'Presiona F11 o haz doble clic sobre la ventana del proyector para ponerla en Pantalla Completa sin bordes.'
+        'Conecta tu televisor o proyector a la computadora mediante cable HDMI.',
+        'Haz clic en el botón "🖥️ Proyectar en TV (Pantalla 2)" en la barra superior o en la Portada.',
+        'El sistema localiza la Pantalla 2 automáticamente y abre la proyección a pantalla completa sin bordes.',
+        'El botón cambiará a rojo: "⏹️ Apagar TV (Pantalla 2)". Vuelve a tocarlo para apagar la proyección.'
       ],
       detallesImportantes: [
-        'La pantalla del proyector no tiene textos de ayuda ni botones que distraigan a la congregación.',
-        'La comunicación funciona 100% de manera local en tu computadora mediante canal interno ultrarrápido (BroadcastChannel + almacenamiento local).'
+        'Si no hay segundo monitor conectado (ej: estás ensayando en casa), se abre en una ventana normal de prueba.',
+        'La pantalla del proyector permanece siempre limpia, con fondo eclesiástico y sin menús que distraigan.'
       ]
     }
   },
   {
     id: 'biblia',
     numero: 2,
-    titulo: 'Biblia Completa (66 Libros)',
+    titulo: 'Sagradas Escrituras (Biblia Completa)',
     subtitulo: 'Navegación por libros, capítulos, versículos y versiones',
     icono: BookOpen,
-    resumen: 'Acceso a los 66 libros del Antiguo y Nuevo Testamento con versiones RV1960, NVI, DHH y TLA.',
+    resumen: 'Acceso a los 66 libros con versiones RV1960, NTV, NVI, DHH y TLA sin depender de internet.',
     contenido: {
       paraQueSirve: 'Proyectar las Sagradas Escrituras en segundos cuando el pastor o predicador lee la Palabra de Dios durante el culto.',
       comoSeUsa: [
-        'Entra a la pestaña "Biblia (66 Libros)".',
+        'Entra a la pestaña "Biblia".',
         'Filtra por Antiguo Testamento, Nuevo Testamento o escribe el nombre del libro en el buscador.',
-        'Selecciona el capítulo en el panel de capítulos y haz clic en el versículo que deseas proyectar.',
+        'Selecciona el capítulo y haz clic en el versículo que deseas proyectar.',
         'Usa las teclas de Flecha Derecha (➡️) y Flecha Izquierda (⬅️) para avanzar o retroceder al siguiente versículo mientras el pastor lee sin tener que usar el mouse.'
       ],
       detallesImportantes: [
-        'Puedes cargar tus carpetas locales de versiones bíblicas desde el botón "📂 Cargar Carpeta" (DHH, NVI, RVR1960, TLA, etc.).',
-        'Cada versión y libro que cargues se guarda localmente en tu equipo para estar disponible sin internet.'
+        'Para tener los 66 libros listos en cualquier PC sin cargar nada, simplemente copia tus 66 archivos JSON en "public/data/biblia/versiones/rv1960/".',
+        'El pie de página muestra siempre la cita bíblica (ej: Deuteronomio 10:4) en letras doradas legibles.'
       ],
       atajos: [
         { tecla: '➡️ Flecha Derecha', descripcion: 'Pasa al siguiente versículo del capítulo' },
@@ -71,22 +71,23 @@ const TEMAS_AYUDA: HelpTopic[] = [
   {
     id: 'canciones',
     numero: 3,
-    titulo: 'Cancionero y Setlists de Alabanza',
-    subtitulo: 'Búsqueda en tiempo real por estrofas, coro y armado de cultos',
+    titulo: 'Cancionero y Setlists con Reordenación por Mouse',
+    subtitulo: 'Búsqueda instantánea y organización de canciones para el culto',
     icono: Music,
-    resumen: 'Catálogo de más de 500 canciones, corarios y cancioneros con selector de estrofas numeradas.',
+    resumen: 'Catálogo de más de 500 canciones, corarios y setlists para Domingo, Miércoles, Sábado y Especial.',
     contenido: {
-      paraQueSirve: 'Guía a la congregación durante el tiempo de alabanza y adoración proyectando la letra exacta en sincronía con el grupo de alabanza.',
+      paraQueSirve: 'Organizar y proyectar las alabanzas en sincronía con el ministerio de música y reordenar las canciones con el ratón.',
       comoSeUsa: [
-        'Escribe el título o cualquier palabra de la letra en la barra de búsqueda (ej. "No hay lugar más alto", "Cuan grande es Dios").',
-        'Selecciona la canción para ver todas sus estrofas, coros y puentes.',
-        'Haz clic en la estrofa o coro que esté cantando el grupo de alabanza para proyectarlo de inmediato.',
-        'Puedes presionar las Flechas Derecha / Izquierda en tu teclado para avanzar a la siguiente estrofa fácilmente.',
-        'Usa el botón "+ Agregar a Lista" para preparar el Setlist del culto del domingo con anticipación.'
+        'Escribe el título o palabra de la letra en el buscador para encontrar cualquier alabanza al instante.',
+        'Haz clic en cualquier estrofa o coro para proyectarlo inmediatamente en la pantalla gigante.',
+        '¿Falta de ortografía o estrofas sin separar?: Haz clic en el botón "✏️ Editar Letra" (arriba a la derecha de la alabanza seleccionada). Podrás corregir el texto, separar estrofas con doble Enter o marcar [CORO] en un segundo.',
+        'Para agregar una canción al culto, pulsa "+ Agregar a Setlist" y elige el día (Domingo, Miércoles, Sábado, Especial).',
+        '¿Te equivocaste en el orden?: Arrastra la canción con el mouse o usa los botones de flecha (⬆ ⬇) en cada tarjeta para subir o bajar su posición al instante.'
       ],
       detallesImportantes: [
-        'Puedes importar tus propios archivos JSON ("Mi Cancionero.json", "Corario.json") haciendo clic en "📂 Importar JSON".',
-        'El sistema normaliza acentos y mayúsculas para encontrar canciones aunque tengan tildes omitidas.'
+        'El botón "✏️ Editar Letra" guarda automáticamente los cambios en tu repertorio permanente y actualiza la proyección en vivo si la estás mostrando.',
+        'El botón "+ Nueva" te permite agregar alabanzas nuevas que no estén en el cancionario.',
+        'El botón "+ Cargar JSON" importa cancioneros externos como "Corario.json" o "Mi Cancionero.json".'
       ],
       atajos: [
         { tecla: '➡️ Flecha Derecha', descripcion: 'Avanza a la siguiente estrofa o coro' },
@@ -95,69 +96,86 @@ const TEMAS_AYUDA: HelpTopic[] = [
     }
   },
   {
-    id: 'fondos',
+    id: 'predica',
     numero: 4,
-    titulo: 'Fondos y Personalización',
-    subtitulo: 'Fondos sobrios de adoración, colores litúrgicos y tipografías',
-    icono: Image,
-    resumen: 'Galería de fondos oscuros, gradientes eclesiásticos y control de fuentes.',
+    titulo: 'Prédica & Bosquejos Pastorales',
+    subtitulo: 'Plantillas de temas, citas bíblicas y puntos del sermón',
+    icono: ScrollText,
+    resumen: 'Muestra a la congregación el tema del día, el predicador, las citas y cada punto expuesto.',
     contenido: {
-      paraQueSirve: 'Brindar un fondo elegante que asegure la lectura clara de las letras desde la última banca del templo.',
+      paraQueSirve: 'Permite que la congregación siga de manera clara la predicación, conociendo el tema tratado, las citas bíblicas y los puntos 1, 2, 3, etc.',
       comoSeUsa: [
-        'Ve a la pestaña "Fondos".',
-        'Haz clic en cualquier fondo de la galería (Azul Medianoche, Rojo Carmesí Cuadrangular, Noche de Adoración, etc.).',
-        'El fondo se actualiza automáticamente tanto en el monitor del operador como en la pantalla del proyector.',
-        'En la pestaña "Ajustes" puedes cambiar la tipografía (Segoe UI, Impact, Georgia) y el color de las letras.'
+        'Ve a la pestaña "Prédica & Bosquejo" (ubicada entre Canciones y Fondos).',
+        'Escribe el Tema de la enseñanza, el nombre del predicador y la fecha o culto.',
+        'Agrega las citas bíblicas que usará el pastor con el botón "+ Añadir".',
+        'Escribe los puntos del sermón (Punto 1, Punto 2, Punto 3) y agrégalos a la lista.',
+        'Durante la prédica, pulsa "👑 Proyectar Portada", "📖 Proyectar Citas Bíblicas" o haz clic en "▶ Proyectar" en el punto que el pastor esté desarrollando.'
       ],
       detallesImportantes: [
-        'Los fondos oscuros con texto blanco o amarillo dorado son los más recomendados para iglesias porque no cansan la vista y no sobrecalientan los proyectores.'
+        'Cada punto proyectado muestra arriba el tema de la prédica en subtítulo para máxima claridad.',
+        'Puedes guardar múltiples bosquejos para cultos dominicales, de doctrina o campañas.'
       ]
     }
   },
   {
-    id: 'canva-anuncios',
+    id: 'video-youtube',
     numero: 5,
-    titulo: 'Diapositivas y Flyers de Canva',
-    subtitulo: 'Subida y proyección de imágenes de bienvenida, culto infantil y eventos',
-    icono: Sparkles,
-    resumen: 'Carga tus imágenes diseñadas en Canva (PNG o JPEG) para proyectar anuncios en alta resolución.',
+    titulo: 'Videos de Culto y YouTube (Detener y Quitar)',
+    subtitulo: 'Videos locales, YouTube oficial y botón de emergencia para quitar video',
+    icono: Video,
+    resumen: 'Reproduce videos locales y enlaces de YouTube con botones para quitarlos por completo.',
     contenido: {
-      paraQueSirve: 'Presentar avisos de actividades, culto infantil, santa cena, diezmos, campañas especiales o bienvenida a los visitantes.',
+      paraQueSirve: 'Proyectar videos de testimonios, anuncios en video o alabanzas de YouTube sin que sigan cargando ni sonando de fondo al cambiar de pestaña.',
       comoSeUsa: [
-        'Diseña tu imagen en Canva y descárgala en formato PNG o JPG en tu computadora.',
-        'En Proyector LBC, ve a la pestaña "Diapositivas & Canva".',
-        'Haz clic en el botón azul "➕ Subir Imágenes (Canva / PNG / JPG)".',
-        'Selecciona uno o varios archivos desde tu explorador.',
-        'La imagen se optimiza automáticamente y queda guardada en tu galería local de la iglesia.',
-        'Haz clic en "🖥️ Proyectar" sobre la miniatura para mostrarla a pantalla completa en el proyector.',
-        'Para borrarla cuando termine la actividad, haz clic en el icono de papelera 🗑️.'
+        'Videos Locales: carga tu archivo MP4/WebM y pulsa "▶ Proyectar Video en Pantalla".',
+        'YouTube: pega el enlace del video, pulsa "Cargar" y luego "▶ Proyectar YouTube en Pantalla Completa".',
+        '¿Terminó el video?: Pulsa "❌ Quitar Video del Todo" para eliminarlo por completo y que no siga sonando ni consumiendo memoria.',
+        'Botón de Emergencia en la barra superior: si estás en cualquier otra pestaña y hay un video sonando, verás un botón rojo parpadeante "⏹️ Quitar Video" que lo apaga inmediatamente con un solo clic.'
       ],
       detallesImportantes: [
-        'El sistema incluye compresión inteligente para que tus imágenes se guarden rápido y no ocupen exceso de memoria en la computadora.',
-        'Viene con diapositivas predeterminadas listas para usar (Bienvenida Cuadrangular, Culto Infantil, Santa Cena y Diezmos).'
-      ],
-      atajos: [
-        { tecla: '➡️ Flecha Derecha', descripcion: 'Pasa a la siguiente imagen de la galería' },
-        { tecla: '⬅️ Flecha Izquierda', descripcion: 'Vuelve a la imagen anterior' }
+        'Al proyectar cualquier canción, versículo o bosquejo, el video se detiene automáticamente para evitar sonidos superpuestos.'
       ]
     }
   },
   {
-    id: 'video-karaoke',
+    id: 'karaoke-pistas',
     numero: 6,
-    titulo: 'Video y Pistas de Karaoke',
-    subtitulo: 'Videos MP4 para el proyector y pistas instrumentales de audio',
-    icono: Video,
-    resumen: 'Reproducción de fondos animados en video MP4 y pistas de alabanza con selector de volumen.',
+    titulo: 'Karaoke y Setlist de Pistas (Culto sin Músicos)',
+    subtitulo: 'Listas de canciones con pistas de audio para sábado, domingo y miércoles',
+    icono: Mic,
+    resumen: 'Organiza 4, 5 o 6 canciones con sus pistas instrumentales y buscador rápido sincronizado.',
     contenido: {
-      paraQueSirve: 'Transmitir videos de eventos, testimonios o fondos dinámicos al proyector, y reproducir pistas instrumentales para solistas o grupos de alabanza.',
+      paraQueSirve: 'Ideal para cultos donde no hay banda en vivo y una sola persona canta con pistas instrumentales de audio.',
       comoSeUsa: [
-        'Pestaña "Video": carga cualquier video MP4 desde tu computadora, ajusta el volumen y presiona "▶ Proyectar Video en Pantalla Completa".',
-        'Pestaña "Karaoke": carga una pista de audio (MP3/WAV) y selecciona la canción correspondiente para seguir la letra estrofa por estrofa en el culto.'
+        'Ve a la pestaña "Karaoke".',
+        'Búsqueda Sincronizada Inteligente: escribe el nombre de la alabanza en "Buscar alabanza..." (ej: "derrama de") y se seleccionará automáticamente al instante, cargando sus estrofas en pantalla. También puedes presionar la tecla Enter o hacer clic en la "X" para limpiar la búsqueda.',
+        'Botón "✏️ Editar": si notas una falta ortográfica o estrofa mal separada en la canción de karaoke, haz clic en "Editar" para corregirla sin salir de la pestaña.',
+        'Setlist de Pistas: selecciona el día (Domingo, Miércoles, Sábado) y pulsa "+ Setlist" para armar tu lista de alabanzas del culto.',
+        'Reordenar: arrastra con el ratón o usa las flechas ⬆ ⬇ para cambiar el orden de las canciones en la lista.',
+        'Durante el culto: haz clic sobre cualquier canción del Setlist y se cargarán sus letras listas para proyectar estrofa por estrofa con el botón "Siguiente Estrofa ➡".'
       ],
       detallesImportantes: [
-        'Puedes silenciar o activar el audio del video según si es un fondo instrumental o un video con predicación/testimonio.',
-        'Al presionar "⏹ Detener Video", el proyector regresa automáticamente a la portada o fondo de espera.'
+        'Las cajas de selección y búsqueda ahora tienen anchos fijos y limpios para que nunca salten ni se golpeen entre sí en pantallas de cualquier tamaño.',
+        'Puedes cargar el archivo MP3 o WAV de la pista y controlar su volumen y tiempo desde el panel izquierdo.'
+      ]
+    }
+  },
+  {
+    id: 'fondos-canva',
+    numero: 7,
+    titulo: 'Fondos Oficiales y Banners de Canva',
+    subtitulo: '10 imágenes fijas de los momentos del culto y fondos litúrgicos',
+    icono: Sparkles,
+    resumen: 'Imágenes oficiales de la Iglesia Cuadrangular Las Brisas listas para proyectar con 1 clic.',
+    contenido: {
+      paraQueSirve: 'Mostrar los momentos solemnes del culto: Bienvenidos, Es tiempo de adorar, Oración, Diezmos, Santa Cena, Servicios y Despedida.',
+      comoSeUsa: [
+        'Pestaña "Diapositivas & Canva": haz clic sobre cualquiera de las 10 tarjetas oficiales para proyectarla en pantalla gigante.',
+        'Pestaña "Fondos": selecciona fondos sobrios para las letras de las canciones (Fondo de Adoración con manos alzadas, Azul Cuadrangular, etc.).',
+        'Para actualizar las imágenes cada 6 meses: copia los nuevos diseños de Canva en la carpeta "public/assets/momentos/" con los mismos nombres.'
+      ],
+      detallesImportantes: [
+        'Incluye filtro oscurecedor ajustable (45% óptimo) para que las letras blancas siempre se lean con máxima nitidez sobre cualquier imagen.'
       ]
     }
   },
