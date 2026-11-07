@@ -26,7 +26,7 @@ if %errorlevel% neq 0 (
 echo Node.js detectado correctamente.
 echo Instalando complementos de la aplicacion (esto puede tardar 1 o 2 minutos)...
 echo.
-call npm install
+call npm install --legacy-peer-deps
 echo.
 echo ========================================================
 echo   LISTO! Todo ha quedado configurado e instalado.

@@ -1,7 +1,7 @@
 {
-  "name": "react-example",
+  "name": "proyector-lbc",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "main": "electron-main.js",
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
@@ -11,6 +11,22 @@
     "lint": "tsc --noEmit",
     "electron": "electron .",
     "dist": "electron-builder --win"
+  },
+  "build": {
+    "appId": "org.cuadrangular.proyectorlbc",
+    "productName": "Proyector LBC",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "win": {
+      "target": ["portable"]
+    },
+    "files": [
+      "dist/**/*",
+      "electron-main.js",
+      "preload.js",
+      "public/**/*"
+    ]
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
@@ -29,10 +45,11 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "autoprefixer": "^10.4.21",
-    "esbuild": "^0.25.0",
     "tailwindcss": "^4.3.3",
     "tsx": "^4.21.0",
     "typescript": "^7.0.2",
-    "@types/express": "^4.17.21"
+    "@types/express": "^4.17.21",
+    "electron": "^34.0.0",
+    "electron-builder": "^25.1.8"
   }
 }
