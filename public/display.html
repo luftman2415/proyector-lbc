@@ -80,7 +80,7 @@
       width: 100vw;
       height: 100vh;
       background: rgba(0, 0, 0, 0.45);
-      z-index: 3;
+      z-index: 10;
       pointer-events: none;
       transition: background 0.3s ease;
     }
@@ -184,7 +184,7 @@
       transition: opacity 0.3s ease, transform 0.3s ease;
       max-width: 900px;
       pointer-events: none;
-      z-index: 5;
+      z-index: 20;
     }
     .standby-box.hidden {
       display: none !important;
@@ -231,7 +231,7 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      z-index: 5;
+      z-index: 20;
     }
     .content-box.hidden {
       display: none !important;
@@ -404,12 +404,26 @@
         aplicarBlackout(data.activo);
       } else if (data.accion === 'fondo') {
         aplicarFondo(data.fondo, data.tipoFondo, { modoAjuste: data.modoAjuste, opacidadScrim: data.opacidadScrim });
-      } else if (data.accion === 'ajusteFondo') {
+      } else if (data.accion === 'ajusteFondo' || data.tipo === 'fondo_ajuste') {
         if (data.modoAjuste) localStorage.setItem('lbc_modo_ajuste_fondo', data.modoAjuste);
         if (data.opacidadScrim !== undefined) localStorage.setItem('lbc_scrim_fondo', String(data.opacidadScrim));
         const f = localStorage.getItem('lbc_fondo_activo');
         const tf = localStorage.getItem('lbc_tipo_fondo');
         aplicarFondo(f, tf, { modoAjuste: data.modoAjuste, opacidadScrim: data.opacidadScrim });
+      } else if (data.accion === 'ajusteMedia' || data.accion === 'ajusteDiapositiva' || data.tipo === 'media_ajuste' || data.tipo === 'ajusteDiapositiva') {
+        if (data.modoAjuste) localStorage.setItem('lbc_modo_ajuste_diapositiva', data.modoAjuste);
+        if (data.opacidadScrim !== undefined) localStorage.setItem('lbc_scrim_diapositiva', String(data.opacidadScrim));
+        const modo = data.modoAjuste || localStorage.getItem('lbc_modo_ajuste_diapositiva') || 'contain';
+        if (projectorImgEl) {
+          projectorImgEl.style.objectFit = (modo === 'fill') ? 'fill' : (modo === 'cover' ? 'cover' : 'contain');
+          projectorImgEl.style.width = '100vw';
+          projectorImgEl.style.height = '100vh';
+          projectorImgEl.style.maxWidth = '100vw';
+          projectorImgEl.style.maxHeight = '100vh';
+        }
+        if (bgScrimEl && data.opacidadScrim !== undefined) {
+          bgScrimEl.style.background = `rgba(0, 0, 0, ${data.opacidadScrim})`;
+        }
       } else if (data.accion === 'tamanoFuente') {
         if (data.tamano) {
           lyricsEl.style.fontSize = data.tamano + 'px';
@@ -495,7 +509,7 @@
       if (fondo.startsWith('http') || fondo.startsWith('data:') || fondo.includes('assets/')) {
         stageEl.style.background = '#020617';
         stageEl.style.backgroundImage = 'url("' + fondo + '")';
-        stageEl.style.backgroundSize = modoAjuste;
+        stageEl.style.backgroundSize = (modoAjuste === 'fill') ? '100% 100%' : modoAjuste;
         stageEl.style.backgroundRepeat = 'no-repeat';
         stageEl.style.backgroundPosition = 'center center';
       } else {
@@ -528,8 +542,8 @@
       lyricsEl.innerText = textoPrincipal;
 
       // REQUISITO ESTRICTO: En canciones e imágenes NO debe salir la etiqueta/nombre en el proyector.
-      // SÓLO debe mostrarse en la BIBLIA (tipo === 'biblia') para que la iglesia sepa la cita leída.
-      if (tipo === 'biblia' && pie) {
+      // SÓLO debe mostrarse en la BIBLIA (tipo === 'biblia') y en PRÉDICA (tipo === 'predica') para que la congregación vea la cita bíblica o el tema.
+      if ((tipo === 'biblia' || tipo === 'predica') && pie) {
         citationEl.innerText = pie.replace(/^[—\-]\s*/, '');
         citationEl.style.display = 'inline-block';
       } else {
@@ -552,7 +566,18 @@
       if (data.tipo === 'imagen') {
         detenerReproductoresVideo();
         projectorImgEl.src = data.url;
+        const modo = data.modoAjuste || localStorage.getItem('lbc_modo_ajuste_diapositiva') || 'contain';
+        projectorImgEl.style.objectFit = (modo === 'fill') ? 'fill' : (modo === 'cover' ? 'cover' : 'contain');
+        projectorImgEl.style.width = '100vw';
+        projectorImgEl.style.height = '100vh';
+        projectorImgEl.style.maxWidth = '100vw';
+        projectorImgEl.style.maxHeight = '100vh';
         projectorImgEl.classList.remove('hidden');
+
+        const scrimVal = data.opacidadScrim !== undefined ? data.opacidadScrim : (parseFloat(localStorage.getItem('lbc_scrim_diapositiva') || '0'));
+        if (bgScrimEl) {
+          bgScrimEl.style.background = `rgba(0, 0, 0, ${scrimVal})`;
+        }
       } else if (data.tipo === 'video') {
         detenerReproductoresVideo();
         projectorImgEl.classList.add('hidden');
@@ -568,7 +593,7 @@
         projectorImgEl.classList.add('hidden');
 
         if (projectorYoutubeEl && data.youtubeId) {
-          projectorYoutubeEl.src = 'https://www.youtube-nocookie.com/embed/' + data.youtubeId + '?autoplay=1&rel=0&controls=1&modestbranding=1&enablejsapi=1&origin=' + encodeURIComponent(window.location.origin.startsWith('http') ? window.location.origin : 'https://www.youtube.com');
+          projectorYoutubeEl.src = 'https://www.youtube.com/embed/' + data.youtubeId + '?autoplay=1&playsinline=1&controls=1&rel=0&modestbranding=1&enablejsapi=1&origin=https://www.youtube.com';
           projectorYoutubeEl.classList.remove('hidden');
         }
       }
