@@ -10,10 +10,10 @@ import {
   Sparkles, ExternalLink, Play, Pause, RotateCcw, AlertCircle, FileText,
   CheckCircle2, Image, Video, Mic, Settings, Home, Clock, Volume2, VolumeX,
   FolderOpen, Sun, Moon, Type, AlignCenter, AlignLeft, Disc, Square,
-  HelpCircle, Radio
+  HelpCircle, Radio, ScrollText, GripVertical, Pencil, X
 } from 'lucide-react';
 
-import { Song, SongSection, SetlistsState, ProjectedContent } from './types';
+import { Song, SongSection, SetlistsState, ProjectedContent, KaraokeItem, KaraokeSetlistsState } from './types';
 import { parsearCancionesDesdeJSON, buscarCanciones, normalizarTexto } from './utils/songParser';
 import { INITIAL_FEATURED_SONGS } from './data/defaultSongs';
 import { VANILLA_APP_JS } from './utils/vanillaTemplates';
@@ -23,6 +23,7 @@ import { FONDOS_PREDETERMINADOS, BackgroundPreset } from './data/backgroundsData
 import { DIAPOSITIVAS_INICIALES, SlideItem } from './data/slidesData';
 import { HelpModal } from './components/HelpModal';
 import { ObsPanel } from './components/ObsPanel';
+import { PredicaPanel } from './components/PredicaPanel';
 
 // Tipografías estándar garantizadas en Windows (funcionan 100% offline)
 export const FUENTES_SISTEMA = [
@@ -37,7 +38,7 @@ export const FUENTES_SISTEMA = [
 
 export default function App() {
   // Navigation tabs matching church operations
-  const [moduloActivo, setModuloActivo] = useState<'portada' | 'biblia' | 'canciones' | 'fondos' | 'video' | 'karaoke' | 'anuncios' | 'obs' | 'config' | 'descargar'>('portada');
+  const [moduloActivo, setModuloActivo] = useState<'portada' | 'biblia' | 'canciones' | 'predica' | 'fondos' | 'video' | 'karaoke' | 'anuncios' | 'obs' | 'config' | 'descargar'>('portada');
 
   // Help modal state
   const [mostrarAyuda, setMostrarAyuda] = useState<boolean>(false);
@@ -59,8 +60,9 @@ export default function App() {
 
   // Notifications
   const [notificacion, setNotificacion] = useState<{ tipo: 'exito' | 'error' | 'info'; texto: string } | null>(null);
-  const mostrarToast = (texto: string, tipo: 'exito' | 'error' | 'info' = 'exito') => {
-    setNotificacion({ tipo, texto });
+  const mostrarToast = (texto: string, tipo: 'exito' | 'error' | 'info' | 'success' = 'exito') => {
+    const t = tipo === 'success' ? 'exito' : tipo;
+    setNotificacion({ tipo: t, texto });
     setTimeout(() => setNotificacion(null), 4000);
   };
 
@@ -91,14 +93,28 @@ export default function App() {
   });
   const fondoFileInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Ajustes de visualización y contraste de fondos
-  const [modoAjusteFondo, setModoAjusteFondo] = useState<'contain' | 'cover'>(() => {
+  // Ajustes de visualización y contraste de fondos (contain, cover, fill)
+  const [modoAjusteFondo, setModoAjusteFondo] = useState<'contain' | 'cover' | 'fill'>(() => {
     return (localStorage.getItem('lbc_modo_ajuste_fondo') as any) || 'contain';
   });
   const [oscurecedorFondo, setOscurecedorFondo] = useState<number>(() => {
     const s = localStorage.getItem('lbc_scrim_fondo');
     return s !== null ? parseFloat(s) : 0.45;
   });
+
+  // Ajustes de visualización y contraste para Diapositivas & Canva (contain, cover, fill)
+  const [modoAjusteDiapositiva, setModoAjusteDiapositiva] = useState<'contain' | 'cover' | 'fill'>(() => {
+    return (localStorage.getItem('lbc_modo_ajuste_diapositiva') as any) || 'contain';
+  });
+  const [oscurecedorDiapositiva, setOscurecedorDiapositiva] = useState<number>(() => {
+    const s = localStorage.getItem('lbc_scrim_diapositiva');
+    return s !== null ? parseFloat(s) : 0;
+  });
+
+  // Control de Pitch (Tono / Semitonos) para Karaoke & Audio
+  const [pitchSemitonos, setPitchSemitonos] = useState<number>(0);
+  const [audioFileCargado, setAudioFileCargado] = useState<File | null>(null);
+  const [cargandoAudio, setCargandoAudio] = useState<boolean>(false);
 
   // Estados para reproductor de YouTube
   const [youtubeInputUrl, setYoutubeInputUrl] = useState<string>('');
@@ -310,6 +326,13 @@ export default function App() {
   const [nuevaLetra, setNuevaLetra] = useState<string>('');
   const songFileInputRef = useRef<HTMLInputElement | null>(null);
 
+  // Modal: Editar Canción y Letras
+  const [mostrarModalEditarCancion, setMostrarModalEditarCancion] = useState<boolean>(false);
+  const [cancionEditando, setCancionEditando] = useState<Song | null>(null);
+  const [editTitulo, setEditTitulo] = useState<string>('');
+  const [editAutor, setEditAutor] = useState<string>('');
+  const [editLetra, setEditLetra] = useState<string>('');
+
   // Initialize BroadcastChannel
   useEffect(() => {
     const canal = new BroadcastChannel('proyector_lbc');
@@ -457,6 +480,197 @@ export default function App() {
     }
   };
 
+  const abrirModalEditarCancion = (cancion: Song | null) => {
+    if (!cancion) return;
+    setCancionEditando(cancion);
+    setEditTitulo(cancion.title);
+    setEditAutor(cancion.author || '');
+
+    // Formatear estrofas en texto limpio y legible
+    const texto = (cancion.sections || []).map(sec => {
+      let encabezado = '';
+      if (sec.type === 'chorus') {
+        encabezado = '[CORO]\n';
+      } else if (sec.type === 'bridge') {
+        encabezado = '[PUENTE]\n';
+      } else if (sec.type === 'pre-chorus') {
+        encabezado = '[PRE-CORO]\n';
+      } else if (sec.label && !sec.label.toLowerCase().startsWith('verso') && !sec.label.toLowerCase().startsWith('estrofa')) {
+        encabezado = `[${sec.label.toUpperCase()}]\n`;
+      }
+      return `${encabezado}${sec.lines.join('\n')}`;
+    }).join('\n\n');
+
+    setEditLetra(texto);
+    setMostrarModalEditarCancion(true);
+  };
+
+  const guardarEdicionCancion = () => {
+    if (!cancionEditando) return;
+    if (!editTitulo.trim()) {
+      mostrarToast('Ingresa un título para la alabanza', 'error');
+      return;
+    }
+    if (!editLetra.trim()) {
+      mostrarToast('Ingresa la letra de la alabanza', 'error');
+      return;
+    }
+
+    // Parsear bloques separados por renglón vacío (doble enter)
+    const bloques = editLetra.split(/\n\s*\n/).map(b => b.trim()).filter(Boolean);
+    let contadorEstrofa = 1;
+
+    const nuevasSecciones: SongSection[] = bloques.map(bloque => {
+      const rawLines = bloque.split('\n').map(l => l.trim()).filter(Boolean);
+      let label = '';
+      let type: SongSection['type'] = 'verse';
+      let lines = rawLines;
+
+      if (rawLines.length > 0) {
+        const firstLine = rawLines[0];
+        const matchTag = firstLine.match(/^\[?(coro|chorus|puente|bridge|pre-coro|estrofa\s*\d*|verso\s*\d*)\]?:?$/i);
+
+        if (matchTag) {
+          const tag = matchTag[1].toLowerCase();
+          if (tag.includes('coro')) {
+            type = 'chorus';
+            label = 'Coro';
+          } else if (tag.includes('puente') || tag.includes('bridge')) {
+            type = 'bridge';
+            label = 'Puente';
+          } else if (tag.includes('pre-coro')) {
+            type = 'pre-chorus';
+            label = 'Pre-Coro';
+          } else {
+            type = 'verse';
+            label = firstLine.replace(/[\[\]:]/g, '').trim();
+          }
+          lines = rawLines.slice(1);
+        } else if (firstLine.toLowerCase().startsWith('coro:')) {
+          type = 'chorus';
+          label = 'Coro';
+          lines = [firstLine.replace(/^coro:\s*/i, ''), ...rawLines.slice(1)].filter(Boolean);
+        } else if (firstLine.toLowerCase().includes('coro')) {
+          type = 'chorus';
+          label = 'Coro';
+        }
+      }
+
+      if (!label) {
+        if (type === 'chorus') {
+          label = 'Coro';
+        } else if (type === 'bridge') {
+          label = 'Puente';
+        } else {
+          label = `Estrofa ${contadorEstrofa++}`;
+        }
+      }
+
+      if (lines.length === 0) {
+        lines = rawLines;
+      }
+
+      return {
+        label,
+        type,
+        lines
+      };
+    });
+
+    const cancionActualizada: Song = {
+      ...cancionEditando,
+      title: editTitulo.trim(),
+      author: editAutor.trim() || 'Desconocido',
+      sections: nuevasSecciones.length > 0 ? nuevasSecciones : [{ label: 'Estrofa 1', type: 'verse', lines: [editLetra] }]
+    };
+
+    // 1. Actualizar en repertorio general
+    const nuevoRepertorio = repertorio.map(s => s.id === cancionEditando.id ? cancionActualizada : s);
+    setRepertorio(nuevoRepertorio);
+    try {
+      localStorage.setItem('proyector_lbc_canciones', JSON.stringify(nuevoRepertorio));
+    } catch (e) {}
+
+    // 2. Si está seleccionada en Canciones
+    if (cancionSeleccionada && cancionSeleccionada.id === cancionEditando.id) {
+      setCancionSeleccionada(cancionActualizada);
+    }
+
+    // 3. Si está seleccionada en Karaoke
+    if (karaokeCancion && karaokeCancion.id === cancionEditando.id) {
+      setKaraokeCancion(cancionActualizada);
+    }
+
+    // 4. Actualizar en setlists de días
+    setSetlists(prev => {
+      const updated: SetlistsState = { ...prev };
+      (Object.keys(updated) as (keyof SetlistsState)[]).forEach(dia => {
+        updated[dia] = updated[dia].map(s => s.id === cancionEditando.id ? cancionActualizada : s);
+      });
+      try {
+        localStorage.setItem('proyector_lbc_setlists', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+
+    // 5. Actualizar en karaokeSetlists
+    setKaraokeSetlists(prev => {
+      const updated: KaraokeSetlistsState = { ...prev };
+      (Object.keys(updated) as (keyof KaraokeSetlistsState)[]).forEach(dia => {
+        updated[dia] = updated[dia].map(item => {
+          if (item.songId === cancionEditando.id || item.song.id === cancionEditando.id) {
+            return {
+              ...item,
+              songTitle: cancionActualizada.title,
+              song: cancionActualizada
+            };
+          }
+          return item;
+        });
+      });
+      try {
+        localStorage.setItem('lbc_karaoke_setlists', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+
+    // 6. Si se está proyectando esta alabanza, actualizar el pie en vivo
+    if (proyeccionActual && proyeccionActual.tipo === 'cancion' && (proyeccionActual.pie?.includes(cancionEditando.title) || proyeccionActual.pie?.includes(cancionActualizada.title))) {
+      setProyeccionActual(prev => prev ? ({
+        ...prev,
+        pie: `${cancionActualizada.title} • ${cancionActualizada.author}`
+      }) : null);
+    }
+
+    setMostrarModalEditarCancion(false);
+    setCancionEditando(null);
+    mostrarToast(`¡Alabanza "${cancionActualizada.title}" actualizada y guardada!`);
+  };
+
+  const eliminarCancionActual = () => {
+    if (!cancionEditando) return;
+    if (!window.confirm(`¿Estás seguro de que deseas eliminar "${cancionEditando.title}" del cancionero?`)) {
+      return;
+    }
+
+    const nuevoRepertorio = repertorio.filter(s => s.id !== cancionEditando.id);
+    setRepertorio(nuevoRepertorio);
+    try {
+      localStorage.setItem('proyector_lbc_canciones', JSON.stringify(nuevoRepertorio));
+    } catch (e) {}
+
+    if (cancionSeleccionada && cancionSeleccionada.id === cancionEditando.id) {
+      setCancionSeleccionada(nuevoRepertorio[0] || null);
+    }
+    if (karaokeCancion && karaokeCancion.id === cancionEditando.id) {
+      setKaraokeCancion(nuevoRepertorio[0] || INITIAL_FEATURED_SONGS[0]);
+    }
+
+    setMostrarModalEditarCancion(false);
+    setCancionEditando(null);
+    mostrarToast(`Alabanza eliminada del cancionero`);
+  };
+
   const toggleBlackout = () => {
     const nuevo = !isBlackout;
     setIsBlackout(nuevo);
@@ -510,9 +724,31 @@ export default function App() {
       accion: 'mostrarMedia',
       tipo: 'imagen',
       url: slide.dataUrl,
-      titulo: slide.titulo
+      titulo: slide.titulo,
+      modoAjuste: modoAjusteDiapositiva,
+      opacidadScrim: oscurecedorDiapositiva
     });
     mostrarToast(`Proyectando: "${slide.titulo}"`);
+  };
+
+  const cambiarModoAjusteDiapositiva = (modo: 'contain' | 'cover' | 'fill') => {
+    setModoAjusteDiapositiva(modo);
+    try {
+      localStorage.setItem('lbc_modo_ajuste_diapositiva', modo);
+    } catch (e) {}
+    enviarAlProyector({ accion: 'ajusteMedia', modoAjuste: modo, opacidadScrim: oscurecedorDiapositiva });
+    enviarAlProyector({ accion: 'ajusteDiapositiva', modoAjuste: modo, opacidadScrim: oscurecedorDiapositiva });
+    mostrarToast(`Ajuste de diapositiva: ${modo === 'contain' ? 'Completa (No cortar)' : modo === 'cover' ? 'Rellenar Pantalla' : 'Pantalla Completa'}`, 'info');
+  };
+
+  const cambiarOscurecedorDiapositiva = (val: number) => {
+    setOscurecedorDiapositiva(val);
+    try {
+      localStorage.setItem('lbc_scrim_diapositiva', String(val));
+    } catch (e) {}
+    enviarAlProyector({ accion: 'ajusteMedia', modoAjuste: modoAjusteDiapositiva, opacidadScrim: val });
+    enviarAlProyector({ accion: 'ajusteDiapositiva', modoAjuste: modoAjusteDiapositiva, opacidadScrim: val });
+    mostrarToast(`Filtro oscuro para letras: ${Math.round(val * 100)}%`, 'info');
   };
 
   const eliminarImagen = (id: string, e?: React.MouseEvent) => {
@@ -669,60 +905,124 @@ export default function App() {
     }
   };
 
-  // Safe multi-environment projector opener (Browser, Electron, file:// protocol)
-  const abrirVentanaProyector = () => {
-    let url = 'display.html';
-    if (window.location.protocol === 'file:') {
-      url = window.location.href.replace(/index\.html.*/i, 'display.html');
-    } else if (window.location.href.includes('index.html')) {
-      url = window.location.href.replace(/index\.html.*/i, 'display.html');
-    } else {
-      url = '/display.html';
-    }
-    window.open(url, 'ProyectorLBC', 'width=1280,height=720,menubar=no,toolbar=no,location=no');
-    setProyectorConectado(true);
+  const ventanaProyectorRef = useRef<Window | null>(null);
 
-    // Enviar de inmediato estado actual después de abrir
-    setTimeout(() => {
-      enviarAlProyector({
-        accion: 'fondo',
-        fondo: fondoActivo,
-        tipoFondo: tipoFondoActivo,
-        modoAjuste: modoAjusteFondo,
-        opacidadScrim: oscurecedorFondo
-      });
-      emitirAjustesProyector({
-        fuente: fuenteProyector,
-        colorTexto: colorTextoProyector,
-        sombraTexto,
-        alineacion: alineacionProyector,
-        tamano: tamanoFuente
-      });
-      if (proyeccionActual) {
-        if (proyeccionActual.tipo === 'imagen') {
-          enviarAlProyector({
-            accion: 'mostrarMedia',
-            tipo: 'imagen',
-            url: proyeccionActual.url,
-            titulo: ''
-          });
-        } else if (proyeccionActual.tipo === 'biblia') {
-          enviarAlProyector({
-            accion: 'mostrar',
-            texto: proyeccionActual.texto,
-            pie: proyeccionActual.pie,
-            tipo: 'biblia'
-          });
+  // Escuchar estado del proyector desde Electron (TV HDMI)
+  useEffect(() => {
+    if ((window as any).electronAPI?.onEstadoProyector) {
+      (window as any).electronAPI.onEstadoProyector((data: any) => {
+        setProyectorConectado(!!data.abierto);
+        if (data.abierto) {
+          mostrarToast(data.esSecundaria ? '📺 ¡Transmitiendo en Pantalla 2 (TV de la congregación)!' : '🖥️ Proyector activado', 'success');
+          setTimeout(() => {
+            enviarAlProyector({
+              accion: 'fondo',
+              fondo: fondoActivo,
+              tipoFondo: tipoFondoActivo,
+              modoAjuste: modoAjusteFondo,
+              opacidadScrim: oscurecedorFondo
+            });
+            emitirAjustesProyector({
+              fuente: fuenteProyector,
+              colorTexto: colorTextoProyector,
+              sombraTexto,
+              alineacion: alineacionProyector,
+              tamano: tamanoFuente
+            });
+            if (proyeccionActual) {
+              enviarAlProyector({
+                accion: proyeccionActual.tipo === 'imagen' ? 'mostrarMedia' : 'mostrar',
+                texto: proyeccionActual.texto,
+                pie: proyeccionActual.pie || '',
+                tipo: proyeccionActual.tipo,
+                url: proyeccionActual.url
+              });
+            }
+          }, 400);
         } else {
+          mostrarToast('⏹️ Proyección en TV desactivada', 'info');
+        }
+      });
+    }
+  }, [fondoActivo, tipoFondoActivo, modoAjusteFondo, oscurecedorFondo, proyeccionActual, fuenteProyector, colorTextoProyector, sombraTexto, alineacionProyector, tamanoFuente]);
+
+  // TOGGLE AUTOMÁTICO: Con 1 clic abre DIRECTAMENTE en la Pantalla 2 (TV por HDMI) sin tener que arrastrar la ventana con el mouse; con otro clic se apaga.
+  const toggleVentanaProyector = () => {
+    if ((window as any).electronAPI?.toggleProyector) {
+      (window as any).electronAPI.toggleProyector();
+      return;
+    }
+
+    // Modo navegador web alternativo (Chrome / Edge en Windows)
+    if (ventanaProyectorRef.current && !ventanaProyectorRef.current.closed) {
+      ventanaProyectorRef.current.close();
+      ventanaProyectorRef.current = null;
+      setProyectorConectado(false);
+      mostrarToast('⏹️ Proyector cerrado', 'info');
+    } else {
+      let url = 'display.html';
+      if (window.location.protocol === 'file:') {
+        url = window.location.href.replace(/index\.html.*/i, 'display.html');
+      } else if (window.location.href.includes('index.html')) {
+        url = window.location.href.replace(/index\.html.*/i, 'display.html');
+      } else {
+        url = '/display.html';
+      }
+
+      // Detectar coordenadas del Televisor / Proyector HDMI (Pantalla 2 extendida)
+      // En Windows, la segunda pantalla se encuentra a la derecha de la principal:
+      const tvLeft = window.screen.availWidth || window.screen.width || 1920;
+      const tvTop = 0;
+      const tvWidth = 1920;
+      const tvHeight = 1080;
+
+      const winFeatures = `left=${tvLeft},top=${tvTop},width=${tvWidth},height=${tvHeight},menubar=no,toolbar=no,location=no,status=no,resizable=yes,scrollbars=no`;
+      const ventana = window.open(url, 'ProyectorLBC_Display', winFeatures);
+
+      if (ventana) {
+        ventanaProyectorRef.current = ventana;
+        try {
+          ventana.moveTo(tvLeft, tvTop);
+          ventana.resizeTo(tvWidth, tvHeight);
+          ventana.focus();
+        } catch (e) {}
+      }
+
+      setProyectorConectado(true);
+      mostrarToast('📺 ¡Proyectando directamente en Pantalla 2 (TV de la congregación)!', 'success');
+
+      setTimeout(() => {
+        enviarAlProyector({
+          accion: 'fondo',
+          fondo: fondoActivo,
+          tipoFondo: tipoFondoActivo,
+          modoAjuste: modoAjusteFondo,
+          opacidadScrim: oscurecedorFondo
+        });
+        emitirAjustesProyector({
+          fuente: fuenteProyector,
+          colorTexto: colorTextoProyector,
+          sombraTexto,
+          alineacion: alineacionProyector,
+          tamano: tamanoFuente
+        });
+        if (proyeccionActual) {
           enviarAlProyector({
-            accion: 'mostrar',
+            accion: proyeccionActual.tipo === 'imagen' ? 'mostrarMedia' : 'mostrar',
             texto: proyeccionActual.texto,
-            pie: '',
-            tipo: 'cancion'
+            pie: proyeccionActual.pie || '',
+            tipo: proyeccionActual.tipo,
+            url: proyeccionActual.url,
+            modoAjuste: modoAjusteDiapositiva,
+            opacidadScrim: oscurecedorDiapositiva
           });
         }
-      }
-    }, 400);
+      }, 400);
+    }
+  };
+
+  const abrirVentanaProyector = () => {
+    toggleVentanaProyector();
   };
 
   const cambiarTamanoFuente = (nuevoTamano: number) => {
@@ -733,13 +1033,13 @@ export default function App() {
     enviarAlProyector({ accion: 'tamanoFuente', tamano: nuevoTamano });
   };
 
-  const cambiarModoAjusteFondo = (modo: 'contain' | 'cover') => {
+  const cambiarModoAjusteFondo = (modo: 'contain' | 'cover' | 'fill') => {
     setModoAjusteFondo(modo);
     try {
       localStorage.setItem('lbc_modo_ajuste_fondo', modo);
     } catch (e) {}
     enviarAlProyector({ accion: 'ajusteFondo', modoAjuste: modo, opacidadScrim: oscurecedorFondo });
-    mostrarToast(`Modo de fondo: ${modo === 'contain' ? 'Completo sin cortar (Contain)' : 'Rellenar pantalla (Cover)'}`, 'info');
+    mostrarToast(`Ajuste de imagen: ${modo === 'contain' ? 'Completa (No cortar)' : modo === 'cover' ? 'Rellenar Pantalla' : 'Pantalla Completa'}`, 'info');
   };
 
   const cambiarOscurecedorFondo = (val: number) => {
@@ -942,6 +1242,226 @@ export default function App() {
     mostrarToast('Proyección de video finalizada');
   };
 
+  // ==================== MOTOR DE TONO (WEB AUDIO API - PURE JAVASCRIPT) ====================
+  // Cambia el tono en semitonos (-6 a +6) SIN CAMBIAR EL TIEMPO NI LA VELOCIDAD DE LA CANCIÓN
+  const pitchEngineRef = useRef<{
+    init: (el: HTMLMediaElement) => void;
+    setPitch: (semitones: number) => void;
+  } | null>(null);
+
+  useEffect(() => {
+    class WebAudioPitchEngine {
+      private ctx: AudioContext | null = null;
+      private source: MediaElementAudioSourceNode | null = null;
+      private inputGain: GainNode | null = null;
+      private outputGain: GainNode | null = null;
+      private bypassGain: GainNode | null = null;
+      private wetGain: GainNode | null = null;
+      private mod1Gain: GainNode | null = null;
+      private mod2Gain: GainNode | null = null;
+      private mod3Gain: GainNode | null = null;
+      private mod4Gain: GainNode | null = null;
+      private modGain1: GainNode | null = null;
+      private modGain2: GainNode | null = null;
+      private isInit = false;
+
+      private createFadeBuffer(activeTime: number, fadeTime: number): AudioBuffer {
+        const sampleRate = this.ctx!.sampleRate;
+        const length1 = Math.floor(activeTime * sampleRate);
+        const length2 = Math.floor((activeTime - 2 * fadeTime) * sampleRate);
+        const length = length1 + length2;
+        const buffer = this.ctx!.createBuffer(1, length, sampleRate);
+        const p = buffer.getChannelData(0);
+        const fadeLength = Math.floor(fadeTime * sampleRate);
+        const fadeIndex2 = length1 - fadeLength;
+
+        for (let i = 0; i < length1; ++i) {
+          if (i < fadeLength) {
+            p[i] = Math.sqrt(i / fadeLength);
+          } else if (i >= fadeIndex2) {
+            p[i] = Math.sqrt(Math.max(0, 1 - (i - fadeIndex2) / fadeLength));
+          } else {
+            p[i] = 1;
+          }
+        }
+        for (let i = length1; i < length; ++i) {
+          p[i] = 0;
+        }
+        return buffer;
+      }
+
+      private createDelayBuffer(activeTime: number, fadeTime: number, shiftUp: boolean): AudioBuffer {
+        const sampleRate = this.ctx!.sampleRate;
+        const length1 = Math.floor(activeTime * sampleRate);
+        const length2 = Math.floor((activeTime - 2 * fadeTime) * sampleRate);
+        const length = length1 + length2;
+        const buffer = this.ctx!.createBuffer(1, length, sampleRate);
+        const p = buffer.getChannelData(0);
+
+        for (let i = 0; i < length1; ++i) {
+          if (shiftUp) {
+            p[i] = (length1 - i) / length;
+          } else {
+            p[i] = i / length1;
+          }
+        }
+        for (let i = length1; i < length; ++i) {
+          p[i] = 0;
+        }
+        return buffer;
+      }
+
+      public init(mediaEl: HTMLMediaElement) {
+        if (this.isInit) return;
+        try {
+          const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+          if (!AudioCtx) return;
+          this.ctx = new AudioCtx();
+
+          this.inputGain = this.ctx.createGain();
+          this.outputGain = this.ctx.createGain();
+          this.bypassGain = this.ctx.createGain();
+          this.wetGain = this.ctx.createGain();
+
+          this.bypassGain.gain.value = 1;
+          this.wetGain.gain.value = 0;
+
+          const bufferTime = 0.100;
+          const fadeTime = 0.050;
+
+          const shiftDownBuffer = this.createDelayBuffer(bufferTime, fadeTime, false);
+          const shiftUpBuffer = this.createDelayBuffer(bufferTime, fadeTime, true);
+          const fadeBuffer = this.createFadeBuffer(bufferTime, fadeTime);
+
+          const mod1 = this.ctx.createBufferSource();
+          const mod2 = this.ctx.createBufferSource();
+          const mod3 = this.ctx.createBufferSource();
+          const mod4 = this.ctx.createBufferSource();
+          mod1.buffer = shiftDownBuffer;
+          mod2.buffer = shiftDownBuffer;
+          mod3.buffer = shiftUpBuffer;
+          mod4.buffer = shiftUpBuffer;
+          mod1.loop = true;
+          mod2.loop = true;
+          mod3.loop = true;
+          mod4.loop = true;
+
+          this.mod1Gain = this.ctx.createGain();
+          this.mod2Gain = this.ctx.createGain();
+          this.mod3Gain = this.ctx.createGain();
+          this.mod4Gain = this.ctx.createGain();
+          this.mod3Gain.gain.value = 0;
+          this.mod4Gain.gain.value = 0;
+
+          mod1.connect(this.mod1Gain);
+          mod2.connect(this.mod2Gain);
+          mod3.connect(this.mod3Gain);
+          mod4.connect(this.mod4Gain);
+
+          this.modGain1 = this.ctx.createGain();
+          this.modGain2 = this.ctx.createGain();
+          this.modGain1.gain.value = 0;
+          this.modGain2.gain.value = 0;
+
+          this.mod1Gain.connect(this.modGain1);
+          this.mod2Gain.connect(this.modGain2);
+          this.mod3Gain.connect(this.modGain1);
+          this.mod4Gain.connect(this.modGain2);
+
+          const delay1 = this.ctx.createDelay(1);
+          const delay2 = this.ctx.createDelay(1);
+
+          this.modGain1.connect(delay1.delayTime);
+          this.modGain2.connect(delay2.delayTime);
+
+          const fade1 = this.ctx.createBufferSource();
+          const fade2 = this.ctx.createBufferSource();
+          fade1.buffer = fadeBuffer;
+          fade2.buffer = fadeBuffer;
+          fade1.loop = true;
+          fade2.loop = true;
+
+          const mix1 = this.ctx.createGain();
+          const mix2 = this.ctx.createGain();
+          mix1.gain.value = 0;
+          mix2.gain.value = 0;
+
+          fade1.connect(mix1.gain);
+          fade2.connect(mix2.gain);
+
+          this.inputGain.connect(delay1);
+          this.inputGain.connect(delay2);
+          delay1.connect(mix1);
+          delay2.connect(mix2);
+          mix1.connect(this.wetGain);
+          mix2.connect(this.wetGain);
+
+          this.inputGain.connect(this.bypassGain);
+          this.bypassGain.connect(this.outputGain);
+          this.wetGain.connect(this.outputGain);
+
+          this.outputGain.connect(this.ctx.destination);
+
+          const t = this.ctx.currentTime + 0.050;
+          const t2 = t + bufferTime - fadeTime;
+          mod1.start(t);
+          mod2.start(t2);
+          mod3.start(t);
+          mod4.start(t2);
+          fade1.start(t);
+          fade2.start(t2);
+
+          this.source = this.ctx.createMediaElementSource(mediaEl);
+          this.source.connect(this.inputGain);
+
+          this.isInit = true;
+        } catch (err) {
+          console.warn('WebAudioPitchEngine init:', err);
+        }
+      }
+
+      public setPitch(semitones: number) {
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume().catch(() => {});
+        }
+
+        if (!this.isInit || !this.ctx || !this.mod1Gain || !this.mod2Gain || !this.mod3Gain || !this.mod4Gain || !this.modGain1 || !this.modGain2 || !this.bypassGain || !this.wetGain) {
+          return;
+        }
+
+        if (semitones === 0) {
+          this.bypassGain.gain.setValueAtTime(1, this.ctx.currentTime);
+          this.wetGain.gain.setValueAtTime(0, this.ctx.currentTime);
+          this.modGain1.gain.setValueAtTime(0, this.ctx.currentTime);
+          this.modGain2.gain.setValueAtTime(0, this.ctx.currentTime);
+          return;
+        }
+
+        this.bypassGain.gain.setValueAtTime(0, this.ctx.currentTime);
+        this.wetGain.gain.setValueAtTime(1, this.ctx.currentTime);
+
+        const mult = Math.pow(2, semitones / 12) - 1;
+        if (mult > 0) {
+          this.mod3Gain.gain.setValueAtTime(1, this.ctx.currentTime);
+          this.mod4Gain.gain.setValueAtTime(1, this.ctx.currentTime);
+          this.mod1Gain.gain.setValueAtTime(0, this.ctx.currentTime);
+          this.mod2Gain.gain.setValueAtTime(0, this.ctx.currentTime);
+        } else {
+          this.mod3Gain.gain.setValueAtTime(0, this.ctx.currentTime);
+          this.mod4Gain.gain.setValueAtTime(0, this.ctx.currentTime);
+          this.mod1Gain.gain.setValueAtTime(1, this.ctx.currentTime);
+          this.mod2Gain.gain.setValueAtTime(1, this.ctx.currentTime);
+        }
+
+        const delay = 0.100 * Math.abs(mult);
+        this.modGain1.gain.setTargetAtTime(0.5 * delay, this.ctx.currentTime, 0.010);
+        this.modGain2.gain.setTargetAtTime(0.5 * delay, this.ctx.currentTime, 0.010);
+      }
+    }
+
+    pitchEngineRef.current = new WebAudioPitchEngine();
+  }, []);
+
   // ==================== KARAOKE & PISTAS AUDIO ====================
   const [karaokeCancion, setKaraokeCancion] = useState<Song>(INITIAL_FEATURED_SONGS[0]);
   const [karaokePistaUrl, setKaraokePistaUrl] = useState<string>('');
@@ -957,6 +1477,11 @@ export default function App() {
 
   const toggleKaraokePlay = () => {
     if (audioRef.current && karaokePistaUrl) {
+      try {
+        pitchEngineRef.current?.init(audioRef.current);
+        pitchEngineRef.current?.setPitch(pitchSemitonos);
+      } catch (e) {}
+
       if (karaokePlaying) {
         audioRef.current.pause();
         setKaraokePlaying(false);
@@ -976,6 +1501,39 @@ export default function App() {
     }
     setKaraokePlaying(false);
     setKaraokeCurrentTime(0);
+  };
+
+  const handleSeekKaraoke = (val: number) => {
+    setKaraokeCurrentTime(val);
+    if (audioRef.current) {
+      audioRef.current.currentTime = val;
+    }
+  };
+
+  const cambiarPitchSemitonos = (deltaOVal: number, esAbsoluto = false) => {
+    const nuevo = esAbsoluto ? deltaOVal : Math.max(-6, Math.min(6, pitchSemitonos + deltaOVal));
+    setPitchSemitonos(nuevo);
+
+    if (audioRef.current) {
+      try {
+        // Velocidad y tiempo de la canción 100% CONSTANTES (no se frena ni se acelera)
+        audioRef.current.playbackRate = 1.0;
+        (audioRef.current as any).preservesPitch = true;
+
+        // Modulación de tono pura por Web Audio API
+        pitchEngineRef.current?.init(audioRef.current);
+        pitchEngineRef.current?.setPitch(nuevo);
+      } catch (e) {
+        console.warn('Error ajustando pitch:', e);
+      }
+    }
+
+    const desc = nuevo === 0
+      ? 'Tono Original (0)'
+      : nuevo > 0
+      ? `+${nuevo} semitono${nuevo > 1 ? 's' : ''} (más agudo)`
+      : `${nuevo} semitono${Math.abs(nuevo) > 1 ? 's' : ''} (más grave)`;
+    mostrarToast(`Tono ajustado: ${desc} • Ritmo y velocidad 100% constantes`, 'info');
   };
 
   // Free text / Announcements
@@ -1004,7 +1562,207 @@ export default function App() {
     });
   };
 
+  // Reordenar Setlist de Canciones con Mouse (Botones y Drag & Drop)
+  const [arrastrandoCancionIdx, setArrastrandoCancionIdx] = useState<number | null>(null);
   const setlistItems = setlists[setlistActual] || [];
+
+  const moverCancionEnSetlist = (idx: number, direccion: 'arriba' | 'abajo') => {
+    const destino = direccion === 'arriba' ? idx - 1 : idx + 1;
+    if (destino < 0 || destino >= setlistItems.length) return;
+    const copia = [...setlistItems];
+    const temp = copia[idx];
+    copia[idx] = copia[destino];
+    copia[destino] = temp;
+    const nuevoSetlists = { ...setlists, [setlistActual]: copia };
+    setSetlists(nuevoSetlists);
+    try {
+      localStorage.setItem('lbc_setlists', JSON.stringify(nuevoSetlists));
+    } catch (e) {}
+  };
+
+  const reordenarCancionEnSetlist = (origenIdx: number, destinoIdx: number) => {
+    if (origenIdx === destinoIdx || origenIdx < 0 || destinoIdx < 0 || origenIdx >= setlistItems.length || destinoIdx >= setlistItems.length) return;
+    const copia = [...setlistItems];
+    const [elemento] = copia.splice(origenIdx, 1);
+    copia.splice(destinoIdx, 0, elemento);
+    const nuevoSetlists = { ...setlists, [setlistActual]: copia };
+    setSetlists(nuevoSetlists);
+    try {
+      localStorage.setItem('lbc_setlists', JSON.stringify(nuevoSetlists));
+    } catch (e) {}
+    mostrarToast('Orden de canciones en el Setlist actualizado');
+  };
+
+  // ==================== SETLISTS DE KARAOKE & PISTAS ====================
+  const [karaokeSetlistActual, setKaraokeSetlistActual] = useState<string>('domingo');
+  const [karaokeSetlists, setKaraokeSetlists] = useState<KaraokeSetlistsState>(() => {
+    const guardado = localStorage.getItem('lbc_karaoke_setlists');
+    if (guardado) {
+      try {
+        const parsed = JSON.parse(guardado);
+        if (parsed && typeof parsed === 'object') return parsed;
+      } catch (e) {}
+    }
+    return {
+      domingo: [
+        { id: 'k-1', songId: INITIAL_FEATURED_SONGS[0].id, songTitle: INITIAL_FEATURED_SONGS[0].title, song: INITIAL_FEATURED_SONGS[0], pistaNombre: 'Pista de Alabanza 1' },
+        { id: 'k-2', songId: INITIAL_FEATURED_SONGS[2].id, songTitle: INITIAL_FEATURED_SONGS[2].title, song: INITIAL_FEATURED_SONGS[2], pistaNombre: 'Pista de Alabanza 2' },
+        { id: 'k-3', songId: INITIAL_FEATURED_SONGS[4].id, songTitle: INITIAL_FEATURED_SONGS[4].title, song: INITIAL_FEATURED_SONGS[4], pistaNombre: 'Pista de Alabanza 3' }
+      ],
+      sabado: [
+        { id: 'k-4', songId: INITIAL_FEATURED_SONGS[3].id, songTitle: INITIAL_FEATURED_SONGS[3].title, song: INITIAL_FEATURED_SONGS[3], pistaNombre: 'Pista Juvenil' },
+        { id: 'k-5', songId: INITIAL_FEATURED_SONGS[7].id, songTitle: INITIAL_FEATURED_SONGS[7].title, song: INITIAL_FEATURED_SONGS[7], pistaNombre: 'Pista de Alabanza' }
+      ],
+      miercoles: [
+        { id: 'k-6', songId: INITIAL_FEATURED_SONGS[1].id, songTitle: INITIAL_FEATURED_SONGS[1].title, song: INITIAL_FEATURED_SONGS[1], pistaNombre: 'Pista Devocional' },
+        { id: 'k-7', songId: INITIAL_FEATURED_SONGS[5].id, songTitle: INITIAL_FEATURED_SONGS[5].title, song: INITIAL_FEATURED_SONGS[5], pistaNombre: 'Pista de Oración' }
+      ],
+      general: []
+    };
+  });
+
+  const [arrastrandoKaraokeIdx, setArrastrandoKaraokeIdx] = useState<number | null>(null);
+  const karaokeSetlistItems = karaokeSetlists[karaokeSetlistActual] || [];
+
+  // Búsqueda rápida en Karaoke para no desplegar lista de 561 canciones
+  const [busquedaKaraoke, setBusquedaKaraoke] = useState<string>('');
+
+  const cancionesFiltradasKaraoke = useMemo(() => {
+    if (!busquedaKaraoke.trim()) return repertorio;
+    const txt = normalizarTexto(busquedaKaraoke);
+    return repertorio.filter(s => normalizarTexto(s.title).includes(txt));
+  }, [repertorio, busquedaKaraoke]);
+
+  const seleccionarCancionKaraoke = (cancion: Song) => {
+    setKaraokeCancion(cancion);
+    setKaraokeSeccionIdx(0);
+    setKaraokePistaNombre(`Pista de ${cancion.title}`);
+  };
+
+  const handleBusquedaKaraokeChange = (texto: string) => {
+    setBusquedaKaraoke(texto);
+    if (texto.trim()) {
+      const txt = normalizarTexto(texto);
+      const primeraCoincidencia = repertorio.find(s => normalizarTexto(s.title).includes(txt));
+      if (primeraCoincidencia) {
+        seleccionarCancionKaraoke(primeraCoincidencia);
+      }
+    }
+  };
+
+  const agregarCancionAKaraokeSetlist = (cancion: Song) => {
+    const nuevoItem: KaraokeItem = {
+      id: `k-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      songId: cancion.id,
+      songTitle: cancion.title,
+      song: cancion,
+      pistaNombre: `Pista de ${cancion.title}`
+    };
+    const listaActual = karaokeSetlists[karaokeSetlistActual] || [];
+    const nuevaLista = [...listaActual, nuevoItem];
+    const nuevoState = { ...karaokeSetlists, [karaokeSetlistActual]: nuevaLista };
+    setKaraokeSetlists(nuevoState);
+    try {
+      localStorage.setItem('lbc_karaoke_setlists', JSON.stringify(nuevoState));
+    } catch (e) {}
+    mostrarToast(`"${cancion.title}" agregada a la lista de pistas (${karaokeSetlistActual})`);
+  };
+
+  const moverKaraokeEnSetlist = (idx: number, direccion: 'arriba' | 'abajo') => {
+    const destino = direccion === 'arriba' ? idx - 1 : idx + 1;
+    if (destino < 0 || destino >= karaokeSetlistItems.length) return;
+    const copia = [...karaokeSetlistItems];
+    const temp = copia[idx];
+    copia[idx] = copia[destino];
+    copia[destino] = temp;
+    const nuevoState = { ...karaokeSetlists, [karaokeSetlistActual]: copia };
+    setKaraokeSetlists(nuevoState);
+    try {
+      localStorage.setItem('lbc_karaoke_setlists', JSON.stringify(nuevoState));
+    } catch (e) {}
+  };
+
+  const reordenarKaraokeEnSetlist = (origenIdx: number, destinoIdx: number) => {
+    if (origenIdx === destinoIdx || origenIdx < 0 || destinoIdx < 0 || origenIdx >= karaokeSetlistItems.length || destinoIdx >= karaokeSetlistItems.length) return;
+    const copia = [...karaokeSetlistItems];
+    const [elemento] = copia.splice(origenIdx, 1);
+    copia.splice(destinoIdx, 0, elemento);
+    const nuevoState = { ...karaokeSetlists, [karaokeSetlistActual]: copia };
+    setKaraokeSetlists(nuevoState);
+    try {
+      localStorage.setItem('lbc_karaoke_setlists', JSON.stringify(nuevoState));
+    } catch (e) {}
+    mostrarToast('Orden de pistas actualizado');
+  };
+
+  const eliminarKaraokeDeSetlist = (idx: number, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    const nuevaLista = karaokeSetlistItems.filter((_, i) => i !== idx);
+    const nuevoState = { ...karaokeSetlists, [karaokeSetlistActual]: nuevaLista };
+    setKaraokeSetlists(nuevoState);
+    try {
+      localStorage.setItem('lbc_karaoke_setlists', JSON.stringify(nuevoState));
+    } catch (e) {}
+    mostrarToast('Pista retirada de la lista', 'info');
+  };
+
+  const seleccionarKaraokeItem = (item: KaraokeItem) => {
+    setKaraokeCancion(item.song);
+    setKaraokeSeccionIdx(0);
+    if (item.pistaUrl) {
+      setKaraokePistaUrl(item.pistaUrl);
+      setKaraokePistaNombre(item.pistaNombre || item.songTitle);
+    } else {
+      setKaraokePistaNombre(`Pista de ${item.songTitle}`);
+    }
+    mostrarToast(`Cargada alabanza "${item.songTitle}" para pista`);
+  };
+
+  // ==================== QUITADO Y LIMPIEZA TOTAL DE VIDEOS ====================
+  const quitarVideoYoutube = () => {
+    setYoutubeVideoId('');
+    setYoutubeInputUrl('');
+    if (youtubeEnProyector) {
+      detenerYoutubeEnProyector();
+    }
+    mostrarToast('Video de YouTube quitado y descargado por completo', 'info');
+  };
+
+  const quitarVideoCulto = () => {
+    setVideoUrl('');
+    setVideoPlaying(false);
+    if (videoEnProyector) {
+      detenerVideoEnProyector();
+    }
+    mostrarToast('Video de culto quitado de memoria y de la pantalla', 'info');
+  };
+
+  // ==================== PROYECCIÓN DE PRÉDICA Y BOSQUEJOS ====================
+  const proyectarPredica = (texto: string, pie?: string, titulo?: string) => {
+    if (videoEnProyector) detenerVideoEnProyector();
+    if (youtubeEnProyector) detenerYoutubeEnProyector();
+    setIsBlackout(false);
+    setProyeccionActual({
+      id: `predica-${Date.now()}`,
+      tipo: 'predica',
+      texto,
+      pie: pie || '',
+      titulo: titulo || 'Prédica'
+    });
+    try {
+      localStorage.setItem('proyector_lbc_actual', JSON.stringify({
+        texto,
+        tipo: 'predica',
+        pie: pie || ''
+      }));
+    } catch (e) {}
+    enviarAlProyector({
+      accion: 'mostrar',
+      texto,
+      pie: pie || '',
+      tipo: 'predica'
+    });
+  };
 
   return (
     <div className={`min-h-screen flex flex-col font-sans transition-colors duration-200 selection:bg-blue-600 selection:text-white ${
@@ -1035,14 +1793,17 @@ export default function App() {
         const file = e.target.files?.[0];
         if (file) setVideoUrl(URL.createObjectURL(file));
       }} accept="video/*" className="hidden" />
-      <input type="file" ref={audioInputRef} onChange={(e) => {
+      <input type="file" ref={audioInputRef} onChange={async (e) => {
         const file = e.target.files?.[0];
         if (file) {
-          setKaraokePistaUrl(URL.createObjectURL(file));
+          setAudioFileCargado(file);
           setKaraokePistaNombre(file.name);
-          mostrarToast(`Pista de audio "${file.name}" cargada`);
+          setKaraokePistaUrl(URL.createObjectURL(file));
+          setKaraokeCurrentTime(0);
+          setKaraokePlaying(false);
+          mostrarToast(`Pista "${file.name}" cargada para Karaoke`);
         }
-      }} accept="audio/*" className="hidden" />
+      }} accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg" className="hidden" />
 
       {/* Audio element for Karaoke */}
       {karaokePistaUrl && (
@@ -1089,8 +1850,9 @@ export default function App() {
         }`}>
           {[
             { id: 'portada', label: 'Portada', icon: Home },
-            { id: 'biblia', label: 'Biblia (66 Libros)', icon: BookOpen },
+            { id: 'biblia', label: 'Biblia', icon: BookOpen },
             { id: 'canciones', label: 'Canciones', icon: Music },
+            { id: 'predica', label: 'Prédica & Bosquejo', icon: ScrollText },
             { id: 'fondos', label: 'Fondos', icon: Image },
             { id: 'video', label: 'Video', icon: Video },
             { id: 'karaoke', label: 'Karaoke', icon: Mic },
@@ -1163,13 +1925,37 @@ export default function App() {
             <span>Limpiar (C)</span>
           </button>
 
-          {/* Abrir Proyector */}
+          {/* Botón Emergencia: Quitar Video en Vivo (visible desde cualquier pestaña si hay video transmitiendo) */}
+          {(youtubeEnProyector || videoEnProyector) && (
+            <button
+              onClick={() => {
+                if (youtubeEnProyector) detenerYoutubeEnProyector();
+                if (videoEnProyector) detenerVideoEnProyector();
+                setYoutubeVideoId('');
+                setYoutubeInputUrl('');
+                setVideoUrl('');
+                mostrarToast('⏹️ Video detenido y quitado de la pantalla', 'info');
+              }}
+              title="Detener y quitar inmediatamente el video que está transmitiendo en el proyector"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-black bg-rose-600 hover:bg-rose-500 text-white animate-pulse shadow-lg shadow-rose-600/40 cursor-pointer"
+            >
+              <Square className="w-3.5 h-3.5 fill-white" />
+              <span>⏹️ Quitar Video</span>
+            </button>
+          )}
+
+          {/* Abrir / Desactivar Proyector Pantalla 2 (TV) */}
           <button
-            onClick={abrirVentanaProyector}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-500 text-slate-950 hover:bg-amber-400 shadow transition cursor-pointer"
+            onClick={toggleVentanaProyector}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition shadow cursor-pointer ${
+              proyectorConectado
+                ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-rose-600/30 ring-2 ring-rose-400/50'
+                : 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-amber-500/20'
+            }`}
+            title={proyectorConectado ? 'Clic para desactivar la proyección en la Pantalla 2 (TV)' : 'Clic para proyectar automáticamente en la Pantalla 2 (TV)'}
           >
             <Monitor className="w-3.5 h-3.5" />
-            <span>🖥️ Proyector</span>
+            <span>{proyectorConectado ? '⏹️ Apagar TV (Pantalla 2)' : '🖥️ Proyectar en TV (Pantalla 2)'}</span>
           </button>
 
           {/* Botón Centro de Ayuda (?) */}
@@ -1191,8 +1977,9 @@ export default function App() {
             <a
               href="/Proyector-LBC-Completo.zip"
               download="Proyector-LBC-Completo.zip"
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow transition"
-              title="Descargar paquete ZIP para llevar a otra computadora"
+              onClick={() => mostrarToast('Descargando Proyector-LBC-Completo.zip (9 MB)...', 'info')}
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow transition cursor-pointer"
+              title="Descargar paquete ZIP completo (9 MB) con archivos .bat y código listo"
             >
               <Download className="w-3.5 h-3.5" />
               <span>ZIP</span>
@@ -1277,7 +2064,7 @@ export default function App() {
                 className="px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-lg shadow-blue-600/30 flex items-center gap-2 transition cursor-pointer"
               >
                 <BookOpen className="w-4 h-4" />
-                <span>Explorar Sagradas Escrituras (66 Libros)</span>
+                <span>Sagradas Escrituras</span>
               </button>
 
               <button
@@ -1305,11 +2092,15 @@ export default function App() {
               </button>
 
               <button
-                onClick={abrirVentanaProyector}
-                className="px-5 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs shadow-lg transition flex items-center gap-2 cursor-pointer"
+                onClick={toggleVentanaProyector}
+                className={`px-5 py-3 rounded-xl font-black text-xs shadow-lg transition flex items-center gap-2 cursor-pointer ${
+                  proyectorConectado
+                    ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-rose-600/30'
+                    : 'bg-amber-500 hover:bg-amber-400 text-slate-950'
+                }`}
               >
                 <Monitor className="w-4 h-4" />
-                <span>Abrir Pantalla del Proyector</span>
+                <span>{proyectorConectado ? '⏹️ Apagar Pantalla 2 (TV)' : '🖥️ Proyectar en Pantalla 2 (TV)'}</span>
               </button>
             </div>
 
@@ -1325,7 +2116,7 @@ export default function App() {
           </div>
         )}
 
-        {/* ==================== MÓDULO 2: BIBLIA COMPLETA (66 LIBROS) ==================== */}
+        {/* ==================== MÓDULO 2: SAGRADAS ESCRITURAS ==================== */}
         {moduloActivo === 'biblia' && (
           <div className="flex flex-col gap-2.5 h-[calc(100vh-105px)] pb-1">
             
@@ -1336,7 +2127,7 @@ export default function App() {
               <div className="flex items-center gap-2">
                 <span className="text-xs font-black flex items-center gap-1.5">
                   <BookOpen className="w-4 h-4 text-amber-500" />
-                  Sagradas Escrituras (66 Libros)
+                  Sagradas Escrituras
                 </span>
                 <span className="text-[11px] text-slate-400 hidden lg:inline">
                   • Selecciona libro, capítulo y versículo para proyectar en vivo
@@ -1347,11 +2138,11 @@ export default function App() {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => folderInputRef.current?.click()}
-                  title="Carga la carpeta 'data/biblia' o 'versiones' de tu computadora para tener los 66 libros completos en memoria"
+                  title="Carga la carpeta de la Biblia de tu computadora para tener todos los libros en memoria"
                   className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-1.5 shadow transition cursor-pointer"
                 >
                   <FolderOpen className="w-3.5 h-3.5" />
-                  <span>📂 Cargar Carpeta data/biblia (66 Libros)</span>
+                  <span>📂 Cargar Biblia</span>
                 </button>
 
                 <button
@@ -1715,7 +2506,7 @@ export default function App() {
                     className="px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs flex items-center gap-1 transition cursor-pointer"
                   >
                     <Plus className="w-3 h-3" />
-                    <span>+ Nueva</span>
+                    <span>Nueva</span>
                   </button>
                 </div>
               </div>
@@ -1814,6 +2605,15 @@ export default function App() {
                     </div>
 
                     <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => abrirModalEditarCancion(cancionSeleccionada)}
+                        title="Editar letra, estrofas o título de esta alabanza"
+                        className="px-2.5 py-1 rounded-lg bg-amber-500/20 border border-amber-500/50 hover:bg-amber-500/30 text-amber-300 font-bold text-xs flex items-center gap-1 shadow transition cursor-pointer"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                        <span>Editar Letra</span>
+                      </button>
+
                       <button
                         onClick={retrocederEstrofa}
                         title="Estrofa anterior (Flecha Izq)"
@@ -1917,33 +2717,80 @@ export default function App() {
                   {setlistItems.map((cancion, idx) => (
                     <div
                       key={`${cancion.id}-${idx}`}
+                      draggable
+                      onDragStart={(e) => {
+                        e.dataTransfer.setData('text/plain', String(idx));
+                        setArrastrandoCancionIdx(idx);
+                      }}
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        const src = parseInt(e.dataTransfer.getData('text/plain'), 10);
+                        if (!isNaN(src)) reordenarCancionEnSetlist(src, idx);
+                        setArrastrandoCancionIdx(null);
+                      }}
+                      onDragEnd={() => setArrastrandoCancionIdx(null)}
                       onClick={() => {
                         setCancionSeleccionada(cancion);
                         setSeccionActivaIdx(-1);
                       }}
-                      className={`p-2 rounded-xl border text-left text-xs flex items-center justify-between cursor-pointer group ${
-                        temaOperador === 'claro' ? 'bg-slate-50 border-slate-200 hover:bg-slate-100' : 'bg-slate-950/70 border-slate-800 hover:bg-slate-800'
+                      className={`p-2 rounded-xl border text-left text-xs flex items-center justify-between cursor-pointer group transition select-none ${
+                        arrastrandoCancionIdx === idx
+                          ? 'opacity-40 border-dashed border-amber-400 bg-amber-500/10'
+                          : temaOperador === 'claro'
+                          ? 'bg-slate-50 border-slate-200 hover:bg-slate-100 hover:border-slate-300'
+                          : 'bg-slate-950/70 border-slate-800 hover:bg-slate-800 hover:border-slate-700'
                       }`}
                     >
-                      <div className="truncate pr-2">
-                        <span className="font-bold block truncate">
-                          {idx + 1}. {cancion.title}
-                        </span>
-                        <span className="text-[10px] text-slate-400 font-mono">
-                          {cancion.sections.length} partes
-                        </span>
+                      <div className="flex items-center gap-1.5 truncate flex-1 pr-1">
+                        <GripVertical className="w-3.5 h-3.5 text-slate-500 group-hover:text-amber-400 cursor-grab flex-shrink-0" />
+                        <div className="truncate">
+                          <span className="font-bold block truncate">
+                            {idx + 1}. {cancion.title}
+                          </span>
+                          <span className="text-[10px] text-slate-400 font-mono">
+                            {cancion.sections.length} partes
+                          </span>
+                        </div>
                       </div>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const nuevo = setlistItems.filter((_, i) => i !== idx);
-                          setSetlists(prev => ({ ...prev, [setlistActual]: nuevo }));
-                          localStorage.setItem('lbc_setlists', JSON.stringify({ ...setlists, [setlistActual]: nuevo }));
-                        }}
-                        className="text-slate-400 hover:text-rose-500 p-1 opacity-0 group-hover:opacity-100 transition cursor-pointer"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+
+                      <div className="flex items-center gap-0.5 flex-shrink-0">
+                        {/* Botones de subir / bajar orden con mouse */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            moverCancionEnSetlist(idx, 'arriba');
+                          }}
+                          disabled={idx === 0}
+                          title="Subir canción en el orden"
+                          className="p-1 rounded text-slate-400 hover:text-amber-400 disabled:opacity-20 cursor-pointer"
+                        >
+                          <ArrowUp className="w-3 h-3" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            moverCancionEnSetlist(idx, 'abajo');
+                          }}
+                          disabled={idx === setlistItems.length - 1}
+                          title="Bajar canción en el orden"
+                          className="p-1 rounded text-slate-400 hover:text-amber-400 disabled:opacity-20 cursor-pointer"
+                        >
+                          <ArrowDown className="w-3 h-3" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const nuevo = setlistItems.filter((_, i) => i !== idx);
+                            setSetlists(prev => ({ ...prev, [setlistActual]: nuevo }));
+                            localStorage.setItem('lbc_setlists', JSON.stringify({ ...setlists, [setlistActual]: nuevo }));
+                          }}
+                          title="Eliminar de la lista"
+                          className="text-slate-400 hover:text-rose-500 p-1 transition cursor-pointer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -1974,6 +2821,15 @@ export default function App() {
               </div>
             </div>
           </div>
+        )}
+
+        {/* ==================== MÓDULO: PRÉDICA & BOSQUEJOS ==================== */}
+        {moduloActivo === 'predica' && (
+          <PredicaPanel
+            temaOperador={temaOperador}
+            onProyectar={proyectarPredica}
+            mostrarToast={mostrarToast}
+          />
         )}
 
         {/* ==================== MÓDULO 4: FONDOS DINÁMICOS ==================== */}
@@ -2103,7 +2959,7 @@ export default function App() {
                       }`}
                       title="Muestra la imagen completa centrada sin cortar nada (ideal para logos y banners)"
                     >
-                      🎯 Completa (No cortar)
+                      🎯 Completar, no cortar
                     </button>
                     <button
                       onClick={() => cambiarModoAjusteFondo('cover')}
@@ -2112,7 +2968,16 @@ export default function App() {
                       }`}
                       title="Rellena toda la pantalla panorámica 16:9"
                     >
-                      📐 Rellenar Pantalla
+                      📐 Rellenar pantalla
+                    </button>
+                    <button
+                      onClick={() => cambiarModoAjusteFondo('fill')}
+                      className={`px-3 py-1 rounded font-bold transition cursor-pointer ${
+                        modoAjusteFondo === 'fill' ? 'bg-amber-500 text-slate-950 shadow' : 'text-slate-400 hover:text-white'
+                      }`}
+                      title="Ajusta a pantalla completa 100% eliminando franjas negras en TV"
+                    >
+                      ↔️ Pantalla completa
                     </button>
                   </div>
                 </div>
@@ -2152,7 +3017,7 @@ export default function App() {
                   backgroundImage: (tipoFondoActivo !== 'anim' && !fondoActivo.startsWith('video:') && (fondoActivo.startsWith('http') || fondoActivo.startsWith('data:') || fondoActivo.includes('assets/')))
                     ? `url('${fondoActivo}')`
                     : (tipoFondoActivo === 'estatico' && !fondoActivo.startsWith('data:') && !fondoActivo.startsWith('http') ? fondoActivo : undefined),
-                  backgroundSize: modoAjusteFondo,
+                  backgroundSize: modoAjusteFondo === 'fill' ? '100% 100%' : modoAjusteFondo,
                   backgroundRepeat: 'no-repeat',
                   backgroundPosition: 'center center'
                 }}
@@ -2248,9 +3113,18 @@ export default function App() {
                         className="px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
                       >
                         <Square className="w-3.5 h-3.5 fill-white" />
-                        <span>⏹ Detener Video en Proyector</span>
+                        <span>⏹ Detener</span>
                       </button>
                     )}
+
+                    <button
+                      onClick={quitarVideoCulto}
+                      title="Descargar y quitar video de la pantalla y de la memoria"
+                      className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-rose-900/60 text-slate-300 hover:text-rose-200 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5 text-rose-400" />
+                      <span>Quitar Video</span>
+                    </button>
                   </div>
 
                   <div className="flex items-center gap-3 text-xs">
@@ -2321,7 +3195,7 @@ export default function App() {
                   <div className="space-y-3 pt-1">
                     <div className="aspect-video w-full rounded-xl overflow-hidden bg-black border border-slate-800">
                       <iframe
-                        src={`https://www.youtube-nocookie.com/embed/${youtubeVideoId}?enablejsapi=1&origin=${encodeURIComponent(typeof window !== 'undefined' && window.location.origin.startsWith('http') ? window.location.origin : 'https://www.youtube.com')}&autoplay=1&rel=0&modestbranding=1`}
+                        src={`https://www.youtube.com/embed/${youtubeVideoId}?enablejsapi=1&origin=${encodeURIComponent(typeof window !== 'undefined' && window.location.origin.startsWith('http') ? window.location.origin : 'https://www.youtube.com')}&autoplay=1&rel=0&modestbranding=1`}
                         className="w-full h-full border-none"
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                         referrerPolicy="strict-origin-when-cross-origin"
@@ -2363,6 +3237,15 @@ export default function App() {
                           ⏹ Detener
                         </button>
                       )}
+
+                      <button
+                        onClick={quitarVideoYoutube}
+                        title="Quitar video de YouTube, detener reproducción y vaciar reproductor"
+                        className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-rose-900/60 text-slate-300 hover:text-rose-200 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
+                      >
+                        <Trash2 className="w-3.5 h-3.5 text-rose-400" />
+                        <span>Quitar Video del Todo</span>
+                      </button>
                     </div>
                   </div>
                 )}
@@ -2451,11 +3334,7 @@ export default function App() {
                       min="0"
                       max={karaokeDuration || 100}
                       value={karaokeCurrentTime}
-                      onChange={(e) => {
-                        const val = Number(e.target.value);
-                        setKaraokeCurrentTime(val);
-                        if (audioRef.current) audioRef.current.currentTime = val;
-                      }}
+                      onChange={(e) => handleSeekKaraoke(Number(e.target.value))}
                       className="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-teal-500"
                     />
                     <div className="flex justify-between text-[10px] font-mono text-slate-400">
@@ -2510,19 +3389,195 @@ export default function App() {
                       />
                     </div>
                   </div>
+
+                  {/* Control de Tono / Pitch Shifter en Semitonos */}
+                  <div className={`mt-3 pt-3 border-t space-y-2.5 ${temaOperador === 'claro' ? 'border-slate-200' : 'border-slate-800'}`}>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <Music className="w-3.5 h-3.5 text-teal-400" />
+                        <span className="text-xs font-bold text-slate-200">Ajuste de Tono (Pitch):</span>
+                      </div>
+                      <span className={`text-[11px] font-mono font-bold px-2 py-0.5 rounded-full ${
+                        pitchSemitonos === 0
+                          ? 'bg-slate-800 text-teal-400 border border-teal-500/30'
+                          : pitchSemitonos > 0
+                          ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                          : 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/40'
+                      }`}>
+                        {pitchSemitonos === 0
+                          ? '0 st (Tono Original)'
+                          : pitchSemitonos > 0
+                          ? `+${pitchSemitonos} st (${pitchSemitonos === 2 ? '1 Tono Arriba' : pitchSemitonos === 1 ? '½ Tono Arriba' : `+${pitchSemitonos} semitonos`})`
+                          : `${pitchSemitonos} st (${pitchSemitonos === -2 ? '1 Tono Abajo' : pitchSemitonos === -1 ? '½ Tono Abajo' : `${pitchSemitonos} semitonos`})`}
+                      </span>
+                    </div>
+
+                    <p className="text-[11px] text-slate-400">
+                      Aumenta o disminuye semitonos para adaptar el audio MP3 o WAV a la voz que vaya a cantar:
+                    </p>
+
+                    {/* Botones de semitono y restablecer */}
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => cambiarPitchSemitonos(-1)}
+                        disabled={pitchSemitonos <= -6}
+                        className="flex-1 py-1.5 px-2 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer border border-slate-700"
+                        title="Disminuir medio tono (-1 semitono)"
+                      >
+                        <ArrowDown className="w-3.5 h-3.5 text-indigo-400" />
+                        <span>-1 Semitono</span>
+                      </button>
+
+                      <button
+                        onClick={() => cambiarPitchSemitonos(0, true)}
+                        className={`py-1.5 px-3 rounded-lg text-xs font-bold transition cursor-pointer border ${
+                          pitchSemitonos === 0
+                            ? 'bg-teal-500 text-slate-950 border-teal-400 shadow'
+                            : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'
+                        }`}
+                        title="Restablecer al tono original"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" />
+                      </button>
+
+                      <button
+                        onClick={() => cambiarPitchSemitonos(1)}
+                        disabled={pitchSemitonos >= 6}
+                        className="flex-1 py-1.5 px-2 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer border border-slate-700"
+                        title="Aumentar medio tono (+1 semitono)"
+                      >
+                        <ArrowUp className="w-3.5 h-3.5 text-emerald-400" />
+                        <span>+1 Semitono</span>
+                      </button>
+                    </div>
+
+                    {/* Selector rápido directo de semitonos (-3 a +3) */}
+                    <div className="flex items-center justify-between gap-1 pt-0.5">
+                      {[-3, -2, -1, 0, 1, 2, 3].map((st) => (
+                        <button
+                          key={st}
+                          onClick={() => cambiarPitchSemitonos(st, true)}
+                          className={`flex-1 py-1 text-[10px] font-mono font-bold rounded transition cursor-pointer ${
+                            pitchSemitonos === st
+                              ? 'bg-teal-400 text-slate-950 shadow scale-105'
+                              : 'bg-slate-900 hover:bg-slate-800 text-slate-400 border border-slate-800'
+                          }`}
+                          title={st === 0 ? 'Original' : st > 0 ? `+${st} semitonos` : `${st} semitonos`}
+                        >
+                          {st > 0 ? `+${st}` : st}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              {/* Tips */}
-              <div className={`p-3.5 rounded-xl border text-xs space-y-1.5 text-slate-400 ${
+              {/* Setlist de Pistas (Culto sin Músicos) */}
+              <div className={`p-3.5 rounded-xl border flex flex-col gap-2 overflow-hidden ${
                 temaOperador === 'claro' ? 'bg-slate-50 border-slate-300' : 'bg-slate-950/80 border-slate-800'
               }`}>
-                <span className="font-bold block">💡 ¿Cómo funciona el Karaoke?</span>
-                <p className="leading-relaxed">
-                  1. Carga cualquier pista de audio instrumental (.mp3 o .wav) con el botón superior.
-                  <br />
-                  2. A la derecha haz clic en cada estrofa de la alabanza para proyectarla sincronizada en el proyector.
-                </p>
+                <div className={`flex items-center justify-between border-b pb-2 ${temaOperador === 'claro' ? 'border-slate-200' : 'border-slate-800'}`}>
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-black text-xs uppercase text-teal-500">SETLIST DE PISTAS</span>
+                    <span className={`text-[10px] font-mono px-1.5 rounded ${temaOperador === 'claro' ? 'bg-slate-200 text-slate-800' : 'bg-slate-800 text-slate-300'}`}>
+                      {karaokeSetlistItems.length}
+                    </span>
+                  </div>
+
+                  <select
+                    value={karaokeSetlistActual}
+                    onChange={(e) => setKaraokeSetlistActual(e.target.value)}
+                    className={`border rounded-lg text-xs font-bold px-2 py-1 focus:outline-none ${
+                      temaOperador === 'claro' ? 'bg-white border-slate-300 text-teal-700' : 'bg-slate-900 border-slate-800 text-teal-400'
+                    }`}
+                  >
+                    <option value="domingo">Domingo</option>
+                    <option value="miercoles">Miércoles</option>
+                    <option value="sabado">Sábado</option>
+                    <option value="general">Especial</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1.5 overflow-y-auto max-h-48 pr-1">
+                  {karaokeSetlistItems.length === 0 ? (
+                    <div className="text-center p-3 text-xs text-slate-500">
+                      No hay canciones en la lista de {karaokeSetlistActual}. Usa el botón "+ Setlist" para añadir.
+                    </div>
+                  ) : (
+                    karaokeSetlistItems.map((item, idx) => (
+                      <div
+                        key={`${item.id}-${idx}`}
+                        draggable
+                        onDragStart={(e) => {
+                          e.dataTransfer.setData('text/plain', String(idx));
+                          setArrastrandoKaraokeIdx(idx);
+                        }}
+                        onDragOver={(e) => e.preventDefault()}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          const src = parseInt(e.dataTransfer.getData('text/plain'), 10);
+                          if (!isNaN(src)) reordenarKaraokeEnSetlist(src, idx);
+                          setArrastrandoKaraokeIdx(null);
+                        }}
+                        onDragEnd={() => setArrastrandoKaraokeIdx(null)}
+                        onClick={() => seleccionarKaraokeItem(item)}
+                        className={`p-2 rounded-xl border text-xs flex items-center justify-between cursor-pointer group transition select-none ${
+                          karaokeCancion.id === item.songId
+                            ? 'bg-teal-500/20 border-teal-400 text-teal-200 shadow'
+                            : arrastrandoKaraokeIdx === idx
+                            ? 'opacity-40 border-dashed border-teal-400'
+                            : temaOperador === 'claro'
+                            ? 'bg-white border-slate-200 hover:bg-slate-100'
+                            : 'bg-slate-900/80 border-slate-800 hover:bg-slate-800'
+                        }`}
+                      >
+                        <div className="flex items-center gap-1.5 truncate flex-1 pr-1">
+                          <GripVertical className="w-3.5 h-3.5 text-slate-500 group-hover:text-teal-400 cursor-grab flex-shrink-0" />
+                          <div className="truncate">
+                            <span className="font-bold block truncate">
+                              {idx + 1}. {item.songTitle}
+                            </span>
+                            <span className="text-[10px] text-slate-400 truncate block font-mono">
+                              {item.pistaNombre}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-0.5 flex-shrink-0">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              moverKaraokeEnSetlist(idx, 'arriba');
+                            }}
+                            disabled={idx === 0}
+                            title="Subir posición"
+                            className="p-1 rounded text-slate-400 hover:text-teal-400 disabled:opacity-20 cursor-pointer"
+                          >
+                            <ArrowUp className="w-3 h-3" />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              moverKaraokeEnSetlist(idx, 'abajo');
+                            }}
+                            disabled={idx === karaokeSetlistItems.length - 1}
+                            title="Bajar posición"
+                            className="p-1 rounded text-slate-400 hover:text-teal-400 disabled:opacity-20 cursor-pointer"
+                          >
+                            <ArrowDown className="w-3 h-3" />
+                          </button>
+                          <button
+                            onClick={(e) => eliminarKaraokeDeSetlist(idx, e)}
+                            title="Quitar de la lista"
+                            className="p-1 text-slate-400 hover:text-rose-400 cursor-pointer"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
             </div>
 
@@ -2530,38 +3585,96 @@ export default function App() {
             <div className={`xl:col-span-7 border rounded-2xl p-4 shadow-xl flex flex-col gap-3 ${
               temaOperador === 'claro' ? 'bg-white border-slate-300' : 'bg-slate-900/80 border-slate-800'
             }`}>
-              <div className={`flex items-center justify-between border-b pb-2 ${temaOperador === 'claro' ? 'border-slate-200' : 'border-slate-800'}`}>
-                <div className="flex items-center gap-2">
-                  <span className="font-black text-xs uppercase">ALABANZA:</span>
+              <div className={`flex flex-wrap items-center justify-between gap-2.5 border-b pb-2.5 ${
+                temaOperador === 'claro' ? 'border-slate-200' : 'border-slate-800'
+              }`}>
+                {/* Selector de Canción Filtrada + Botón Editar */}
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="font-black text-xs uppercase text-teal-400 shrink-0">ALABANZA:</span>
                   <select
                     value={karaokeCancion.id}
                     onChange={(e) => {
-                      const song = repertorio.find(s => s.id === e.target.value) || repertorio[0];
-                      setKaraokeCancion(song);
-                      setKaraokeSeccionIdx(0);
+                      const song = repertorio.find(s => s.id === e.target.value);
+                      if (song) seleccionarCancionKaraoke(song);
                     }}
-                    className={`border rounded-lg text-xs font-bold px-2 py-1 max-w-[280px] ${
-                      temaOperador === 'claro' ? 'bg-slate-50 border-slate-300 text-amber-600' : 'bg-slate-950 border-slate-800 text-amber-400'
+                    className={`border rounded-lg text-xs font-bold px-2 py-1.5 w-44 sm:w-56 truncate outline-none ${
+                      temaOperador === 'claro' ? 'bg-slate-50 border-slate-300 text-teal-700' : 'bg-slate-950 border-slate-800 text-teal-400'
                     }`}
                   >
-                    {repertorio.map(s => (
+                    {!cancionesFiltradasKaraoke.some(s => s.id === karaokeCancion.id) && (
+                      <option value={karaokeCancion.id}>{karaokeCancion.title} (Actual)</option>
+                    )}
+                    {cancionesFiltradasKaraoke.map(s => (
                       <option key={s.id} value={s.id}>{s.title}</option>
                     ))}
                   </select>
+
+                  <button
+                    onClick={() => abrirModalEditarCancion(karaokeCancion)}
+                    className="px-2.5 py-1.5 rounded-lg bg-amber-500/20 border border-amber-500/50 hover:bg-amber-500/30 text-amber-300 font-bold text-xs flex items-center gap-1 shadow transition cursor-pointer shrink-0"
+                    title="Editar letra o corregir estrofas de esta alabanza"
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                    <span>Editar</span>
+                  </button>
                 </div>
 
-                <button
-                  onClick={() => {
-                    if (karaokeSeccionIdx < karaokeCancion.sections.length - 1) {
-                      const sig = karaokeSeccionIdx + 1;
-                      setKaraokeSeccionIdx(sig);
-                      proyectarEstrofa(karaokeCancion.sections[sig], karaokeCancion, sig);
-                    }
-                  }}
-                  className="px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow flex items-center gap-1 cursor-pointer"
-                >
-                  <span>Siguiente Estrofa ➡</span>
-                </button>
+                {/* Caja de Búsqueda Sincronizada con Enter y Limpiar + Botones de Acción */}
+                <div className="flex items-center gap-2 shrink-0">
+                  <div className={`flex items-center gap-1.5 px-2.5 py-1 text-xs border rounded-lg w-40 sm:w-52 ${
+                    temaOperador === 'claro' ? 'bg-white border-slate-300 text-slate-800' : 'bg-slate-950 border-slate-700 text-white'
+                  }`}>
+                    <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    <input
+                      type="text"
+                      value={busquedaKaraoke}
+                      onChange={(e) => handleBusquedaKaraokeChange(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          if (cancionesFiltradasKaraoke.length > 0) {
+                            seleccionarCancionKaraoke(cancionesFiltradasKaraoke[0]);
+                            mostrarToast(`Alabanza seleccionada: ${cancionesFiltradasKaraoke[0].title}`);
+                          }
+                        }
+                      }}
+                      placeholder="Buscar alabanza..."
+                      className="bg-transparent border-none outline-none w-full text-xs"
+                    />
+                    {busquedaKaraoke && (
+                      <button
+                        onClick={() => setBusquedaKaraoke('')}
+                        title="Limpiar búsqueda"
+                        className="text-slate-400 hover:text-white p-0.5 shrink-0 cursor-pointer"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Botón para añadir alabanza al setlist de pistas */}
+                  <button
+                    onClick={() => agregarCancionAKaraokeSetlist(karaokeCancion)}
+                    className="px-2.5 py-1.5 rounded-lg bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs flex items-center gap-1 shadow transition cursor-pointer shrink-0"
+                    title="Añadir esta canción a la lista de pistas del día"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>+ Setlist</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      if (karaokeSeccionIdx < karaokeCancion.sections.length - 1) {
+                        const sig = karaokeSeccionIdx + 1;
+                        setKaraokeSeccionIdx(sig);
+                        proyectarEstrofa(karaokeCancion.sections[sig], karaokeCancion, sig);
+                      }
+                    }}
+                    className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow flex items-center gap-1 cursor-pointer shrink-0"
+                  >
+                    <span>Siguiente Estrofa ➡</span>
+                  </button>
+                </div>
               </div>
 
               {/* Sections to click and project */}
@@ -2779,17 +3892,92 @@ export default function App() {
                   </span>
                 </div>
 
-                <div className="min-h-[220px] aspect-video bg-black rounded-xl overflow-hidden border border-slate-800 flex items-center justify-center p-2 relative">
+                {/* Controles de Ajuste de Imagen y Contraste de Letras para Diapositivas & Canva */}
+                <div className={`p-3 rounded-xl border flex flex-col gap-2.5 ${
+                  temaOperador === 'claro' ? 'bg-slate-50 border-slate-200' : 'bg-slate-950/80 border-slate-800'
+                }`}>
+                  <div className="flex flex-col gap-1.5">
+                    <span className="text-xs font-bold text-slate-300">Ajuste de Imagen:</span>
+                    <div className="grid grid-cols-3 rounded-lg border border-slate-700 bg-slate-900 p-0.5 text-xs text-center">
+                      <button
+                        onClick={() => cambiarModoAjusteDiapositiva('contain')}
+                        className={`px-1.5 py-1 rounded font-bold transition cursor-pointer truncate ${
+                          modoAjusteDiapositiva === 'contain' ? 'bg-amber-500 text-slate-950 shadow' : 'text-slate-400 hover:text-white'
+                        }`}
+                        title="Muestra la imagen completa centrada sin cortar nada (ideal para afiches)"
+                      >
+                        🎯 Completar, no cortar
+                      </button>
+                      <button
+                        onClick={() => cambiarModoAjusteDiapositiva('cover')}
+                        className={`px-1.5 py-1 rounded font-bold transition cursor-pointer truncate ${
+                          modoAjusteDiapositiva === 'cover' ? 'bg-amber-500 text-slate-950 shadow' : 'text-slate-400 hover:text-white'
+                        }`}
+                        title="Rellena toda la pantalla panorámica 16:9 recortando bordes"
+                      >
+                        📐 Rellenar pantalla
+                      </button>
+                      <button
+                        onClick={() => cambiarModoAjusteDiapositiva('fill')}
+                        className={`px-1.5 py-1 rounded font-bold transition cursor-pointer truncate ${
+                          modoAjusteDiapositiva === 'fill' ? 'bg-amber-500 text-slate-950 shadow' : 'text-slate-400 hover:text-white'
+                        }`}
+                        title="Ajusta a pantalla completa 100% eliminando franjas negras en TV"
+                      >
+                        ↔️ Pantalla completa
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <span className="text-xs font-bold text-slate-300">Filtro Oscuro para Letras:</span>
+                    <div className="grid grid-cols-4 gap-1 text-xs">
+                      {[
+                        { val: 0, label: '0%' },
+                        { val: 0.3, label: '30%' },
+                        { val: 0.45, label: '45% (Óptimo)' },
+                        { val: 0.65, label: '65%' }
+                      ].map((opt) => (
+                        <button
+                          key={opt.val}
+                          onClick={() => cambiarOscurecedorDiapositiva(opt.val)}
+                          className={`py-1 rounded font-bold border transition cursor-pointer text-center ${
+                            oscurecedorDiapositiva === opt.val
+                              ? 'bg-amber-500 text-slate-950 border-amber-400 shadow'
+                              : 'bg-slate-900 border-slate-700 text-slate-400 hover:text-white'
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="min-h-[220px] aspect-video bg-black rounded-xl overflow-hidden border border-slate-800 flex items-center justify-center p-0 relative">
                   {isBlackout ? (
                     <span className="text-xs font-mono text-slate-600 font-bold uppercase tracking-widest">
                       PANTALLA NEGRA (BLACKOUT)
                     </span>
                   ) : proyeccionActual?.tipo === 'imagen' && proyeccionActual.url ? (
-                    <img
-                      src={proyeccionActual.url}
-                      alt="Proyección Activa"
-                      className="w-full h-full object-contain"
-                    />
+                    <div className="w-full h-full relative flex items-center justify-center overflow-hidden">
+                      <img
+                        src={proyeccionActual.url}
+                        alt="Proyección Activa"
+                        style={{
+                          objectFit: modoAjusteDiapositiva,
+                          width: '100%',
+                          height: '100%'
+                        }}
+                        className="w-full h-full transition-all duration-200"
+                      />
+                      {oscurecedorDiapositiva > 0 && (
+                        <div
+                          className="absolute inset-0 pointer-events-none transition-all duration-200"
+                          style={{ backgroundColor: `rgba(0, 0, 0, ${oscurecedorDiapositiva})` }}
+                        />
+                      )}
+                    </div>
                   ) : proyeccionActual?.texto ? (
                     <div className="p-3 text-center text-white text-xs font-bold whitespace-pre-line leading-relaxed">
                       {proyeccionActual.texto}
@@ -3102,6 +4290,19 @@ export default function App() {
                     Restablecer
                   </button>
                 </div>
+
+                {/* Descarga completa del código y archivos para Windows */}
+                <div className="pt-1">
+                  <a
+                    href="/Proyector-LBC-Completo.zip"
+                    download="Proyector-LBC-Completo.zip"
+                    onClick={() => mostrarToast('Descargando Proyector-LBC-Completo.zip (9 MB)...', 'info')}
+                    className="w-full py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md transition cursor-pointer"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span>Descargar Proyecto Completo con Scripts Windows (.ZIP - 9 MB)</span>
+                  </a>
+                </div>
               </div>
 
               {/* Atajos de Teclado */}
@@ -3211,6 +4412,139 @@ export default function App() {
               >
                 Guardar Canción
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Editar Canción y Letras */}
+      {mostrarModalEditarCancion && cancionEditando && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-700 rounded-2xl p-5 max-w-xl w-full space-y-4 shadow-2xl text-left max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-amber-500/20 text-amber-400">
+                  <Pencil className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white">Editar Letra & Estrofas</h3>
+                  <p className="text-[11px] text-slate-400">
+                    Modifica el título, autor o separa las estrofas para la proyección
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setMostrarModalEditarCancion(false)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3 flex-1 overflow-y-auto pr-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div>
+                  <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                    Título de la Alabanza
+                  </label>
+                  <input
+                    type="text"
+                    value={editTitulo}
+                    onChange={(e) => setEditTitulo(e.target.value)}
+                    placeholder="Título de la alabanza..."
+                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+                <div>
+                  <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                    Autor / Ministerio (Opcional)
+                  </label>
+                  <input
+                    type="text"
+                    value={editAutor}
+                    onChange={(e) => setEditAutor(e.target.value)}
+                    placeholder="Autor o ministerio..."
+                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+              </div>
+
+              {/* Botones de ayuda rápida para insertar etiquetas de estrofas */}
+              <div className="flex flex-wrap items-center justify-between gap-1.5 bg-slate-950/70 p-2.5 rounded-xl border border-slate-800">
+                <span className="text-[11px] text-slate-400 font-medium">Marcadores rápidos:</span>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setEditLetra(prev => prev + (prev.endsWith('\n') ? '' : '\n\n') + '[CORO]\n')}
+                    className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 text-[11px] font-bold transition"
+                  >
+                    + [CORO]
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditLetra(prev => prev + (prev.endsWith('\n') ? '' : '\n\n') + '[ESTROFA]\n')}
+                    className="px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 text-[11px] font-bold transition"
+                  >
+                    + [ESTROFA]
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditLetra(prev => prev + (prev.endsWith('\n') ? '' : '\n\n') + '[PUENTE]\n')}
+                    className="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 text-[11px] font-bold transition"
+                  >
+                    + [PUENTE]
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                    Letra Completa & Estrofas
+                  </label>
+                  <span className="text-[10px] text-slate-500">
+                    💡 Deja un renglón en blanco (doble Enter) entre cada estrofa
+                  </span>
+                </div>
+                <textarea
+                  rows={10}
+                  value={editLetra}
+                  onChange={(e) => setEditLetra(e.target.value)}
+                  placeholder="Escribe o pega la letra aquí. Separa cada estrofa con un espacio en blanco..."
+                  className="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-600 focus:outline-none focus:border-amber-500 font-mono leading-relaxed"
+                ></textarea>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between gap-2 border-t border-slate-800 pt-3">
+              <button
+                type="button"
+                onClick={eliminarCancionActual}
+                className="px-3 py-2 rounded-xl bg-rose-950/40 border border-rose-900/60 hover:bg-rose-900/50 text-rose-300 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
+                title="Eliminar permanentemente esta canción del cancionero"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Eliminar Canción</span>
+              </button>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setMostrarModalEditarCancion(false)}
+                  className="px-4 py-2 rounded-xl bg-slate-800 text-xs font-bold text-slate-300 hover:bg-slate-700 transition cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={guardarEdicionCancion}
+                  className="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs shadow-lg flex items-center gap-1.5 transition cursor-pointer"
+                >
+                  <Check className="w-4 h-4" />
+                  <span>Guardar Cambios</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
