@@ -9,7 +9,7 @@ import {
   Search, Upload, Download, Eye, EyeOff, RefreshCw, Check, Copy,
   Sparkles, ExternalLink, Play, Pause, RotateCcw, AlertCircle, FileText,
   CheckCircle2, Image, Video, Mic, Settings, Home, Clock, Volume2, VolumeX,
-  FolderOpen, Sun, Moon, Type, AlignCenter, AlignLeft, Disc, Square,
+  FolderOpen, FolderPlus, Sun, Moon, Type, AlignCenter, AlignLeft, Disc, Square,
   HelpCircle, Radio, ScrollText, GripVertical, Pencil, X
 } from 'lucide-react';
 
@@ -1474,6 +1474,24 @@ export default function App() {
   const [karaokeSeccionIdx, setKaraokeSeccionIdx] = useState<number>(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioInputRef = useRef<HTMLInputElement | null>(null);
+  const karaokeSetlistFileInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Eliminar la pista de audio cargada actualmente y dejar el reproductor limpio
+  const eliminarPistaActual = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+    setKaraokePlaying(false);
+    setKaraokePistaUrl('');
+    setKaraokePistaNombre('Sin pista cargada');
+    setAudioFileCargado(null);
+    setKaraokeCurrentTime(0);
+    if (audioInputRef.current) {
+      audioInputRef.current.value = '';
+    }
+    mostrarToast('Pista de audio eliminada del reproductor', 'info');
+  };
 
   const toggleKaraokePlay = () => {
     if (audioRef.current && karaokePistaUrl) {
@@ -1718,6 +1736,124 @@ export default function App() {
     mostrarToast(`Cargada alabanza "${item.songTitle}" para pista`);
   };
 
+  // Reproducir pista DIRECTAMENTE desde la fila del Setlist con un solo clic
+  const reproducirItemDirecto = (item: KaraokeItem, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+
+    // Si ya es la pista actual y está sonando, alternar pausa
+    if (karaokePistaUrl === item.pistaUrl && karaokePlaying) {
+      if (audioRef.current) audioRef.current.pause();
+      setKaraokePlaying(false);
+      return;
+    }
+
+    // Cargar canción y pista
+    setKaraokeCancion(item.song);
+    setKaraokeSeccionIdx(0);
+
+    if (item.pistaUrl) {
+      setKaraokePistaUrl(item.pistaUrl);
+      setKaraokePistaNombre(item.pistaNombre || item.songTitle);
+      setKaraokeCurrentTime(0);
+
+      // Iniciar reproducción instantánea
+      setTimeout(() => {
+        if (audioRef.current) {
+          audioRef.current.currentTime = 0;
+          audioRef.current.playbackRate = 1.0;
+          try {
+            pitchEngineRef.current?.init(audioRef.current);
+            pitchEngineRef.current?.setPitch(pitchSemitonos);
+          } catch (err) {}
+          audioRef.current.play().then(() => setKaraokePlaying(true)).catch(() => {});
+        }
+      }, 100);
+
+      mostrarToast(`▶ Reproduciendo pista: "${item.pistaNombre || item.songTitle}"`, 'success');
+    } else {
+      mostrarToast(`"${item.songTitle}" no tiene archivo de audio MP3 adjunto. Súbelo con "+ Pistas MP3".`, 'info');
+    }
+  };
+
+  // Subir múltiples canciones y pistas de audio a la vez (4, 8, 10, 20 pistas) al Setlist del día seleccionado
+  const handleSubirPistasAlSetlist = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const nuevosItems: KaraokeItem[] = [];
+
+    Array.from(files).forEach((file, idx) => {
+      const nombreSinExt = file.name.replace(/\.[^/.]+$/, '').trim();
+      const nombreLimpio = nombreSinExt.replace(/^[0-9]+[\s.\-_]+/, '').replace(/^pista[\s.\-_]+/i, '').trim();
+
+      // Buscar si coincide con alguna alabanza en el repertorio para vincular sus letras
+      const coincidencia = repertorio.find(s => {
+        const t1 = normalizarTexto(s.title);
+        const t2 = normalizarTexto(nombreLimpio);
+        return t1.includes(t2) || t2.includes(t1);
+      });
+
+      const audioUrl = URL.createObjectURL(file);
+
+      const songObj: Song = coincidencia || {
+        id: `song-pista-${Date.now()}-${idx}`,
+        title: nombreLimpio || nombreSinExt,
+        author: 'Pista de Alabanza',
+        sections: [
+          {
+            type: 'verse',
+            label: 'Pista de Audio',
+            lines: [
+              nombreLimpio || nombreSinExt,
+              `(${file.name})`,
+              'Pista instrumental para culto congregacional'
+            ]
+          }
+        ]
+      };
+
+      nuevosItems.push({
+        id: `k-${Date.now()}-${idx}-${Math.random().toString(36).substring(2, 6)}`,
+        songId: songObj.id,
+        songTitle: songObj.title,
+        song: songObj,
+        pistaUrl: audioUrl,
+        pistaNombre: file.name
+      });
+    });
+
+    const listaActual = karaokeSetlists[karaokeSetlistActual] || [];
+    const nuevaLista = [...listaActual, ...nuevosItems];
+    const nuevoState = { ...karaokeSetlists, [karaokeSetlistActual]: nuevaLista };
+    setKaraokeSetlists(nuevoState);
+    try {
+      localStorage.setItem('lbc_karaoke_setlists', JSON.stringify(nuevoState));
+    } catch (err) {}
+
+    // Cargar de inmediato la primera si no había ninguna cargada
+    if (!karaokePistaUrl && nuevosItems.length > 0) {
+      seleccionarKaraokeItem(nuevosItems[0]);
+    }
+
+    const diaNombre = karaokeSetlistActual === 'general' ? 'Especial' : karaokeSetlistActual.toUpperCase();
+    mostrarToast(`🎵 ¡${files.length} pista(s) agregada(s) al Setlist de ${diaNombre}!`, 'success');
+    if (karaokeSetlistFileInputRef.current) {
+      karaokeSetlistFileInputRef.current.value = '';
+    }
+  };
+
+  // Vaciar la lista del día actual si el usuario desea rehacerla
+  const vaciarKaraokeSetlistActual = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    const diaNombre = karaokeSetlistActual === 'general' ? 'Especial' : karaokeSetlistActual;
+    const nuevoState = { ...karaokeSetlists, [karaokeSetlistActual]: [] };
+    setKaraokeSetlists(nuevoState);
+    try {
+      localStorage.setItem('lbc_karaoke_setlists', JSON.stringify(nuevoState));
+    } catch (err) {}
+    mostrarToast(`Lista de pistas de ${diaNombre} vaciada`, 'info');
+  };
+
   // ==================== QUITADO Y LIMPIEZA TOTAL DE VIDEOS ====================
   const quitarVideoYoutube = () => {
     setYoutubeVideoId('');
@@ -1805,14 +1941,36 @@ export default function App() {
         }
       }} accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg" className="hidden" />
 
+      {/* Input oculto para subir MÚLTIPLES archivos de audio MP3/WAV a la vez al Setlist de Pistas */}
+      <input
+        type="file"
+        ref={karaokeSetlistFileInputRef}
+        multiple
+        onChange={handleSubirPistasAlSetlist}
+        accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg"
+        className="hidden"
+      />
+
       {/* Audio element for Karaoke */}
       {karaokePistaUrl && (
         <audio
           ref={audioRef}
           src={karaokePistaUrl}
+          crossOrigin="anonymous"
           onTimeUpdate={(e) => setKaraokeCurrentTime((e.target as HTMLAudioElement).currentTime)}
           onLoadedMetadata={(e) => setKaraokeDuration((e.target as HTMLAudioElement).duration)}
-          onEnded={() => setKaraokePlaying(false)}
+          onEnded={() => {
+            setKaraokePlaying(false);
+            // Si hay una siguiente pista en el setlist del día, prepararla
+            const currentIdx = karaokeSetlistItems.findIndex(it => it.pistaUrl === karaokePistaUrl);
+            if (currentIdx !== -1 && currentIdx < karaokeSetlistItems.length - 1) {
+              const siguiente = karaokeSetlistItems[currentIdx + 1];
+              if (siguiente && siguiente.pistaUrl) {
+                seleccionarKaraokeItem(siguiente);
+                mostrarToast(`Pista finalizada. Siguiente lista: "${siguiente.songTitle}"`, 'info');
+              }
+            }
+          }}
         />
       )}
 
@@ -3321,10 +3479,26 @@ export default function App() {
                       <span className="font-extrabold text-xs block truncate">
                         {karaokePistaNombre}
                       </span>
-                      <span className="text-[11px] text-slate-400">
-                        Alabanza: <strong className="text-amber-500">{karaokeCancion.title}</strong>
+                      <span className="text-[11px] text-slate-400 block truncate">
+                        {karaokePistaUrl ? (
+                          <>Alabanza: <strong className="text-amber-500">{karaokeCancion.title}</strong></>
+                        ) : (
+                          <span>Sin audio • Usa "Cargar MP3/WAV" o pulsa Play en el Setlist</span>
+                        )}
                       </span>
                     </div>
+
+                    {/* Botón para Eliminar la Canción / Pista subida y dejar el reproductor limpio */}
+                    {karaokePistaUrl && (
+                      <button
+                        onClick={eliminarPistaActual}
+                        className="px-2.5 py-1.5 rounded-lg bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white border border-rose-500/30 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer shrink-0 shadow-sm"
+                        title="Eliminar esta canción subida para dejar el reproductor limpio"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span className="hidden sm:inline">Eliminar pista</span>
+                      </button>
+                    )}
                   </div>
 
                   {/* Seek Bar */}
@@ -3476,106 +3650,180 @@ export default function App() {
               <div className={`p-3.5 rounded-xl border flex flex-col gap-2 overflow-hidden ${
                 temaOperador === 'claro' ? 'bg-slate-50 border-slate-300' : 'bg-slate-950/80 border-slate-800'
               }`}>
-                <div className={`flex items-center justify-between border-b pb-2 ${temaOperador === 'claro' ? 'border-slate-200' : 'border-slate-800'}`}>
+                <div className={`flex flex-wrap items-center justify-between gap-2 border-b pb-2 ${temaOperador === 'claro' ? 'border-slate-200' : 'border-slate-800'}`}>
                   <div className="flex items-center gap-1.5">
-                    <span className="font-black text-xs uppercase text-teal-500">SETLIST DE PISTAS</span>
-                    <span className={`text-[10px] font-mono px-1.5 rounded ${temaOperador === 'claro' ? 'bg-slate-200 text-slate-800' : 'bg-slate-800 text-slate-300'}`}>
+                    <span className="font-black text-xs uppercase text-teal-400">SETLIST DE PISTAS</span>
+                    <span className={`text-[10px] font-mono font-bold px-1.5 py-0.2 rounded ${temaOperador === 'claro' ? 'bg-slate-200 text-slate-800' : 'bg-slate-800 text-teal-300'}`}>
                       {karaokeSetlistItems.length}
                     </span>
                   </div>
 
-                  <select
-                    value={karaokeSetlistActual}
-                    onChange={(e) => setKaraokeSetlistActual(e.target.value)}
-                    className={`border rounded-lg text-xs font-bold px-2 py-1 focus:outline-none ${
-                      temaOperador === 'claro' ? 'bg-white border-slate-300 text-teal-700' : 'bg-slate-900 border-slate-800 text-teal-400'
-                    }`}
-                  >
-                    <option value="domingo">Domingo</option>
-                    <option value="miercoles">Miércoles</option>
-                    <option value="sabado">Sábado</option>
-                    <option value="general">Especial</option>
-                  </select>
+                  <div className="flex items-center gap-1.5">
+                    {/* Botón para subir múltiples pistas de audio MP3/WAV a la vez (4, 8, 10, 20 pistas) */}
+                    <button
+                      onClick={() => karaokeSetlistFileInputRef.current?.click()}
+                      className="px-2.5 py-1 rounded-lg bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs flex items-center gap-1 transition cursor-pointer shadow-sm"
+                      title="Subir pistas MP3/WAV para este culto (puedes seleccionar varias a la vez)"
+                    >
+                      <FolderPlus className="w-3.5 h-3.5" />
+                      <span>+ Pistas MP3</span>
+                    </button>
+
+                    <select
+                      value={karaokeSetlistActual}
+                      onChange={(e) => setKaraokeSetlistActual(e.target.value)}
+                      className={`border rounded-lg text-xs font-bold px-2 py-1 focus:outline-none cursor-pointer ${
+                        temaOperador === 'claro' ? 'bg-white border-slate-300 text-teal-700' : 'bg-slate-900 border-slate-800 text-teal-400'
+                      }`}
+                    >
+                      <option value="domingo">Domingo</option>
+                      <option value="miercoles">Miércoles</option>
+                      <option value="sabado">Sábado</option>
+                      <option value="general">Especial</option>
+                    </select>
+
+                    {karaokeSetlistItems.length > 0 && (
+                      <button
+                        onClick={vaciarKaraokeSetlistActual}
+                        title={`Vaciar todas las pistas de ${karaokeSetlistActual === 'general' ? 'Especial' : karaokeSetlistActual}`}
+                        className="p-1 rounded text-slate-400 hover:text-rose-400 cursor-pointer"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
                 </div>
 
-                <div className="space-y-1.5 overflow-y-auto max-h-48 pr-1">
+                <div className="space-y-1.5 overflow-y-auto max-h-56 pr-1">
                   {karaokeSetlistItems.length === 0 ? (
-                    <div className="text-center p-3 text-xs text-slate-500">
-                      No hay canciones en la lista de {karaokeSetlistActual}. Usa el botón "+ Setlist" para añadir.
+                    <div className="text-center p-4 border border-dashed border-slate-800 rounded-xl space-y-2">
+                      <p className="text-xs text-slate-300 font-bold">
+                        No hay pistas cargadas para {karaokeSetlistActual === 'general' ? 'Especial' : karaokeSetlistActual}.
+                      </p>
+                      <p className="text-[11px] text-slate-500">
+                        Sube varias pistas a la vez (4, 8, 10, 20 canciones) para tener todo el culto listo sin subirlas una a una.
+                      </p>
+                      <button
+                        onClick={() => karaokeSetlistFileInputRef.current?.click()}
+                        className="px-3 py-1.5 rounded-lg bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs inline-flex items-center gap-1.5 cursor-pointer shadow-sm"
+                      >
+                        <FolderPlus className="w-3.5 h-3.5" />
+                        <span>Subir Pistas MP3 ({karaokeSetlistActual === 'general' ? 'Especial' : karaokeSetlistActual})</span>
+                      </button>
                     </div>
                   ) : (
-                    karaokeSetlistItems.map((item, idx) => (
-                      <div
-                        key={`${item.id}-${idx}`}
-                        draggable
-                        onDragStart={(e) => {
-                          e.dataTransfer.setData('text/plain', String(idx));
-                          setArrastrandoKaraokeIdx(idx);
-                        }}
-                        onDragOver={(e) => e.preventDefault()}
-                        onDrop={(e) => {
-                          e.preventDefault();
-                          const src = parseInt(e.dataTransfer.getData('text/plain'), 10);
-                          if (!isNaN(src)) reordenarKaraokeEnSetlist(src, idx);
-                          setArrastrandoKaraokeIdx(null);
-                        }}
-                        onDragEnd={() => setArrastrandoKaraokeIdx(null)}
-                        onClick={() => seleccionarKaraokeItem(item)}
-                        className={`p-2 rounded-xl border text-xs flex items-center justify-between cursor-pointer group transition select-none ${
-                          karaokeCancion.id === item.songId
-                            ? 'bg-teal-500/20 border-teal-400 text-teal-200 shadow'
-                            : arrastrandoKaraokeIdx === idx
-                            ? 'opacity-40 border-dashed border-teal-400'
-                            : temaOperador === 'claro'
-                            ? 'bg-white border-slate-200 hover:bg-slate-100'
-                            : 'bg-slate-900/80 border-slate-800 hover:bg-slate-800'
-                        }`}
-                      >
-                        <div className="flex items-center gap-1.5 truncate flex-1 pr-1">
-                          <GripVertical className="w-3.5 h-3.5 text-slate-500 group-hover:text-teal-400 cursor-grab flex-shrink-0" />
-                          <div className="truncate">
-                            <span className="font-bold block truncate">
-                              {idx + 1}. {item.songTitle}
-                            </span>
-                            <span className="text-[10px] text-slate-400 truncate block font-mono">
-                              {item.pistaNombre}
-                            </span>
+                    karaokeSetlistItems.map((item, idx) => {
+                      const esPistaActual = (karaokePistaUrl && karaokePistaUrl === item.pistaUrl) || (karaokeCancion.id === item.songId && !item.pistaUrl);
+                      const estaSonando = esPistaActual && karaokePlaying;
+
+                      return (
+                        <div
+                          key={`${item.id}-${idx}`}
+                          draggable
+                          onDragStart={(e) => {
+                            e.dataTransfer.setData('text/plain', String(idx));
+                            setArrastrandoKaraokeIdx(idx);
+                          }}
+                          onDragOver={(e) => e.preventDefault()}
+                          onDrop={(e) => {
+                            e.preventDefault();
+                            const src = parseInt(e.dataTransfer.getData('text/plain'), 10);
+                            if (!isNaN(src)) reordenarKaraokeEnSetlist(src, idx);
+                            setArrastrandoKaraokeIdx(null);
+                          }}
+                          onDragEnd={() => setArrastrandoKaraokeIdx(null)}
+                          onClick={() => seleccionarKaraokeItem(item)}
+                          className={`p-2 rounded-xl border text-xs flex items-center justify-between cursor-pointer group transition select-none ${
+                            esPistaActual
+                              ? 'bg-teal-500/20 border-teal-400 text-teal-200 shadow'
+                              : arrastrandoKaraokeIdx === idx
+                              ? 'opacity-40 border-dashed border-teal-400'
+                              : temaOperador === 'claro'
+                              ? 'bg-white border-slate-200 hover:bg-slate-100'
+                              : 'bg-slate-900/80 border-slate-800 hover:bg-slate-800'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 truncate flex-1 pr-1">
+                            <GripVertical className="w-3.5 h-3.5 text-slate-500 group-hover:text-teal-400 cursor-grab flex-shrink-0" />
+
+                            {/* Botón de Play / Pausa DIRECTO en cada pista del Setlist */}
+                            <button
+                              onClick={(e) => reproducirItemDirecto(item, e)}
+                              title={
+                                estaSonando
+                                  ? 'Pausar esta pista'
+                                  : 'Reproducir esta pista directamente'
+                              }
+                              className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition cursor-pointer shadow-sm ${
+                                estaSonando
+                                  ? 'bg-teal-400 text-slate-950 animate-pulse font-black'
+                                  : item.pistaUrl
+                                  ? 'bg-teal-600/30 hover:bg-teal-500 text-teal-300 hover:text-slate-950'
+                                  : 'bg-slate-800 text-slate-500 hover:text-slate-300'
+                              }`}
+                            >
+                              {estaSonando ? (
+                                <Pause className="w-3.5 h-3.5" />
+                              ) : (
+                                <Play className="w-3.5 h-3.5 fill-current ml-0.5" />
+                              )}
+                            </button>
+
+                            <div className="truncate flex-1">
+                              <div className="flex items-center gap-1.5 truncate">
+                                <span className="font-bold block truncate">
+                                  {idx + 1}. {item.songTitle}
+                                </span>
+                                {item.pistaUrl ? (
+                                  <span className="text-[9px] bg-teal-500/20 text-teal-300 border border-teal-500/30 px-1 py-0.2 rounded font-mono font-bold flex-shrink-0">
+                                    MP3
+                                  </span>
+                                ) : (
+                                  <span className="text-[9px] bg-slate-800 text-slate-400 px-1 py-0.2 rounded font-mono flex-shrink-0">
+                                    Letra
+                                  </span>
+                                )}
+                              </div>
+                              <span className="text-[10px] text-slate-400 truncate block font-mono">
+                                {item.pistaNombre || 'Pista de alabanza'}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-0.5 flex-shrink-0">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                moverKaraokeEnSetlist(idx, 'arriba');
+                              }}
+                              disabled={idx === 0}
+                              title="Subir posición"
+                              className="p-1 rounded text-slate-400 hover:text-teal-400 disabled:opacity-20 cursor-pointer"
+                            >
+                              <ArrowUp className="w-3 h-3" />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                moverKaraokeEnSetlist(idx, 'abajo');
+                              }}
+                              disabled={idx === karaokeSetlistItems.length - 1}
+                              title="Bajar posición"
+                              className="p-1 rounded text-slate-400 hover:text-teal-400 disabled:opacity-20 cursor-pointer"
+                            >
+                              <ArrowDown className="w-3 h-3" />
+                            </button>
+                            <button
+                              onClick={(e) => eliminarKaraokeDeSetlist(idx, e)}
+                              title="Quitar pista de la lista"
+                              className="p-1 text-slate-400 hover:text-rose-400 cursor-pointer"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
                           </div>
                         </div>
-
-                        <div className="flex items-center gap-0.5 flex-shrink-0">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              moverKaraokeEnSetlist(idx, 'arriba');
-                            }}
-                            disabled={idx === 0}
-                            title="Subir posición"
-                            className="p-1 rounded text-slate-400 hover:text-teal-400 disabled:opacity-20 cursor-pointer"
-                          >
-                            <ArrowUp className="w-3 h-3" />
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              moverKaraokeEnSetlist(idx, 'abajo');
-                            }}
-                            disabled={idx === karaokeSetlistItems.length - 1}
-                            title="Bajar posición"
-                            className="p-1 rounded text-slate-400 hover:text-teal-400 disabled:opacity-20 cursor-pointer"
-                          >
-                            <ArrowDown className="w-3 h-3" />
-                          </button>
-                          <button
-                            onClick={(e) => eliminarKaraokeDeSetlist(idx, e)}
-                            title="Quitar de la lista"
-                            className="p-1 text-slate-400 hover:text-rose-400 cursor-pointer"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </div>
-                    ))
+                      );
+                    })
                   )}
                 </div>
               </div>
