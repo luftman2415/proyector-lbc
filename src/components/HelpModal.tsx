@@ -140,48 +140,54 @@ const TEMAS_AYUDA: HelpTopic[] = [
   {
     id: 'karaoke-pistas',
     numero: 6,
-    titulo: 'Karaoke y Setlist de Pistas (Culto sin Músicos)',
-    subtitulo: 'Listas de canciones con pistas de audio para sábado, domingo y miércoles',
+    titulo: 'Karaoke, Ajuste de Tono (Pitch) y Setlist de Pistas Múltiples',
+    subtitulo: 'Ajuste de semitonos sin alterar velocidad, subida en lote y reproducción directa',
     icono: Mic,
-    resumen: 'Organiza 4, 5 o 6 canciones con sus pistas instrumentales y buscador rápido sincronizado.',
+    resumen: 'Sube varias pistas MP3 a la vez (4, 8, 10, 20), ajusta el tono para la voz sin cambiar el tiempo y reproduce con 1 clic.',
     contenido: {
-      paraQueSirve: 'Ideal para cultos donde no hay banda en vivo y una sola persona canta con pistas instrumentales de audio.',
+      paraQueSirve: 'Diseñado para cultos donde una sola persona o grupo vocal canta con pistas instrumentales de audio MP3 o WAV, sin necesidad de músicos en vivo.',
       comoSeUsa: [
-        'Ve a la pestaña "Karaoke".',
-        'Búsqueda Sincronizada Inteligente: escribe el nombre de la alabanza en "Buscar alabanza..." (ej: "derrama de") y se seleccionará automáticamente al instante, cargando sus estrofas en pantalla. También puedes presionar la tecla Enter o hacer clic en la "X" para limpiar la búsqueda.',
-        'Botón "✏️ Editar": si notas una falta ortográfica o estrofa mal separada en la canción de karaoke, haz clic en "Editar" para corregirla sin salir de la pestaña.',
-        'Setlist de Pistas: selecciona el día (Domingo, Miércoles, Sábado) y pulsa "+ Setlist" para armar tu lista de alabanzas del culto.',
-        'Reordenar: arrastra con el ratón o usa las flechas ⬆ ⬇ para cambiar el orden de las canciones en la lista.',
-        'Durante el culto: haz clic sobre cualquier canción del Setlist y se cargarán sus letras listas para proyectar estrofa por estrofa con el botón "Siguiente Estrofa ➡".'
+        'Ajuste de Tono (Pitch Shifter en Semitonos): usa los botones "-1 Semitono", "+1 Semitono" o la barra de -3 a +3 para adaptar la pista al tono de voz de quien va a cantar. El tiempo y la velocidad de la pista permanecen 100% constantes e idénticos (no se acelera ni se frena). Para volver al tono original, pulsa el botón central con la flecha circular.',
+        'Botón "+ Pistas MP3" (Subida Múltiple): en la sección "SETLIST DE PISTAS", pulsa "+ Pistas MP3" y selecciona de una sola vez 4, 8, 10, 15 o 20 canciones desde tu computadora. Todas se agregarán automáticamente a la lista del culto seleccionado.',
+        'Listas por Días del Culto: selecciona si las pistas son para Domingo, Miércoles, Sábado o un culto Especial.',
+        'Botón Play (▶) directo en cada canción: en el culto no tienes que subir pistas una por una. Dale clic directamente al botón circular de Play (▶) de la pista en el Setlist y comenzará a sonar al instante, cargando a la derecha las letras correspondientes.',
+        'Botón "Eliminar Pista" (🗑️): en el panel superior de reproducción, haz clic en el botón rojo "Eliminar pista" para retirar el archivo actual y dejar el reproductor limpio.',
+        'Auto-avance de pista: cuando una pista de audio finaliza, el sistema prepara automáticamente la siguiente de la lista para que la alabanza no se detenga.'
       ],
       detallesImportantes: [
-        'Las cajas de selección y búsqueda ahora tienen anchos fijos y limpios para que nunca salten ni se golpeen entre sí en pantallas de cualquier tamaño.',
-        'Puedes cargar el archivo MP3 o WAV de la pista y controlar su volumen y tiempo desde el panel izquierdo.'
+        'Las pistas con archivo MP3 cargado muestran una insignia verde "MP3".',
+        'Puedes reordenar las canciones arrastrándolas con el ratón o con las flechas ⬆ ⬇.',
+        'El botón de la papelera en la cabecera permite vaciar el Setlist de ese día si deseas armar uno nuevo.'
       ]
     }
   },
   {
     id: 'fondos-canva',
     numero: 7,
-    titulo: 'Fondos Oficiales y Banners de Canva',
-    subtitulo: '10 imágenes fijas de los momentos del culto y fondos litúrgicos',
+    titulo: 'Fondos Litúrgicos, Banners Canva y Ajuste de Imagen',
+    subtitulo: 'Completar, Rellenar, Pantalla Completa y Filtro Oscuro de Contraste',
     icono: Sparkles,
-    resumen: 'Imágenes oficiales de la Iglesia Cuadrangular Las Brisas listas para proyectar con 1 clic.',
+    resumen: 'Ajuste de imagen perfecto para cualquier pantalla de TV y filtros oscuros para 100% legibilidad.',
     contenido: {
-      paraQueSirve: 'Mostrar los momentos solemnes del culto: Bienvenidos, Es tiempo de adorar, Oración, Diezmos, Santa Cena, Servicios y Despedida.',
+      paraQueSirve: 'Garantizar que todo flyer de Canva, diapositiva o fondo bíblico se proyecte en el televisor del templo sin deformarse y con las letras siempre legibles.',
       comoSeUsa: [
-        'Pestaña "Diapositivas & Canva": haz clic sobre cualquiera de las 10 tarjetas oficiales para proyectarla en pantalla gigante.',
-        'Pestaña "Fondos": selecciona fondos sobrios para las letras de las canciones (Fondo de Adoración con manos alzadas, Azul Cuadrangular, etc.).',
-        'Para actualizar las imágenes cada 6 meses: copia los nuevos diseños de Canva en la carpeta "public/assets/momentos/" con los mismos nombres.'
+        'Pestaña "Diapositivas & Canva": haz clic sobre cualquiera de las imágenes oficiales de la iglesia para proyectarla en la pantalla de la congregación.',
+        'Los 3 Modos de Ajuste de Imagen:',
+        '• 🎯 Completar, no cortar: Muestra el diseño completo centrado sin cortar nada de texto (ideal para afiches de actividades y anuncios).',
+        '• 📐 Rellenar pantalla: Rellena toda la pantalla panorámica 16:9 recortando ligeramente los bordes sobrantes.',
+        '• ↔️ Pantalla completa: Estira y ajusta la imagen al 100% de la TV eliminando cualquier franja negra.',
+        'Filtro Oscuro para Letras (0%, 30%, 45% Óptimo, 65%): oscurece suavemente la imagen o el fondo litúrgico para que las letras blancas de las alabanzas o citas bíblicas resalten con máximo contraste.',
+        'Pestaña "Fondos": cuenta con los mismos controles de ajuste y brillo para los fondos litúrgicos animados y estáticos.'
       ],
       detallesImportantes: [
-        'Incluye filtro oscurecedor ajustable (45% óptimo) para que las letras blancas siempre se lean con máxima nitidez sobre cualquier imagen.'
+        'Tanto el monitor de control como el televisor HDMI aplican el ajuste y el filtro en tiempo real.',
+        'El valor predeterminado recomendado para alabanza es "45% (Óptimo)".'
       ]
     }
   },
   {
     id: 'obs-streaming',
-    numero: 7,
+    numero: 8,
     titulo: 'OBS Studio (Transmisión en Vivo)',
     subtitulo: 'Tercios inferiores transparentes para YouTube y Facebook Live',
     icono: Radio,
@@ -191,7 +197,7 @@ const TEMAS_AYUDA: HelpTopic[] = [
       comoSeUsa: [
         'Abre OBS Studio en la computadora del templo.',
         'En Fuentes de tu escena, haz clic en "+" y elige "Navegador" (Browser Source).',
-        'En la URL, escribe: http://localhost:3000/obs.html (o la ruta al archivo obs.html si usas la versión local).',
+        'En la URL, escribe: http://localhost:3000/obs.html (o pulsa "Copiar URL de OBS" desde la pestaña OBS Studio del proyector).',
         'Configura el Ancho en 1920 y el Alto en 1080.',
         'Marca la casilla "Apagar fuente cuando no esté visible".',
         '¡Listo! Todo versículo, canción o anuncio que proyectes aparecerá con un elegante tercio inferior en la transmisión sin tapar el rostro de los hermanos.'
@@ -204,7 +210,7 @@ const TEMAS_AYUDA: HelpTopic[] = [
   },
   {
     id: 'atajos-teclado',
-    numero: 8,
+    numero: 9,
     titulo: 'Atajos de Teclado del Operador',
     subtitulo: 'Control rápido durante el culto sin depender del mouse',
     icono: Keyboard,
@@ -225,21 +231,23 @@ const TEMAS_AYUDA: HelpTopic[] = [
   },
   {
     id: 'solucion-problemas',
-    numero: 9,
-    titulo: 'Preguntas Frecuentes y Solución de Problemas',
-    subtitulo: 'Consejos para el computador del templo y empaquetado .EXE',
+    numero: 10,
+    titulo: 'Estructura de Archivos y Preguntas Frecuentes',
+    subtitulo: '¿Qué hace cada carpeta y archivo? Explicación de node_modules y ejecutables',
     icono: AlertTriangle,
-    resumen: 'Cómo solucionar pantalla en blanco, permisos locales y ejecución sin conexión a internet.',
+    resumen: 'Guía sobre los archivos de la carpeta del proyecto y consejos para el computador del templo.',
     contenido: {
-      paraQueSirve: 'Ayudar al operador a resolver dudas comunes en el día a día del templo.',
+      paraQueSirve: 'Conocer qué archivos son indispensables en tu carpeta y evitar borrar componentes vitales del sistema.',
       comoSeUsa: [
-        'Si la pantalla del proyector se abre en blanco: asegúrate de haber hecho clic en el botón "🖥️ Proyector" de la barra superior y selecciona cualquier versículo o canción para activarlo.',
-        'Para ejecutar 100% sin internet: el paquete ZIP descargado contiene todos los archivos necesarios (data, assets, scripts) para funcionar offline sin requerir conexión.',
-        'Para compilar tu archivo .EXE final: usa el comando "npm run build" y luego empaquétalo con Electron ("npx electron-builder") usando el archivo electron-main.js ya configurado en el paquete.',
-        'Si quieres cambiar el nombre de la congregación: ve a "Ajustes" y escribe el nombre de tu sede o filial.'
+        '¿Se debe borrar la carpeta "node_modules"?: ¡NO, NUNCA! "node_modules" NO es basura; contiene el motor de la aplicación (React, Vite, Tailwind, el servidor web y los iconos). Si la borras, el archivo "2-EJECUTAR-PROGRAMA.bat" no podrá arrancar y mostrará error.',
+        '¿Para qué sirve "2-EJECUTAR-PROGRAMA.bat"?: Inicia el servidor local en tu PC y abre el proyector en http://localhost:3000 sin depender de internet.',
+        '¿Para qué sirve "1-INSTALAR-DEPENDENCIAS.bat"?: Se ejecuta una sola vez cuando descargas el proyecto en una computadora nueva para descargar las librerías necesarias.',
+        '¿Para qué sirve "3-CREAR-INSTALADOR-EXE.bat"?: Compila todo el sistema para crear el archivo instalador .EXE con el logo oficial de la iglesia.',
+        'Carpetas "src" y "public": "src" contiene el código de la aplicación y "public" contiene las imágenes, videos, canciones y la página de la TV (display.html).'
       ],
       detallesImportantes: [
-        'El sistema nunca sube tus canciones ni versículos a internet; la privacidad de la congregación está totalmente protegida.'
+        'Ningún archivo de tu carpeta principal es basura: los 17 elementos que ves en tu explorador son necesarios para el funcionamiento y compilación del proyecto.',
+        'Todo el sistema trabaja 100% de manera local y fuera de línea sin requerir conexión a internet durante el culto.'
       ]
     }
   }
