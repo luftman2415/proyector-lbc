@@ -9,7 +9,30 @@ export interface BackgroundPreset {
 }
 
 export const FONDOS_PREDETERMINADOS: BackgroundPreset[] = [
-  // Fondos Animados Predeterminados
+  // Fondos Oficiales de la Iglesia Cuadrangular Las Brisas
+  {
+    id: 'fondo-icc-canciones',
+    nombre: 'Fondo Oficial Alabanza ICC Las Brisas',
+    categoria: 'adoracion',
+    url: 'assets/momentos/04_canciones.png',
+    tipo: 'estatico'
+  },
+  {
+    id: 'fondo-icc-adoracion',
+    nombre: 'Fondo Oficial Adoración ICC Las Brisas',
+    categoria: 'adoracion',
+    url: 'assets/momentos/02_adoracion.png',
+    tipo: 'estatico'
+  },
+  {
+    id: 'fondo-icc-4simbolos',
+    nombre: 'Emblema 4 Símbolos Cuadrangular',
+    categoria: 'adoracion',
+    url: 'assets/logo_cuadrangular_4simbolos.png',
+    tipo: 'estatico'
+  },
+
+  // Fondos Animados Litúrgicos
   {
     id: 'anim-cielo',
     nombre: 'Cielo Celestial Dinámico',
