@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 
 import { Song, SongSection, SetlistsState, ProjectedContent, KaraokeItem, KaraokeSetlistsState } from './types';
-import { parsearCancionesDesdeJSON, buscarCanciones, normalizarTexto } from './utils/songParser';
+import { parsearCancionesDesdeJSON, parsearCancionesDesdeArchivo, buscarCanciones, normalizarTexto } from './utils/songParser';
 import { INITIAL_FEATURED_SONGS } from './data/defaultSongs';
 import { VANILLA_APP_JS } from './utils/vanillaTemplates';
 import { LIBROS_BIBLIA_COMPLETOS, VERSIONES_BIBLIA, BibleBookMeta } from './data/bibleMetadata';
@@ -407,12 +407,18 @@ export default function App() {
       const reader = new FileReader();
       reader.onload = (event) => {
         try {
-          const raw = JSON.parse(event.target?.result as string);
-          const parsed = parsearCancionesDesdeJSON(raw, file.name);
-          nuevasCanciones.push(...parsed);
+          const contenido = event.target?.result as string;
+          const parsed = parsearCancionesDesdeArchivo(contenido, file.name);
+          if (parsed && parsed.length > 0) {
+            nuevasCanciones.push(...parsed);
+          }
           cargados++;
 
           if (cargados === files.length) {
+            if (nuevasCanciones.length === 0) {
+              mostrarToast(`No se encontraron canciones reconocibles en los archivos`, 'error');
+              return;
+            }
             const map = new Map<string, Song>();
             repertorio.forEach(c => map.set(c.title.toLowerCase(), c));
             nuevasCanciones.forEach(c => map.set(c.title.toLowerCase(), c));
@@ -420,10 +426,10 @@ export default function App() {
             setRepertorio(finalLista);
             setCancionSeleccionada(finalLista[0]);
             localStorage.setItem('proyector_lbc_canciones', JSON.stringify(finalLista));
-            mostrarToast(`¡Se cargaron ${nuevasCanciones.length} canciones desde tus archivos JSON! Total: ${finalLista.length}`);
+            mostrarToast(`¡Se importaron ${nuevasCanciones.length} canciones con éxito desde tus archivos! Total en repertorio: ${finalLista.length}`);
           }
         } catch (err) {
-          mostrarToast(`Error al leer archivo ${file.name}`, 'error');
+          mostrarToast(`Error al procesar archivo ${file.name}`, 'error');
         }
       };
       reader.readAsText(file);
@@ -1920,7 +1926,7 @@ export default function App() {
       )}
 
       {/* Hidden inputs */}
-      <input type="file" ref={songFileInputRef} onChange={handleArchivosCanciones} multiple accept=".json" className="hidden" />
+      <input type="file" ref={songFileInputRef} onChange={handleArchivosCanciones} multiple accept=".json,.js,.txt" className="hidden" />
       <input type="file" ref={bibleFileInputRef} onChange={handleCargaArchivosBiblia} multiple accept=".json" className="hidden" />
       <input type="file" ref={folderInputRef} onChange={handleCargaArchivosBiblia} multiple {...({ webkitdirectory: '', directory: '' } as any)} className="hidden" />
       <input type="file" ref={imageFileInputRef} onChange={handleSubirImagenes} multiple accept="image/*" className="hidden" />
@@ -1990,10 +1996,10 @@ export default function App() {
                   {nombreCongregacion}
                 </span>
                 <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-500 border border-amber-500/30">
-                  LBC
+                  ICC
                 </span>
               </div>
-              <p className="text-[10px] text-slate-400">Proyector LBC • {horaActual}</p>
+              <p className="text-[10px] text-slate-400">Proyector ICC • {horaActual}</p>
             </div>
           </div>
 
@@ -2168,7 +2174,7 @@ export default function App() {
                 {nombreCongregacion}
               </h1>
               <h2 className="text-lg md:text-xl font-bold text-amber-500">
-                Barrio Las Brisas • Proyector LBC
+                Barrio Las Brisas • Proyector ICC
               </h2>
               <p className={`text-sm italic font-serif ${temaOperador === 'claro' ? 'text-slate-600' : 'text-slate-300'}`}>
                 "Jesucristo es el mismo ayer, y hoy, y por los siglos."
@@ -2268,7 +2274,7 @@ export default function App() {
                 Creado por: <strong className="text-amber-500 font-bold">LuftmandMauricio</strong>
               </p>
               <p className="text-[10px] text-slate-500">
-                Iglesia Cristiana Cuadrangular Barrio Las Brisas • Proyector LBC © 2026
+                Iglesia Cristiana Cuadrangular Barrio Las Brisas • Proyector ICC © 2026
               </p>
             </div>
           </div>
@@ -2653,11 +2659,11 @@ export default function App() {
                 <div className="flex items-center gap-1.5">
                   <button
                     onClick={() => songFileInputRef.current?.click()}
-                    title="Cargar archivo JSON (Corario.json o Mi Cancionero.json)"
+                    title="Cargar archivos de canciones (.JS como Canciones.js o .JSON como Corario.json)"
                     className="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-1 transition cursor-pointer"
                   >
                     <Upload className="w-3 h-3" />
-                    <span>+ Cargar JSON</span>
+                    <span>+ Cargar Cancionero (.JS / .JSON)</span>
                   </button>
                   <button
                     onClick={() => setMostrarModalNuevaCancion(true)}
@@ -4509,7 +4515,7 @@ export default function App() {
                       const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(repertorio, null, 2));
                       const downloadAnchor = document.createElement('a');
                       downloadAnchor.setAttribute("href", dataStr);
-                      downloadAnchor.setAttribute("download", "Cancionero_Respaldo_LBC.json");
+                      downloadAnchor.setAttribute("download", "Cancionero_Respaldo_ICC.json");
                       document.body.appendChild(downloadAnchor);
                       downloadAnchor.click();
                       downloadAnchor.remove();
@@ -4808,7 +4814,7 @@ export default function App() {
           <span>Creado por: <strong className="text-amber-500 font-bold">LuftmandMauricio</strong></span>
         </div>
         <div className="flex items-center gap-3">
-          <span>Proyector LBC v3.4</span>
+          <span>Proyector ICC v3.4</span>
           <span className="text-emerald-500 font-semibold">● Canal Dual Activo (0ms)</span>
         </div>
       </footer>
