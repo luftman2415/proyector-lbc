@@ -87,7 +87,7 @@ const TEMAS_AYUDA: HelpTopic[] = [
       detallesImportantes: [
         'El botón "✏️ Editar Letra" guarda automáticamente los cambios en tu repertorio permanente y actualiza la proyección en vivo si la estás mostrando.',
         'El botón "+ Nueva" te permite agregar alabanzas nuevas que no estén en el cancionario.',
-        'El botón "+ Cargar JSON" importa cancioneros externos como "Corario.json" o "Mi Cancionero.json".'
+        'El botón "+ Cargar Cancionero" importa cancioneros en formato .JSON y también archivos nativos .JS de la iglesia anterior (Canciones.js, Corario IPUC castilla.js, Himnario Lluvias de Bendicion.js, Infantiles.js, Manantial de Inspiracion.js, Mi Cancionero.js) importando más de 500 canciones en 1 segundo sin tener que copiar letra por letra.'
       ],
       atajos: [
         { tecla: '➡️ Flecha Derecha', descripcion: 'Avanza a la siguiente estrofa o coro' },
@@ -197,7 +197,8 @@ const TEMAS_AYUDA: HelpTopic[] = [
       comoSeUsa: [
         'Abre OBS Studio en la computadora del templo.',
         'En Fuentes de tu escena, haz clic en "+" y elige "Navegador" (Browser Source).',
-        'En la URL, escribe: http://localhost:3000/obs.html (o pulsa "Copiar URL de OBS" desde la pestaña OBS Studio del proyector).',
+        'Método 1 (Archivo Local - Más Rápido y Directo): Marca la casilla "Archivo local" (Local file), pulsa "Examinar" y selecciona el archivo "public/obs.html" dentro de tu carpeta del proyecto.',
+        'Método 2 (URL Web con Servidor): Desmarca "Archivo local" y en la URL escribe: http://localhost:3000/obs.html (requiere tener abierto 2-EJECUTAR-PROGRAMA.bat).',
         'Configura el Ancho en 1920 y el Alto en 1080.',
         'Marca la casilla "Apagar fuente cuando no esté visible".',
         '¡Listo! Todo versículo, canción o anuncio que proyectes aparecerá con un elegante tercio inferior en la transmisión sin tapar el rostro de los hermanos.'
@@ -303,7 +304,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-lg font-black tracking-tight">Manual y Centro de Ayuda LBC</h2>
+                <h2 className="text-lg font-black tracking-tight">Manual y Centro de Ayuda ICC</h2>
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 border border-blue-500/30">
                   Operador Eclesiástico
                 </span>
@@ -400,7 +401,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({
               <div className="flex items-center gap-2 text-xs font-bold text-amber-500 uppercase tracking-wider">
                 <span>Tema {temaActivo.numero}</span>
                 <span>•</span>
-                <span>Proyector LBC</span>
+                <span>Proyector ICC</span>
               </div>
               <h3 className={`text-2xl font-black ${esOscuro ? 'text-white' : 'text-slate-900'}`}>
                 {temaActivo.numero}. {temaActivo.titulo}
@@ -516,7 +517,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({
           esOscuro ? 'border-slate-800 bg-slate-950/80 text-slate-400' : 'border-slate-200 bg-slate-100 text-slate-600'
         }`}>
           <div>
-            Iglesia Cristiana Cuadrangular Barrio Las Brisas (LBC) • Manual de Operador
+            Iglesia Cristiana Cuadrangular (ICC) • Manual de Operador
           </div>
           <button
             onClick={alCerrar}
