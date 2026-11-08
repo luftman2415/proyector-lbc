@@ -24,9 +24,8 @@ export const ObsPanel: React.FC<ObsPanelProps> = ({
 
   const esOscuro = temaOperador !== 'claro';
 
-  const obsUrl = typeof window !== 'undefined'
-    ? `${window.location.origin}/obs.html`
-    : 'http://localhost:3000/obs.html';
+  const esHttp = typeof window !== 'undefined' && window.location.protocol.startsWith('http');
+  const obsUrl = esHttp ? `${window.location.origin}/obs.html` : 'http://localhost:3000/obs.html';
 
   const copiarUrl = () => {
     navigator.clipboard.writeText(obsUrl);
@@ -36,7 +35,7 @@ export const ObsPanel: React.FC<ObsPanelProps> = ({
   };
 
   const abrirEnVentana = () => {
-    window.open('/obs.html', 'OBS_Overlay_LBC', 'width=1280,height=720,menubar=no,toolbar=no');
+    window.open('/obs.html', 'OBS_Overlay_ICC', 'width=1280,height=720,menubar=no,toolbar=no');
   };
 
   const proyectarBannerOrador = () => {
@@ -152,25 +151,39 @@ export const ObsPanel: React.FC<ObsPanelProps> = ({
               Cómo agregar en OBS Studio
             </h3>
 
-            <div className={`p-3 rounded-xl border text-xs font-mono break-all flex items-center justify-between gap-2 ${
-              esOscuro ? 'bg-slate-950 border-slate-800 text-blue-300' : 'bg-slate-100 border-slate-300 text-blue-700'
-            }`}>
-              <span className="truncate">{obsUrl}</span>
-              <button
-                onClick={copiarUrl}
-                className="p-1.5 hover:bg-slate-800 rounded text-slate-400 hover:text-white shrink-0"
-                title="Copiar URL"
-              >
-                <Copy className="w-3.5 h-3.5" />
-              </button>
+            {/* Método 1: URL Web */}
+            <div className="space-y-1.5">
+              <span className="text-[11px] font-bold text-amber-500 uppercase">Opción 1 (Con Servidor Local Abierto):</span>
+              <div className={`p-2.5 rounded-xl border text-xs font-mono break-all flex items-center justify-between gap-2 ${
+                esOscuro ? 'bg-slate-950 border-slate-800 text-blue-300' : 'bg-slate-100 border-slate-300 text-blue-700'
+              }`}>
+                <span className="truncate">{obsUrl}</span>
+                <button
+                  onClick={copiarUrl}
+                  className="p-1.5 hover:bg-slate-800 rounded text-slate-400 hover:text-white shrink-0 cursor-pointer"
+                  title="Copiar URL"
+                >
+                  <Copy className="w-3.5 h-3.5" />
+                </button>
+              </div>
             </div>
 
-            <ol className={`text-xs space-y-2 list-decimal list-inside leading-relaxed ${esOscuro ? 'text-slate-300' : 'text-slate-700'}`}>
-              <li>En OBS Studio, ve a tu Escena y agrega una fuente de tipo <strong>"Navegador" (Browser)</strong>.</li>
-              <li>Pega la URL de arriba en el campo de enlace.</li>
-              <li>Establece el tamaño en <strong>Ancho: 1920</strong> y <strong>Alto: 1080</strong>.</li>
-              <li>Deja el fondo predeterminado (es <strong>100% transparente</strong>).</li>
-              <li>Coloca esta capa por encima de tu cámara de transmisión.</li>
+            {/* Método 2: Archivo Local directo */}
+            <div className={`p-3 rounded-xl border text-xs space-y-1.5 ${
+              esOscuro ? 'bg-blue-950/20 border-blue-900/40 text-blue-200' : 'bg-blue-50 border-blue-200 text-blue-900'
+            }`}>
+              <span className="font-bold text-amber-400 block">Opción 2 (Archivo Local - Más Rápido y Directo):</span>
+              <p className="text-[11px] leading-relaxed">
+                En OBS Studio, al crear la fuente <strong>"Navegador"</strong>, marca la casilla <strong>"Archivo local"</strong> (Local file), pulsa <strong>Examinar</strong> y selecciona el archivo <code className="bg-black/30 px-1 py-0.5 rounded text-amber-300 font-mono">public/obs.html</code> dentro de tu carpeta del programa.
+              </p>
+            </div>
+
+            <ol className={`text-xs space-y-1.5 list-decimal list-inside leading-relaxed ${esOscuro ? 'text-slate-300' : 'text-slate-700'}`}>
+              <li>En OBS Studio, en el panel <strong>Fuentes</strong>, haz clic en el botón <strong>+</strong> y selecciona <strong>Navegador</strong> (Browser).</li>
+              <li>Pega la URL de la Opción 1 o selecciona el archivo local con la Opción 2.</li>
+              <li>Configura: <strong>Ancho: 1920</strong> y <strong>Alto: 1080</strong>.</li>
+              <li>El fondo es <strong>100% transparente</strong> para no tapar tus cámaras.</li>
+              <li>Coloca esta fuente por encima de tu cámara de transmisión.</li>
             </ol>
           </div>
 
@@ -325,7 +338,7 @@ export const ObsPanel: React.FC<ObsPanelProps> = ({
                       <span className="text-[11px] font-extrabold uppercase tracking-wider text-amber-400 bg-amber-500/10 border border-amber-500/40 px-2 py-0.5 rounded-full">
                         {proyeccionActual.titulo || proyeccionActual.pie || 'Escritura'}
                       </span>
-                      <span className="text-[10px] text-slate-400">LBC Proyector</span>
+                      <span className="text-[10px] text-slate-400">ICC Proyector</span>
                     </div>
                     <p className="text-sm sm:text-base font-bold text-white leading-snug line-clamp-3">
                       {proyeccionActual.texto}
