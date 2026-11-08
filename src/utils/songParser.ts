@@ -39,7 +39,71 @@ export function clasificarTipoEstrofa(textoOIdentificador: string): { type: Song
 }
 
 /**
- * Parsea y normaliza cualquier estructura JSON a un arreglo de Song estándar
+ * Divide un texto de letra (le) en secciones legibles para proyección en pantalla
+ */
+function procesarLetraEnSecciones(textoLetra: string): SongSection[] {
+  if (!textoLetra || !textoLetra.trim()) return [];
+
+  // Normalizar retornos de carro y barras escapadas (\/\/ -> //)
+  const limpio = textoLetra
+    .replace(/\\r\\n/g, '\n')
+    .replace(/\r\n/g, '\n')
+    .replace(/\r/g, '\n')
+    .replace(/\\\//g, '//');
+
+  // Separar por bloques de doble salto de línea
+  const bloques = limpio.split(/\n\s*\n/).map(b => b.trim()).filter(Boolean);
+
+  const secciones: SongSection[] = [];
+  let numEstrofa = 1;
+  let numCoro = 1;
+
+  bloques.forEach((bloque) => {
+    let lineas = bloque.split('\n').map(l => l.trim()).filter(Boolean);
+    if (lineas.length === 0) return;
+
+    // Detectar si el bloque es un coro
+    const primeraLinea = lineas[0].toLowerCase();
+    const esCoro = primeraLinea.includes('//') || 
+                   primeraLinea.includes('coro') || 
+                   primeraLinea.includes('estribillo') ||
+                   lineas.some(l => l.startsWith('//') && l.endsWith('//'));
+
+    // Limpiar etiquetas de coro al inicio si existen
+    if (primeraLinea.startsWith('[coro]') || primeraLinea.startsWith('coro:')) {
+      lineas.shift();
+    }
+
+    // Si el bloque tiene demasiadas líneas (más de 6), dividirlo en grupos de 4 para no saturar la TV
+    if (lineas.length > 6) {
+      for (let i = 0; i < lineas.length; i += 4) {
+        const subLineas = lineas.slice(i, i + 4);
+        secciones.push({
+          type: esCoro ? 'chorus' : 'verse',
+          label: esCoro ? `Coro ${numCoro}` : `Estrofa ${numEstrofa}`,
+          color: esCoro ? '#f59e0b' : '#0ea5e9',
+          lines: subLineas
+        });
+        if (esCoro) numCoro++;
+        else numEstrofa++;
+      }
+    } else {
+      secciones.push({
+        type: esCoro ? 'chorus' : 'verse',
+        label: esCoro ? (numCoro === 1 ? 'Coro' : `Coro ${numCoro}`) : `Estrofa ${numEstrofa}`,
+        color: esCoro ? '#f59e0b' : '#0ea5e9',
+        lines: lineas
+      });
+      if (esCoro) numCoro++;
+      else numEstrofa++;
+    }
+  });
+
+  return secciones;
+}
+
+/**
+ * Parsea y normaliza cualquier estructura JSON o JS a un arreglo de Song estándar
  */
 export function parsearCancionesDesdeJSON(datos: any, origen: string = 'Local'): Song[] {
   let listaBruta: any[] = [];
@@ -50,6 +114,7 @@ export function parsearCancionesDesdeJSON(datos: any, origen: string = 'Local'):
     if (Array.isArray(datos.canciones)) listaBruta = datos.canciones;
     else if (Array.isArray(datos.songs)) listaBruta = datos.songs;
     else if (Array.isArray(datos.repertorio)) listaBruta = datos.repertorio;
+    else if (Array.isArray(datos.jscanciones)) listaBruta = datos.jscanciones;
     else if (Array.isArray(datos.data)) listaBruta = datos.data;
     else if (Array.isArray(datos.items)) listaBruta = datos.items;
     else {
@@ -63,8 +128,18 @@ export function parsearCancionesDesdeJSON(datos: any, origen: string = 'Local'):
   listaBruta.forEach((item, index) => {
     if (!item || typeof item !== 'object') return;
 
-    const titulo = item.title || item.titulo || item.nombre || item.name || `Canción ${index + 1}`;
-    const autor = item.author || item.autor || item.artista || item.artist || 'Tradicional / Desconocido';
+    // Soporte para formato nativo antiguo JS (ti = título, le = letra, tono = key)
+    let tituloBruto = item.title || item.titulo || item.nombre || item.name || item.ti || `Canción ${index + 1}`;
+    let autor = item.author || item.autor || item.artista || item.artist || '';
+    
+    // Si el título viene en formato "Santo es el señor - Juan Carlos Alvarado", extraer título y autor
+    if (!autor && typeof tituloBruto === 'string' && tituloBruto.includes(' - ')) {
+      const partes = tituloBruto.split(' - ');
+      tituloBruto = partes[0].trim();
+      autor = partes.slice(1).join(' - ').trim();
+    }
+    if (!autor) autor = 'Tradicional / Desconocido';
+
     const numero = item.numero || item.number || item.id_num || index + 1;
     const tono = item.key || item.tono || item.acorde || 'C';
     const tempo = item.tempo || item.bpm || 80;
@@ -109,36 +184,10 @@ export function parsearCancionesDesdeJSON(datos: any, origen: string = 'Local'):
           lines: lineas
         };
       });
-    } else if (typeof item.letra === 'string' || typeof item.lyrics === 'string' || typeof item.body === 'string') {
-      // Formato 2: La letra viene como un solo texto grande separado por dobles saltos de línea
-      const textoCompleto = (item.letra || item.lyrics || item.body || '').trim();
-      const bloques = textoCompleto.split(/\n\s*\n/);
-      
-      secciones = bloques.map((bloque: string, bIdx: number) => {
-        let lineas = bloque.split('\n').map((l: string) => l.trim()).filter(Boolean);
-        let clasif = clasificarTipoEstrofa(`Estrofa ${bIdx + 1}`);
-
-        if (lineas.length > 0) {
-          const primera = lineas[0].toLowerCase();
-          if (primera.includes('coro') || primera.includes('chorus')) {
-            clasif = clasificarTipoEstrofa('coro');
-            lineas.shift();
-          } else if (primera.includes('puente') || primera.includes('bridge')) {
-            clasif = clasificarTipoEstrofa('puente');
-            lineas.shift();
-          } else if (primera.includes('estrofa') || primera.includes('verso')) {
-            clasif = clasificarTipoEstrofa('verso');
-            lineas.shift();
-          }
-        }
-
-        return {
-          type: clasif.type,
-          label: clasif.label,
-          color: clasif.color,
-          lines: lineas
-        };
-      });
+    } else if (typeof item.le === 'string' || typeof item.letra === 'string' || typeof item.lyrics === 'string' || typeof item.body === 'string') {
+      // Formato 2: La letra viene como un solo texto (como en los archivos Canciones.js con "le")
+      const textoCompleto = item.le || item.letra || item.lyrics || item.body || '';
+      secciones = procesarLetraEnSecciones(textoCompleto);
     }
 
     // Si aún no tiene secciones, crear al menos una con el título
@@ -147,14 +196,14 @@ export function parsearCancionesDesdeJSON(datos: any, origen: string = 'Local'):
         type: 'verse',
         label: 'Estrofa 1',
         color: '#0ea5e9',
-        lines: [titulo]
+        lines: [String(tituloBruto)]
       });
     }
 
     cancionesProcesadas.push({
       id: item.id ? String(item.id) : `song-${index}-${Date.now()}`,
       numero: Number(numero) || index + 1,
-      title: String(titulo).trim(),
+      title: String(tituloBruto).trim(),
       author: String(autor).trim(),
       key: tono,
       tempo: Number(tempo) || 80,
@@ -164,6 +213,68 @@ export function parsearCancionesDesdeJSON(datos: any, origen: string = 'Local'):
   });
 
   return cancionesProcesadas;
+}
+
+/**
+ * Lee un archivo de texto ya sea .JSON o .JS (ej: Canciones.js, Corario IPUC castilla.js, Mi Cancionero.js)
+ * y lo convierte automáticamente en el repertorio de canciones.
+ */
+export function parsearCancionesDesdeArchivo(contenidoTexto: string, nombreArchivo: string = 'Importado'): Song[] {
+  if (!contenidoTexto || !contenidoTexto.trim()) return [];
+
+  const limpio = contenidoTexto.trim();
+
+  // Intento 1: Es un JSON puro directo
+  try {
+    const json = JSON.parse(limpio);
+    return parsearCancionesDesdeJSON(json, nombreArchivo);
+  } catch (e1) {
+    // No es JSON puro, proceder a análisis de archivo JavaScript (.js)
+  }
+
+  // Intento 2: Archivo .JS con "var jscanciones = [...]" o similar
+  const primerCorchete = limpio.indexOf('[');
+  const ultimoCorchete = limpio.lastIndexOf(']');
+
+  if (primerCorchete !== -1 && ultimoCorchete !== -1 && ultimoCorchete > primerCorchete) {
+    const segmentoArray = limpio.substring(primerCorchete, ultimoCorchete + 1);
+
+    // Intentar parsear el fragmento entre corchetes como JSON
+    try {
+      const parsedArray = JSON.parse(segmentoArray);
+      return parsearCancionesDesdeJSON(parsedArray, nombreArchivo);
+    } catch (e2) {
+      // Si falla por detalles de sintaxis JS (como comas finales o variables), usar Function segura
+      try {
+        const evalArray = new Function(`"use strict"; return (${segmentoArray});`)();
+        if (Array.isArray(evalArray)) {
+          return parsearCancionesDesdeJSON(evalArray, nombreArchivo);
+        }
+      } catch (e3) {
+        console.warn('Error al evaluar arreglo JS:', e3);
+      }
+    }
+  }
+
+  // Intento 3: Si tiene "var x = { ... }"
+  const primeraLlave = limpio.indexOf('{');
+  const ultimaLlave = limpio.lastIndexOf('}');
+  if (primeraLlave !== -1 && ultimaLlave !== -1 && ultimaLlave > primeraLlave) {
+    const segmentoObjeto = limpio.substring(primeraLlave, ultimaLlave + 1);
+    try {
+      const parsedObj = JSON.parse(segmentoObjeto);
+      return parsearCancionesDesdeJSON(parsedObj, nombreArchivo);
+    } catch (e4) {
+      try {
+        const evalObj = new Function(`"use strict"; return (${segmentoObjeto});`)();
+        if (evalObj && typeof evalObj === 'object') {
+          return parsearCancionesDesdeJSON(evalObj, nombreArchivo);
+        }
+      } catch (e5) {}
+    }
+  }
+
+  return [];
 }
 
 /**
