@@ -20,10 +20,740 @@ import { VANILLA_APP_JS } from './utils/vanillaTemplates';
 import { LIBROS_BIBLIA_COMPLETOS, VERSIONES_BIBLIA, BibleBookMeta } from './data/bibleMetadata';
 import { obtenerVersiculosCapitulo, guardarLibroImportado, BibleVerse, VersiculoProyectado } from './data/bibleStore';
 import { FONDOS_PREDETERMINADOS, BackgroundPreset } from './data/backgroundsData';
-import { DIAPOSITIVAS_INICIALES, SlideItem } from './data/slidesData';
+import { DIAPOSITIVAS_INICIALES, SlideItem, obtenerFallbackArteSVG } from './data/slidesData';
 import { HelpModal } from './components/HelpModal';
 import { ObsPanel } from './components/ObsPanel';
 import { PredicaPanel } from './components/PredicaPanel';
+// ==================== MOTOR SOUNDTOUCH PURE JS (SIN DEPENDENCIAS EXTERNAS) ====================
+// Implementación 100% nativa de WSOLA (Waveform Similarity Overlap-Add) para modulación de tono
+// Cero dependencias npm externas: funciona de inmediato en local y offline sin ejecutar npm install
+
+class FifoSampleBuffer {
+  private _vector: Float32Array;
+  private _position: number;
+  private _frameCount: number;
+
+  constructor() {
+    this._vector = new Float32Array();
+    this._position = 0;
+    this._frameCount = 0;
+  }
+  get vector() { return this._vector; }
+  get position() { return this._position; }
+  get startIndex() { return this._position * 2; }
+  get frameCount() { return this._frameCount; }
+  get endIndex() { return (this._position + this._frameCount) * 2; }
+
+  clear() {
+    this._vector.fill(0);
+    this._position = 0;
+    this._frameCount = 0;
+  }
+  put(numFrames: number) {
+    this._frameCount += numFrames;
+  }
+  putSamples(samples: Float32Array, position = 0, numFrames = 0) {
+    const sourceOffset = position * 2;
+    if (!(numFrames >= 0)) {
+      numFrames = (samples.length - sourceOffset) / 2;
+    }
+    const numSamples = numFrames * 2;
+    this.ensureCapacity(numFrames + this._frameCount);
+    const destOffset = this.endIndex;
+    this.vector.set(samples.subarray(sourceOffset, sourceOffset + numSamples), destOffset);
+    this._frameCount += numFrames;
+  }
+  putBuffer(buffer: FifoSampleBuffer, position = 0, numFrames = 0) {
+    if (!(numFrames >= 0)) {
+      numFrames = buffer.frameCount - position;
+    }
+    this.putSamples(buffer.vector, buffer.position + position, numFrames);
+  }
+  receive(numFrames?: number) {
+    if (numFrames === undefined || !(numFrames >= 0) || numFrames > this._frameCount) {
+      numFrames = this.frameCount;
+    }
+    this._frameCount -= numFrames;
+    this._position += numFrames;
+  }
+  receiveSamples(output: Float32Array, numFrames = 0) {
+    const numSamples = numFrames * 2;
+    const sourceOffset = this.startIndex;
+    output.set(this._vector.subarray(sourceOffset, sourceOffset + numSamples));
+    this.receive(numFrames);
+  }
+  extract(output: Float32Array, position = 0, numFrames = 0) {
+    const sourceOffset = this.startIndex + position * 2;
+    const numSamples = numFrames * 2;
+    output.set(this._vector.subarray(sourceOffset, sourceOffset + numSamples));
+  }
+  ensureCapacity(numFrames = 0) {
+    const minLength = Math.floor(numFrames * 2);
+    if (this._vector.length < minLength) {
+      const newVector = new Float32Array(minLength);
+      newVector.set(this._vector.subarray(this.startIndex, this.endIndex));
+      this._vector = newVector;
+      this._position = 0;
+    } else {
+      this.rewind();
+    }
+  }
+  ensureAdditionalCapacity(numFrames = 0) {
+    this.ensureCapacity(this._frameCount + numFrames);
+  }
+  rewind() {
+    if (this._position > 0) {
+      this._vector.set(this._vector.subarray(this.startIndex, this.endIndex));
+      this._position = 0;
+    }
+  }
+}
+
+abstract class AbstractFifoSamplePipe {
+  protected _inputBuffer: FifoSampleBuffer;
+  protected _outputBuffer: FifoSampleBuffer;
+
+  constructor(createBuffers: boolean) {
+    if (createBuffers) {
+      this._inputBuffer = new FifoSampleBuffer();
+      this._outputBuffer = new FifoSampleBuffer();
+    } else {
+      this._inputBuffer = null as any;
+      this._outputBuffer = null as any;
+    }
+  }
+  get inputBuffer() { return this._inputBuffer; }
+  set inputBuffer(b: FifoSampleBuffer) { this._inputBuffer = b; }
+  get outputBuffer() { return this._outputBuffer; }
+  set outputBuffer(b: FifoSampleBuffer) { this._outputBuffer = b; }
+  clear() {
+    this._inputBuffer?.clear();
+    this._outputBuffer?.clear();
+  }
+  abstract process(): void;
+}
+
+class RateTransposer extends AbstractFifoSamplePipe {
+  private _rate = 1;
+  private slopeCount = 0;
+  private prevSampleL = 0;
+  private prevSampleR = 0;
+
+  constructor(createBuffers = false) {
+    super(createBuffers);
+    this.reset();
+  }
+  get rate() { return this._rate; }
+  set rate(r: number) { this._rate = r; }
+  reset() {
+    this.slopeCount = 0;
+    this.prevSampleL = 0;
+    this.prevSampleR = 0;
+  }
+  clear() {
+    super.clear();
+    this.reset();
+  }
+  process() {
+    const numFrames = this._inputBuffer.frameCount;
+    this._outputBuffer.ensureAdditionalCapacity(numFrames / this._rate + 1);
+    const numFramesOutput = this.transpose(numFrames);
+    this._inputBuffer.receive();
+    this._outputBuffer.put(numFramesOutput);
+  }
+  transpose(numFrames = 0) {
+    if (numFrames === 0) return 0;
+    const src = this._inputBuffer.vector;
+    const srcOffset = this._inputBuffer.startIndex;
+    const dest = this._outputBuffer.vector;
+    const destOffset = this._outputBuffer.endIndex;
+    let used = 0;
+    let i = 0;
+    while (this.slopeCount < 1.0) {
+      dest[destOffset + 2 * i] = (1.0 - this.slopeCount) * this.prevSampleL + this.slopeCount * src[srcOffset];
+      dest[destOffset + 2 * i + 1] = (1.0 - this.slopeCount) * this.prevSampleR + this.slopeCount * src[srcOffset + 1];
+      i++;
+      this.slopeCount += this._rate;
+    }
+    this.slopeCount -= 1.0;
+    if (numFrames !== 1) {
+      out: while (true) {
+        while (this.slopeCount > 1.0) {
+          this.slopeCount -= 1.0;
+          used++;
+          if (used >= numFrames - 1) break out;
+        }
+        const srcIndex = srcOffset + 2 * used;
+        dest[destOffset + 2 * i] = (1.0 - this.slopeCount) * src[srcIndex] + this.slopeCount * src[srcIndex + 2];
+        dest[destOffset + 2 * i + 1] = (1.0 - this.slopeCount) * src[srcIndex + 1] + this.slopeCount * src[srcIndex + 3];
+        i++;
+        this.slopeCount += this._rate;
+      }
+    }
+    this.prevSampleL = src[srcOffset + 2 * numFrames - 2];
+    this.prevSampleR = src[srcOffset + 2 * numFrames - 1];
+    return i;
+  }
+}
+
+const _SCAN_OFFSETS = [
+  [124, 186, 248, 310, 372, 434, 496, 558, 620, 682, 744, 806, 868, 930, 992, 1054, 1116, 1178, 1240, 1302, 1364, 1426, 1488, 0],
+  [-100, -75, -50, -25, 25, 50, 75, 100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [-20, -15, -10, -5, 5, 10, 15, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [-4, -3, -2, -1, 1, 2, 3, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+];
+
+class Stretch extends AbstractFifoSamplePipe {
+  private _quickSeek = true;
+  private midBuffer: Float32Array | null = null;
+  private refMidBuffer: Float32Array | null = null;
+  private overlapLength = 0;
+  private autoSeqSetting = true;
+  private autoSeekSetting = true;
+  private _tempo = 1;
+  private sampleRate = 44100;
+  private sequenceMs = 0;
+  private seekWindowMs = 0;
+  private overlapMs = 8;
+  private seekWindowLength = 0;
+  private seekLength = 0;
+  private nominalSkip = 0;
+  private skipFract = 0;
+  private sampleReq = 0;
+
+  constructor(createBuffers = false) {
+    super(createBuffers);
+    this.setParameters(44100, 0, 0, 8);
+  }
+  clear() {
+    super.clear();
+    this.midBuffer = null;
+    if (this.refMidBuffer) this.refMidBuffer.fill(0);
+    this.skipFract = 0;
+  }
+  setParameters(sampleRate: number, sequenceMs: number, seekWindowMs: number, overlapMs: number) {
+    if (sampleRate > 0) this.sampleRate = sampleRate;
+    if (overlapMs > 0) this.overlapMs = overlapMs;
+    this.autoSeqSetting = sequenceMs <= 0;
+    this.autoSeekSetting = seekWindowMs <= 0;
+    this.sequenceMs = sequenceMs;
+    this.seekWindowMs = seekWindowMs;
+    this.calculateSequenceParameters();
+    this.calculateOverlapLength(this.overlapMs);
+    this.tempo = this._tempo;
+  }
+  set tempo(newTempo: number) {
+    this._tempo = newTempo;
+    this.calculateSequenceParameters();
+    this.nominalSkip = this._tempo * (this.seekWindowLength - this.overlapLength);
+    this.skipFract = 0;
+    const intskip = Math.floor(this.nominalSkip + 0.5);
+    this.sampleReq = Math.max(intskip + this.overlapLength, this.seekWindowLength) + this.seekLength;
+  }
+  get tempo() { return this._tempo; }
+
+  private calculateOverlapLength(overlapInMsec: number) {
+    let newOvl = (this.sampleRate * overlapInMsec) / 1000;
+    newOvl = newOvl < 16 ? 16 : newOvl;
+    newOvl -= newOvl % 8;
+    this.overlapLength = newOvl;
+    this.refMidBuffer = new Float32Array(this.overlapLength * 2);
+    this.midBuffer = new Float32Array(this.overlapLength * 2);
+  }
+  private calculateSequenceParameters() {
+    if (this.autoSeqSetting) {
+      const seq = 125.0 + ((50.0 - 125.0) / (4.0 - 0.25)) * (this._tempo - 0.25);
+      this.sequenceMs = Math.floor(Math.max(50.0, Math.min(125.0, seq)) + 0.5);
+    }
+    if (this.autoSeekSetting) {
+      const seek = 25.0 + ((15.0 - 25.0) / (4.0 - 0.25)) * (this._tempo - 0.25);
+      this.seekWindowMs = Math.floor(Math.max(15.0, Math.min(25.0, seek)) + 0.5);
+    }
+    this.seekWindowLength = Math.floor((this.sampleRate * this.sequenceMs) / 1000);
+    this.seekLength = Math.floor((this.sampleRate * this.seekWindowMs) / 1000);
+  }
+  private seekBestOverlapPosition() {
+    return this._quickSeek ? this.seekBestOverlapPositionStereoQuick() : this.seekBestOverlapPositionStereo();
+  }
+  private seekBestOverlapPositionStereo() {
+    this.preCalculateCorrelationReferenceStereo();
+    let bestOffset = 0;
+    let bestCorrelation = -Number.MAX_VALUE;
+    for (let i = 0; i < this.seekLength; i++) {
+      const correlation = this.calculateCrossCorrelationStereo(2 * i, this.refMidBuffer!);
+      if (correlation > bestCorrelation) {
+        bestCorrelation = correlation;
+        bestOffset = i;
+      }
+    }
+    return bestOffset;
+  }
+  private seekBestOverlapPositionStereoQuick() {
+    this.preCalculateCorrelationReferenceStereo();
+    let bestOffset = 0;
+    let bestCorrelation = -Number.MAX_VALUE;
+    let correlationOffset = 0;
+    for (let scanCount = 0; scanCount < 4; scanCount++) {
+      let j = 0;
+      while (_SCAN_OFFSETS[scanCount][j]) {
+        const tempOffset = correlationOffset + _SCAN_OFFSETS[scanCount][j];
+        if (tempOffset >= this.seekLength) break;
+        const correlation = this.calculateCrossCorrelationStereo(2 * tempOffset, this.refMidBuffer!);
+        if (correlation > bestCorrelation) {
+          bestCorrelation = correlation;
+          bestOffset = tempOffset;
+        }
+        j++;
+      }
+      correlationOffset = bestOffset;
+    }
+    return bestOffset;
+  }
+  private preCalculateCorrelationReferenceStereo() {
+    for (let i = 0; i < this.overlapLength; i++) {
+      const temp = i * (this.overlapLength - i);
+      const ctx = i * 2;
+      this.refMidBuffer![ctx] = this.midBuffer![ctx] * temp;
+      this.refMidBuffer![ctx + 1] = this.midBuffer![ctx + 1] * temp;
+    }
+  }
+  private calculateCrossCorrelationStereo(mixingPosition: number, compare: Float32Array) {
+    const mixing = this._inputBuffer.vector;
+    mixingPosition += this._inputBuffer.startIndex;
+    let correlation = 0;
+    const calcLength = 2 * this.overlapLength;
+    for (let i = 2; i < calcLength; i += 2) {
+      const mixingOffset = i + mixingPosition;
+      correlation += mixing[mixingOffset] * compare[i] + mixing[mixingOffset + 1] * compare[i + 1];
+    }
+    return correlation;
+  }
+  private overlap(overlapPosition: number) {
+    const input = this._inputBuffer.vector;
+    const inputPosition = 2 * overlapPosition + this._inputBuffer.startIndex;
+    const output = this._outputBuffer.vector;
+    const outputPosition = this._outputBuffer.endIndex;
+    const frameScale = 1 / this.overlapLength;
+    for (let i = 0; i < this.overlapLength; i++) {
+      const tempFrame = (this.overlapLength - i) * frameScale;
+      const fi = i * frameScale;
+      const ctx = 2 * i;
+      output[ctx + outputPosition] = input[ctx + inputPosition] * fi + this.midBuffer![ctx] * tempFrame;
+      output[ctx + outputPosition + 1] = input[ctx + inputPosition + 1] * fi + this.midBuffer![ctx + 1] * tempFrame;
+    }
+  }
+  process() {
+    if (this.midBuffer === null) {
+      if (this._inputBuffer.frameCount < this.overlapLength) return;
+      this.midBuffer = new Float32Array(this.overlapLength * 2);
+      this._inputBuffer.receiveSamples(this.midBuffer, this.overlapLength);
+    }
+    while (this._inputBuffer.frameCount >= this.sampleReq) {
+      const offset = this.seekBestOverlapPosition();
+      this._outputBuffer.ensureAdditionalCapacity(this.overlapLength);
+      this.overlap(Math.floor(offset));
+      this._outputBuffer.put(this.overlapLength);
+      const temp = this.seekWindowLength - 2 * this.overlapLength;
+      if (temp > 0) {
+        this._outputBuffer.putBuffer(this._inputBuffer, offset + this.overlapLength, temp);
+      }
+      const start = this._inputBuffer.startIndex + 2 * (offset + this.seekWindowLength - this.overlapLength);
+      this.midBuffer.set(this._inputBuffer.vector.subarray(start, start + 2 * this.overlapLength));
+      this.skipFract += this.nominalSkip;
+      const overlapSkip = Math.floor(this.skipFract);
+      this.skipFract -= overlapSkip;
+      this._inputBuffer.receive(overlapSkip);
+    }
+  }
+}
+
+class SoundTouch {
+  private transposer = new RateTransposer(false);
+  private stretch = new Stretch(false);
+  private _inputBuffer = new FifoSampleBuffer();
+  private _intermediateBuffer = new FifoSampleBuffer();
+  private _outputBuffer = new FifoSampleBuffer();
+  private _rate = 0;
+  private _tempo = 0;
+  private virtualPitch = 1.0;
+  private virtualRate = 1.0;
+  private virtualTempo = 1.0;
+
+  constructor() {
+    this.calculateEffectiveRateAndTempo();
+  }
+  clear() {
+    this.transposer.clear();
+    this.stretch.clear();
+  }
+  get rate() { return this._rate; }
+  set rate(r: number) {
+    this.virtualRate = r;
+    this.calculateEffectiveRateAndTempo();
+  }
+  get tempo() { return this._tempo; }
+  set tempo(t: number) {
+    this.virtualTempo = t;
+    this.calculateEffectiveRateAndTempo();
+  }
+  set pitch(p: number) {
+    this.virtualPitch = p;
+    this.calculateEffectiveRateAndTempo();
+  }
+  set pitchSemitones(semitones: number) {
+    this.pitch = Math.exp((0.69314718056 * semitones) / 12.0);
+  }
+  get inputBuffer() { return this._inputBuffer; }
+  get outputBuffer() { return this._outputBuffer; }
+
+  private calculateEffectiveRateAndTempo() {
+    this._tempo = this.virtualTempo / this.virtualPitch;
+    this._rate = this.virtualRate * this.virtualPitch;
+    this.stretch.tempo = this._tempo;
+    this.transposer.rate = this._rate;
+    if (this._rate > 1.0) {
+      if (this._outputBuffer !== this.transposer.outputBuffer) {
+        this.stretch.inputBuffer = this._inputBuffer;
+        this.stretch.outputBuffer = this._intermediateBuffer;
+        this.transposer.inputBuffer = this._intermediateBuffer;
+        this.transposer.outputBuffer = this._outputBuffer;
+      }
+    } else {
+      if (this._outputBuffer !== this.stretch.outputBuffer) {
+        this.transposer.inputBuffer = this._inputBuffer;
+        this.transposer.outputBuffer = this._intermediateBuffer;
+        this.stretch.inputBuffer = this._intermediateBuffer;
+        this.stretch.outputBuffer = this._outputBuffer;
+      }
+    }
+  }
+  process() {
+    if (this._rate > 1.0) {
+      this.stretch.process();
+      this.transposer.process();
+    } else {
+      this.transposer.process();
+      this.stretch.process();
+    }
+  }
+}
+
+class SimpleFilter {
+  private historyBufferSize = 22050;
+  private _sourcePosition = 0;
+  private outputBufferPosition = 0;
+  private _position = 0;
+
+  constructor(
+    private sourceSound: WebAudioBufferSource,
+    private pipe: SoundTouch,
+    private callback: () => void = () => {}
+  ) {}
+
+  get position() { return this._position; }
+  get sourcePosition() { return this._sourcePosition; }
+  set sourcePosition(pos: number) {
+    this.clear();
+    this._sourcePosition = pos;
+  }
+  clear() {
+    this.pipe.clear();
+    this.outputBufferPosition = 0;
+  }
+  onEnd() { this.callback(); }
+
+  fillInputBuffer(numFrames = 0) {
+    const samples = new Float32Array(numFrames * 2);
+    const numFramesExtracted = this.sourceSound.extract(samples, numFrames, this._sourcePosition);
+    this._sourcePosition += numFramesExtracted;
+    this.pipe.inputBuffer.putSamples(samples, 0, numFramesExtracted);
+  }
+  fillOutputBuffer(numFrames = 0) {
+    while (this.pipe.outputBuffer.frameCount < numFrames) {
+      const numInputFrames = 8192 * 2 - this.pipe.inputBuffer.frameCount;
+      this.fillInputBuffer(numInputFrames);
+      if (this.pipe.inputBuffer.frameCount < 8192 * 2) break;
+      this.pipe.process();
+    }
+  }
+  extract(target: Float32Array, numFrames = 0) {
+    this.fillOutputBuffer(this.outputBufferPosition + numFrames);
+    const numFramesExtracted = Math.min(numFrames, this.pipe.outputBuffer.frameCount - this.outputBufferPosition);
+    this.pipe.outputBuffer.extract(target, this.outputBufferPosition, numFramesExtracted);
+    const currentFrames = this.outputBufferPosition + numFramesExtracted;
+    this.outputBufferPosition = Math.min(this.historyBufferSize, currentFrames);
+    this.pipe.outputBuffer.receive(Math.max(currentFrames - this.historyBufferSize, 0));
+    this._position += numFramesExtracted;
+    return numFramesExtracted;
+  }
+}
+
+class WebAudioBufferSource {
+  private _position = 0;
+  constructor(public buffer: AudioBuffer) {}
+  get dualChannel() { return this.buffer.numberOfChannels > 1; }
+  get position() { return this._position; }
+  set position(v: number) { this._position = v; }
+
+  extract(target: Float32Array, numFrames = 0, position = 0) {
+    this._position = position;
+    const left = this.buffer.getChannelData(0);
+    const right = this.dualChannel ? this.buffer.getChannelData(1) : left;
+    for (let i = 0; i < numFrames; i++) {
+      target[i * 2] = left[i + position] || 0;
+      target[i * 2 + 1] = right[i + position] || 0;
+    }
+    return Math.min(numFrames, Math.max(0, left.length - position));
+  }
+}
+
+class PitchShifter {
+  private _soundtouch = new SoundTouch();
+  private _filter: SimpleFilter;
+  private _node: ScriptProcessorNode;
+  public duration: number;
+  public sampleRate: number;
+  public timePlayed = 0;
+  public sourcePosition = 0;
+
+  constructor(
+    context: AudioContext,
+    buffer: AudioBuffer,
+    bufferSize = 4096,
+    onEnd: () => void = () => {}
+  ) {
+    const source = new WebAudioBufferSource(buffer);
+    this.duration = buffer.duration;
+    this.sampleRate = context.sampleRate;
+    this._filter = new SimpleFilter(source, this._soundtouch, onEnd);
+
+    this._node = context.createScriptProcessor(bufferSize, 2, 2);
+    const samples = new Float32Array(bufferSize * 2);
+
+    this._node.onaudioprocess = (event) => {
+      const left = event.outputBuffer.getChannelData(0);
+      const right = event.outputBuffer.getChannelData(1);
+      const framesExtracted = this._filter.extract(samples, bufferSize);
+      this.sourcePosition = this._filter.sourcePosition;
+      this.timePlayed = this.sourcePosition / this.sampleRate;
+
+      if (framesExtracted === 0) {
+        this._filter.onEnd();
+      }
+      for (let i = 0; i < bufferSize; i++) {
+        left[i] = i < framesExtracted ? samples[i * 2] : 0;
+        right[i] = i < framesExtracted ? samples[i * 2 + 1] : 0;
+      }
+    };
+  }
+
+  get percentagePlayed() {
+    return (100 * this._filter.sourcePosition) / (this.duration * this.sampleRate);
+  }
+  set percentagePlayed(perc: number) {
+    this._filter.sourcePosition = Math.floor((perc / 100) * this.duration * this.sampleRate);
+    this.sourcePosition = this._filter.sourcePosition;
+    this.timePlayed = this.sourcePosition / this.sampleRate;
+  }
+  set pitchSemitones(semitone: number) {
+    this._soundtouch.pitchSemitones = semitone;
+  }
+  set tempo(tempo: number) {
+    this._soundtouch.tempo = tempo;
+  }
+  connect(dest: AudioNode) {
+    this._node.connect(dest);
+  }
+  disconnect() {
+    try { this._node.disconnect(); } catch (e) {}
+  }
+}
+
+// Motor Profesional de Cambio de Tono en Tiempo Real basado en SoundTouch (WSOLA)
+// Permite subir/bajar semitonos manteniendo la velocidad y el tiempo de la canción 100% constantes
+export class PitchAudioPlayer {
+  private ctx: AudioContext | null = null;
+  private shifter: any = null;
+  private gainNode: GainNode | null = null;
+  private audioBuffer: AudioBuffer | null = null;
+  private isPlaying: boolean = false;
+  private currentPitch: number = 0;
+  private currentVolume: number = 0.85;
+  private isMuted: boolean = false;
+  private durationSec: number = 0;
+  private trackingTimer: any = null;
+  private onTimeUpdateCb: ((curr: number, dur: number) => void) | null = null;
+  private onEndCb: (() => void) | null = null;
+
+  public getContext(): AudioContext {
+    if (!this.ctx) {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      this.ctx = new AudioCtx();
+    }
+    if (this.ctx.state === 'suspended') {
+      this.ctx.resume().catch(() => {});
+    }
+    return this.ctx;
+  }
+
+  public async load(source: File | string, pitch = 0): Promise<number> {
+    this.stop();
+    const ctx = this.getContext();
+    let arrayBuffer: ArrayBuffer;
+
+    if (source instanceof File) {
+      arrayBuffer = await source.arrayBuffer();
+    } else {
+      const res = await fetch(source);
+      arrayBuffer = await res.arrayBuffer();
+    }
+
+    this.audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+    this.durationSec = this.audioBuffer.duration;
+    this.currentPitch = pitch;
+    this.initShifter(0);
+    return this.durationSec;
+  }
+
+  private initShifter(startPercentage = 0) {
+    if (!this.audioBuffer) return;
+    const ctx = this.getContext();
+
+    if (this.shifter) {
+      try { this.shifter.disconnect(); } catch (e) {}
+      this.shifter = null;
+    }
+
+    if (!this.gainNode) {
+      this.gainNode = ctx.createGain();
+      this.gainNode.gain.setValueAtTime(this.isMuted ? 0 : this.currentVolume, ctx.currentTime);
+      this.gainNode.connect(ctx.destination);
+    }
+
+    this.shifter = new (PitchShifter as any)(ctx, this.audioBuffer, 4096, () => {
+      this.isPlaying = false;
+      this.stopTracking();
+      if (this.onEndCb) this.onEndCb();
+    });
+
+    this.shifter.tempo = 1.0;
+    this.shifter.pitchSemitones = this.currentPitch;
+    if (startPercentage > 0) {
+      this.shifter.percentagePlayed = startPercentage;
+    }
+  }
+
+  public play() {
+    if (!this.audioBuffer) return;
+    const ctx = this.getContext();
+    if (ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
+
+    if (!this.shifter) {
+      this.initShifter(0);
+    }
+
+    if (this.shifter && this.gainNode) {
+      try {
+        this.shifter.disconnect();
+      } catch (e) {}
+      this.shifter.connect(this.gainNode);
+    }
+
+    this.isPlaying = true;
+    this.startTracking();
+  }
+
+  public pause() {
+    if (this.shifter) {
+      try {
+        this.shifter.disconnect();
+      } catch (e) {}
+    }
+    this.isPlaying = false;
+    this.stopTracking();
+  }
+
+  public stop() {
+    this.pause();
+    if (this.shifter) {
+      this.shifter.percentagePlayed = 0;
+    }
+  }
+
+  public seek(seconds: number) {
+    if (!this.durationSec || this.durationSec <= 0) return;
+    const perc = Math.max(0, Math.min(100, (seconds / this.durationSec) * 100));
+    if (this.shifter) {
+      this.shifter.percentagePlayed = perc;
+    }
+  }
+
+  public setPitch(semitones: number) {
+    this.currentPitch = semitones;
+    if (this.shifter) {
+      this.shifter.pitchSemitones = semitones;
+      this.shifter.tempo = 1.0; // Velocidad y tiempo 100% constantes
+    }
+  }
+
+  public setVolume(vol0to100: number, muted = false) {
+    this.currentVolume = Math.max(0, Math.min(1, vol0to100 / 100));
+    this.isMuted = muted;
+    if (this.gainNode && this.ctx) {
+      const target = this.isMuted ? 0 : this.currentVolume;
+      this.gainNode.gain.setValueAtTime(target, this.ctx.currentTime);
+    }
+  }
+
+  public getCurrentTime(): number {
+    if (!this.shifter || !this.durationSec) return 0;
+    return this.shifter.timePlayed || ((this.shifter.percentagePlayed || 0) / 100) * this.durationSec;
+  }
+
+  public getDuration(): number {
+    return this.durationSec;
+  }
+
+  public getIsPlaying(): boolean {
+    return this.isPlaying;
+  }
+
+  public onTimeUpdate(cb: (curr: number, dur: number) => void) {
+    this.onTimeUpdateCb = cb;
+  }
+
+  public onEnd(cb: () => void) {
+    this.onEndCb = cb;
+  }
+
+  private startTracking() {
+    this.stopTracking();
+    this.trackingTimer = setInterval(() => {
+      if (this.isPlaying && this.onTimeUpdateCb) {
+        this.onTimeUpdateCb(this.getCurrentTime(), this.durationSec);
+      }
+    }, 200);
+  }
+
+  private stopTracking() {
+    if (this.trackingTimer) {
+      clearInterval(this.trackingTimer);
+      this.trackingTimer = null;
+    }
+  }
+
+  public clear() {
+    this.stop();
+    if (this.shifter) {
+      try { this.shifter.disconnect(); } catch (e) {}
+      this.shifter = null;
+    }
+    this.audioBuffer = null;
+    this.durationSec = 0;
+  }
+}
 
 // Tipografías estándar garantizadas en Windows (funcionan 100% offline)
 export const FUENTES_SISTEMA = [
@@ -122,9 +852,6 @@ export default function App() {
   const [youtubeEnProyector, setYoutubeEnProyector] = useState<boolean>(false);
 
   // ==================== AJUSTES PERSONALIZADOS DEL SISTEMA ====================
-  const [mostrarBotonZip, setMostrarBotonZip] = useState<boolean>(() => {
-    return localStorage.getItem('lbc_mostrar_zip') !== 'false';
-  });
   const [fuenteProyector, setFuenteProyector] = useState<string>(() => {
     return localStorage.getItem('lbc_fuente') || "'Segoe UI', system-ui, -apple-system, sans-serif";
   });
@@ -153,6 +880,15 @@ export default function App() {
 
     try {
       localStorage.setItem('proyector_lbc_msg', JSON.stringify({ ...data, _ts: Date.now() }));
+    } catch (e) {}
+
+    // Publicar en la Red Local para el computador de transmisión con OBS Studio
+    try {
+      fetch('http://127.0.0.1:3001/api/obs-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...data, _ts: Date.now() })
+      }).catch(() => {});
     } catch (e) {}
   };
 
@@ -187,6 +923,39 @@ export default function App() {
   // Folder and file inputs for Bible files
   const folderInputRef = useRef<HTMLInputElement | null>(null);
   const bibleFileInputRef = useRef<HTMLInputElement | null>(null);
+  const listaVersiculosRef = useRef<HTMLDivElement | null>(null);
+  const nuevaLetraRef = useRef<HTMLTextAreaElement | null>(null);
+  const editLetraRef = useRef<HTMLTextAreaElement | null>(null);
+  // Insertar marcador en la posición actual del cursor
+const insertarMarcador = (
+  tipo: string,
+  textarea: HTMLTextAreaElement | null,
+  actualizarLetra: (texto: string) => void
+) => {
+  if (!textarea) return;
+
+  const texto = textarea.value;
+  const inicio = textarea.selectionStart;
+  const fin = textarea.selectionEnd;
+
+  const antes = texto.slice(0, inicio);
+  const despues = texto.slice(fin);
+
+  const saltoAntes = antes.length > 0 && !antes.endsWith('\n') ? '\n' : '';
+
+  const saltoDespues = despues.length > 0 && !despues.startsWith('\n') ? '\n' : '';
+
+  const marcador = `${saltoAntes}[${tipo}]${saltoDespues ? '\n' : ''}`;
+  const nuevoTexto = antes + marcador + despues;
+  const nuevaPosicion = antes.length + marcador.length;
+
+  actualizarLetra(nuevoTexto);
+
+  requestAnimationFrame(() => {
+    textarea.focus();
+    textarea.setSelectionRange(nuevaPosicion, nuevaPosicion);
+  });
+};
 
   // Load verses when book, chapter or version changes
   useEffect(() => {
@@ -203,6 +972,13 @@ export default function App() {
     cargar();
     return () => { montado = false; };
   }, [libroSeleccionado, capituloActual, versionBiblia]);
+
+  // Reiniciar la lista al cambiar de libro o capítulo
+useEffect(() => {
+  if (listaVersiculosRef.current) {
+    listaVersiculosRef.current.scrollTop = 0;
+  }
+}, [libroSeleccionado, capituloActual]);
 
   // Project selected Bible verse
   const proyectarVersiculo = (versiculo: BibleVerse) => {
@@ -300,6 +1076,25 @@ export default function App() {
     );
   }, [versiculosCapitulo, busquedaVersiculoTexto]);
 
+  // Llevar la lista al versículo seleccionado cuando se limpia el filtro
+  useEffect(() => {
+    if (busquedaVersiculoTexto !== '') return;
+
+    const lista = listaVersiculosRef.current;
+    if (!lista) return;
+
+    const versiculo = lista.querySelector(
+      `[data-versiculo="${versiculoActivoNum}"]`
+    ) as HTMLElement | null;
+
+    if (versiculo) {
+      versiculo.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center'
+      });
+    }
+  }, [busquedaVersiculoTexto]);
+
   // ==================== CANCIONES & SETLISTS ====================
   const [repertorio, setRepertorio] = useState<Song[]>(INITIAL_FEATURED_SONGS);
   const [cancionSeleccionada, setCancionSeleccionada] = useState<Song | null>(INITIAL_FEATURED_SONGS[0]);
@@ -322,12 +1117,14 @@ export default function App() {
 
   const [mostrarModalNuevaCancion, setMostrarModalNuevaCancion] = useState<boolean>(false);
   const [nuevaTitulo, setNuevaTitulo] = useState<string>('');
+  const [errorNuevaCancion, setErrorNuevaCancion] = useState<boolean>(false);
   const [nuevaAutor, setNuevaAutor] = useState<string>('');
   const [nuevaLetra, setNuevaLetra] = useState<string>('');
   const songFileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Modal: Editar Canción y Letras
   const [mostrarModalEditarCancion, setMostrarModalEditarCancion] = useState<boolean>(false);
+  const [mostrarConfirmarEliminarCancion, setMostrarConfirmarEliminarCancion] = useState<boolean>(false);
   const [cancionEditando, setCancionEditando] = useState<Song | null>(null);
   const [editTitulo, setEditTitulo] = useState<string>('');
   const [editAutor, setEditAutor] = useState<string>('');
@@ -440,6 +1237,21 @@ export default function App() {
     return buscarCanciones(repertorio, busquedaCanciones, buscarEnLetra);
   }, [repertorio, busquedaCanciones, buscarEnLetra]);
 
+  const eliminarCancionDelRepertorio = (idCancion: string) => {
+    setRepertorio(prev => {
+      const nuevaLista = prev.filter(c => c.id !== idCancion);
+      try {
+        localStorage.setItem('proyector_lbc_canciones', JSON.stringify(nuevaLista));
+      } catch (e) {}
+      return nuevaLista;
+    });
+    if (cancionSeleccionada?.id === idCancion) {
+      setCancionSeleccionada(null);
+      setSeccionActivaIdx(-1);
+    }
+    mostrarToast('Canción eliminada del repertorio');
+  };
+
   const proyectarEstrofa = (seccion: SongSection, cancion: Song, indice: number) => {
     setSeccionActivaIdx(indice);
     setIsBlackout(false);
@@ -492,20 +1304,24 @@ export default function App() {
     setEditTitulo(cancion.title);
     setEditAutor(cancion.author || '');
 
-    // Formatear estrofas en texto limpio y legible
-    const texto = (cancion.sections || []).map(sec => {
-      let encabezado = '';
-      if (sec.type === 'chorus') {
-        encabezado = '[CORO]\n';
-      } else if (sec.type === 'bridge') {
-        encabezado = '[PUENTE]\n';
-      } else if (sec.type === 'pre-chorus') {
-        encabezado = '[PRE-CORO]\n';
-      } else if (sec.label && !sec.label.toLowerCase().startsWith('verso') && !sec.label.toLowerCase().startsWith('estrofa')) {
-        encabezado = `[${sec.label.toUpperCase()}]\n`;
-      }
-      return `${encabezado}${sec.lines.join('\n')}`;
-    }).join('\n\n');
+// Formatear estrofas en texto limpio y legible
+const texto = (cancion.sections || []).map(sec => {
+  let encabezado = '';
+
+  if (sec.type === 'chorus') {
+    encabezado = '[CORO]\n';
+  } else if (sec.type === 'bridge') {
+    encabezado = '[PUENTE]\n';
+  } else if (sec.type === 'pre-chorus') {
+    encabezado = '[PRE-CORO]\n';
+  } else if (sec.type === 'verse') {
+    encabezado = '[ESTROFA]\n';
+  } else if (sec.label) {
+    encabezado = `[${sec.label.toUpperCase()}]\n`;
+  }
+
+  return `${encabezado}${sec.lines.join('\n')}`;
+}).join('\n\n');
 
     setEditLetra(texto);
     setMostrarModalEditarCancion(true);
@@ -655,9 +1471,13 @@ export default function App() {
 
   const eliminarCancionActual = () => {
     if (!cancionEditando) return;
-    if (!window.confirm(`¿Estás seguro de que deseas eliminar "${cancionEditando.title}" del cancionero?`)) {
-      return;
-    }
+
+    setMostrarConfirmarEliminarCancion(true);
+    return;
+  };
+
+  const confirmarEliminarCancion = () => {
+    if (!cancionEditando) return;
 
     const nuevoRepertorio = repertorio.filter(s => s.id !== cancionEditando.id);
     setRepertorio(nuevoRepertorio);
@@ -674,6 +1494,7 @@ export default function App() {
 
     setMostrarModalEditarCancion(false);
     setCancionEditando(null);
+    setMostrarConfirmarEliminarCancion(false);
     mostrarToast(`Alabanza eliminada del cancionero`);
   };
 
@@ -693,19 +1514,65 @@ export default function App() {
     enviarAlProyector({ accion: 'limpiar' });
   };
 
-  // Diapositivas & Galería de Imágenes (Canva, Avisos, Banners)
+  // Diapositivas & Galería de Imágenes (Canva, Avisos, Banners, 14 Imágenes Litúrgicas)
   const [imagenesGuardadas, setImagenesGuardadas] = useState<SlideItem[]>(() => {
+    // Mapa rápido de las imágenes predeterminadas oficiales con su dataUrl real embebida (Base64)
+    const mapaPredeterminados = new Map(DIAPOSITIVAS_INICIALES.map(d => [d.id, d.dataUrl]));
+
     const guardado = localStorage.getItem('lbc_imagenes_guardadas');
     if (guardado) {
       try {
         const parsed = JSON.parse(guardado);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          // 1. Actualizar items predeterminados para asegurar que usen la fotografía real en Base64
+          // (reemplazando cualquier ruta '/fondos/fondo_*.jpg' que falle en discos locales sin esa carpeta)
+          const actualizados = parsed.map((item: SlideItem) => {
+            if (mapaPredeterminados.has(item.id)) {
+              return { ...item, dataUrl: mapaPredeterminados.get(item.id)! };
+            }
+            return item;
+          });
+
+          // 2. Asegurar que las 14 imágenes litúrgicas y momentos predeterminados siempre estén presentes
+          const idsExistentes = new Set(actualizados.map((item: SlideItem) => item.id));
+          const faltantes = DIAPOSITIVAS_INICIALES.filter(init => !idsExistentes.has(init.id));
+          const listaFinal = [...actualizados, ...faltantes];
+
+          // Persistir la lista actualizada
+          try {
+            localStorage.setItem('lbc_imagenes_guardadas', JSON.stringify(listaFinal));
+          } catch (e) {}
+
+          return listaFinal;
+        }
       } catch (e) {}
     }
     return DIAPOSITIVAS_INICIALES;
   });
+  const [cancionAEliminar, setCancionAEliminar] = useState<Song | null>(null);
+  const [imagenAEliminar, setImagenAEliminar] = useState<SlideItem | null>(null);
   const [imagenActivaIdx, setImagenActivaIdx] = useState<number>(-1);
   const imageFileInputRef = useRef<HTMLInputElement | null>(null);
+  const galeriaFileInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Sub-pestaña activa dentro de Diapositivas & Canva:
+  // 'iglesia' -> 10 momentos predeterminados de la iglesia + flyers subidos
+  // 'galeria' -> 13 paisajes y biblias litúrgicas + fotos de paisajes subidas
+  const [subPestanaDiapositivas, setSubPestanaDiapositivas] = useState<'iglesia' | 'galeria'>('iglesia');
+
+  const diapositivasIglesia = useMemo(() => {
+    return imagenesGuardadas.filter(img =>
+      img.id.startsWith('momento-') ||
+      (img.categoria !== 'predeterminado' && !img.id.startsWith('img-pred-'))
+    );
+  }, [imagenesGuardadas]);
+
+  const galeriaPaisajes = useMemo(() => {
+    return imagenesGuardadas.filter(img =>
+      img.id.startsWith('img-pred-') ||
+      img.categoria === 'predeterminado'
+    );
+  }, [imagenesGuardadas]);
 
   const proyectarImagen = (slide: SlideItem, idx: number) => {
     setImagenActivaIdx(idx);
@@ -773,8 +1640,7 @@ export default function App() {
     mostrarToast(`Imagen "${slide.titulo}" eliminada`, 'info');
   };
 
-  const handleSubirImagenes = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
+  const procesarSubidaArchivosImagen = (files: FileList | null, categoriaPorDefecto: 'evento' | 'predeterminado') => {
     if (!files || files.length === 0) return;
 
     const filesArray = Array.from(files).filter(file => {
@@ -796,14 +1662,15 @@ export default function App() {
       setImagenesGuardadas(prev => {
         const combinadas = [...nuevosItems, ...prev];
         try {
-          // Limitamos el historial guardado en localStorage a las últimas 35 imágenes para máxima seguridad
-          localStorage.setItem('lbc_imagenes_guardadas', JSON.stringify(combinadas.slice(0, 35)));
+          // Guardar con límite de 45 para máxima fluidez
+          localStorage.setItem('lbc_imagenes_guardadas', JSON.stringify(combinadas.slice(0, 45)));
         } catch (err) {
           console.warn('Storage limit warning, kept in memory:', err);
         }
         return combinadas;
       });
-      mostrarToast(`¡Se agregaron ${nuevosItems.length} imágenes a tu galería local!`);
+      const dest = categoriaPorDefecto === 'predeterminado' ? 'Galería de Paisajes' : 'Diapositivas de la Iglesia';
+      mostrarToast(`¡Se agregaron ${nuevosItems.length} imágenes a ${dest}!`);
     };
 
     filesArray.forEach(file => {
@@ -816,7 +1683,6 @@ export default function App() {
           return;
         }
 
-        // Optimizar y comprimir imágenes pesadas de Canva mediante un Canvas off-screen
         const img = new window.Image();
         img.onload = () => {
           let targetW = img.naturalWidth || img.width;
@@ -841,7 +1707,6 @@ export default function App() {
 
           if (ctx) {
             ctx.drawImage(img, 0, 0, targetW, targetH);
-            // Comprimir a JPEG 0.85 para ahorrar 90% de memoria manteniendo nitidez en pantalla
             finalDataUrl = canvas.toDataURL('image/jpeg', 0.85);
           }
 
@@ -849,7 +1714,7 @@ export default function App() {
           nuevosItems.push({
             id: `slide-custom-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
             titulo: nombreLimpio,
-            categoria: 'evento',
+            categoria: categoriaPorDefecto,
             fecha: new Date().toLocaleDateString('es-CO', { day: 'numeric', month: 'short' }),
             dataUrl: finalDataUrl,
             esPredeterminado: false
@@ -864,7 +1729,7 @@ export default function App() {
           nuevosItems.push({
             id: `slide-custom-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
             titulo: nombreLimpio,
-            categoria: 'evento',
+            categoria: categoriaPorDefecto,
             fecha: new Date().toLocaleDateString('es-CO', { day: 'numeric', month: 'short' }),
             dataUrl: rawDataUrl,
             esPredeterminado: false
@@ -880,18 +1745,31 @@ export default function App() {
     });
 
     if (imageFileInputRef.current) imageFileInputRef.current.value = '';
+    if (galeriaFileInputRef.current) galeriaFileInputRef.current.value = '';
+  };
+
+  const handleSubirImagenes = (e: React.ChangeEvent<HTMLInputElement>) => {
+    procesarSubidaArchivosImagen(e.target.files, 'evento');
+  };
+
+  const handleSubirImagenGaleria = (e: React.ChangeEvent<HTMLInputElement>) => {
+    procesarSubidaArchivosImagen(e.target.files, 'predeterminado');
   };
 
   const avanzarImagen = () => {
-    if (!imagenesGuardadas || imagenesGuardadas.length === 0) return;
-    const sig = (imagenActivaIdx + 1) % imagenesGuardadas.length;
-    proyectarImagen(imagenesGuardadas[sig], sig);
+    const listaActual = subPestanaDiapositivas === 'iglesia' ? diapositivasIglesia : galeriaPaisajes;
+    if (!listaActual || listaActual.length === 0) return;
+    const curIdx = listaActual.findIndex(s => s.id === proyeccionActual?.id);
+    const sig = (curIdx + 1) % listaActual.length;
+    proyectarImagen(listaActual[sig], sig);
   };
 
   const retrocederImagen = () => {
-    if (!imagenesGuardadas || imagenesGuardadas.length === 0) return;
-    const ant = imagenActivaIdx <= 0 ? imagenesGuardadas.length - 1 : imagenActivaIdx - 1;
-    proyectarImagen(imagenesGuardadas[ant], ant);
+    const listaActual = subPestanaDiapositivas === 'iglesia' ? diapositivasIglesia : galeriaPaisajes;
+    if (!listaActual || listaActual.length === 0) return;
+    const curIdx = listaActual.findIndex(s => s.id === proyeccionActual?.id);
+    const ant = curIdx <= 0 ? listaActual.length - 1 : curIdx - 1;
+    proyectarImagen(listaActual[ant], ant);
   };
 
   // Navegación secuencial por versículos de la Biblia
@@ -1122,16 +2000,25 @@ export default function App() {
   };
 
   const eliminarFondoPersonalizado = (id: string, e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    setFondosPersonalizados(prev => {
-      const filtrados = prev.filter(f => f.id !== id);
-      try {
-        localStorage.setItem('lbc_fondos_subidos', JSON.stringify(filtrados));
-      } catch (err) {}
-      return filtrados;
-    });
-    mostrarToast('Fondo personalizado eliminado', 'info');
-  };
+  e?.stopPropagation();
+
+  const fondoAEliminar = fondosPersonalizados.find(f => f.id === id);
+  if (!fondoAEliminar) return;
+
+  if (!window.confirm(`¿Deseas eliminar el fondo "${fondoAEliminar.nombre}"?`)) {
+    return;
+  }
+
+  setFondosPersonalizados(prev => {
+    const filtrados = prev.filter(f => f.id !== id);
+    try {
+      localStorage.setItem('lbc_fondos_subidos', JSON.stringify(filtrados));
+    } catch (err) {}
+    return filtrados;
+  });
+
+  mostrarToast('Fondo personalizado eliminado', 'info');
+};
 
   // Manejadores para YouTube
   const extraerYoutubeId = (url: string) => {
@@ -1248,225 +2135,9 @@ export default function App() {
     mostrarToast('Proyección de video finalizada');
   };
 
-  // ==================== MOTOR DE TONO (WEB AUDIO API - PURE JAVASCRIPT) ====================
-  // Cambia el tono en semitonos (-6 a +6) SIN CAMBIAR EL TIEMPO NI LA VELOCIDAD DE LA CANCIÓN
-  const pitchEngineRef = useRef<{
-    init: (el: HTMLMediaElement) => void;
-    setPitch: (semitones: number) => void;
-  } | null>(null);
-
-  useEffect(() => {
-    class WebAudioPitchEngine {
-      private ctx: AudioContext | null = null;
-      private source: MediaElementAudioSourceNode | null = null;
-      private inputGain: GainNode | null = null;
-      private outputGain: GainNode | null = null;
-      private bypassGain: GainNode | null = null;
-      private wetGain: GainNode | null = null;
-      private mod1Gain: GainNode | null = null;
-      private mod2Gain: GainNode | null = null;
-      private mod3Gain: GainNode | null = null;
-      private mod4Gain: GainNode | null = null;
-      private modGain1: GainNode | null = null;
-      private modGain2: GainNode | null = null;
-      private isInit = false;
-
-      private createFadeBuffer(activeTime: number, fadeTime: number): AudioBuffer {
-        const sampleRate = this.ctx!.sampleRate;
-        const length1 = Math.floor(activeTime * sampleRate);
-        const length2 = Math.floor((activeTime - 2 * fadeTime) * sampleRate);
-        const length = length1 + length2;
-        const buffer = this.ctx!.createBuffer(1, length, sampleRate);
-        const p = buffer.getChannelData(0);
-        const fadeLength = Math.floor(fadeTime * sampleRate);
-        const fadeIndex2 = length1 - fadeLength;
-
-        for (let i = 0; i < length1; ++i) {
-          if (i < fadeLength) {
-            p[i] = Math.sqrt(i / fadeLength);
-          } else if (i >= fadeIndex2) {
-            p[i] = Math.sqrt(Math.max(0, 1 - (i - fadeIndex2) / fadeLength));
-          } else {
-            p[i] = 1;
-          }
-        }
-        for (let i = length1; i < length; ++i) {
-          p[i] = 0;
-        }
-        return buffer;
-      }
-
-      private createDelayBuffer(activeTime: number, fadeTime: number, shiftUp: boolean): AudioBuffer {
-        const sampleRate = this.ctx!.sampleRate;
-        const length1 = Math.floor(activeTime * sampleRate);
-        const length2 = Math.floor((activeTime - 2 * fadeTime) * sampleRate);
-        const length = length1 + length2;
-        const buffer = this.ctx!.createBuffer(1, length, sampleRate);
-        const p = buffer.getChannelData(0);
-
-        for (let i = 0; i < length1; ++i) {
-          if (shiftUp) {
-            p[i] = (length1 - i) / length;
-          } else {
-            p[i] = i / length1;
-          }
-        }
-        for (let i = length1; i < length; ++i) {
-          p[i] = 0;
-        }
-        return buffer;
-      }
-
-      public init(mediaEl: HTMLMediaElement) {
-        if (this.isInit) return;
-        try {
-          const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-          if (!AudioCtx) return;
-          this.ctx = new AudioCtx();
-
-          this.inputGain = this.ctx.createGain();
-          this.outputGain = this.ctx.createGain();
-          this.bypassGain = this.ctx.createGain();
-          this.wetGain = this.ctx.createGain();
-
-          this.bypassGain.gain.value = 1;
-          this.wetGain.gain.value = 0;
-
-          const bufferTime = 0.100;
-          const fadeTime = 0.050;
-
-          const shiftDownBuffer = this.createDelayBuffer(bufferTime, fadeTime, false);
-          const shiftUpBuffer = this.createDelayBuffer(bufferTime, fadeTime, true);
-          const fadeBuffer = this.createFadeBuffer(bufferTime, fadeTime);
-
-          const mod1 = this.ctx.createBufferSource();
-          const mod2 = this.ctx.createBufferSource();
-          const mod3 = this.ctx.createBufferSource();
-          const mod4 = this.ctx.createBufferSource();
-          mod1.buffer = shiftDownBuffer;
-          mod2.buffer = shiftDownBuffer;
-          mod3.buffer = shiftUpBuffer;
-          mod4.buffer = shiftUpBuffer;
-          mod1.loop = true;
-          mod2.loop = true;
-          mod3.loop = true;
-          mod4.loop = true;
-
-          this.mod1Gain = this.ctx.createGain();
-          this.mod2Gain = this.ctx.createGain();
-          this.mod3Gain = this.ctx.createGain();
-          this.mod4Gain = this.ctx.createGain();
-          this.mod3Gain.gain.value = 0;
-          this.mod4Gain.gain.value = 0;
-
-          mod1.connect(this.mod1Gain);
-          mod2.connect(this.mod2Gain);
-          mod3.connect(this.mod3Gain);
-          mod4.connect(this.mod4Gain);
-
-          this.modGain1 = this.ctx.createGain();
-          this.modGain2 = this.ctx.createGain();
-          this.modGain1.gain.value = 0;
-          this.modGain2.gain.value = 0;
-
-          this.mod1Gain.connect(this.modGain1);
-          this.mod2Gain.connect(this.modGain2);
-          this.mod3Gain.connect(this.modGain1);
-          this.mod4Gain.connect(this.modGain2);
-
-          const delay1 = this.ctx.createDelay(1);
-          const delay2 = this.ctx.createDelay(1);
-
-          this.modGain1.connect(delay1.delayTime);
-          this.modGain2.connect(delay2.delayTime);
-
-          const fade1 = this.ctx.createBufferSource();
-          const fade2 = this.ctx.createBufferSource();
-          fade1.buffer = fadeBuffer;
-          fade2.buffer = fadeBuffer;
-          fade1.loop = true;
-          fade2.loop = true;
-
-          const mix1 = this.ctx.createGain();
-          const mix2 = this.ctx.createGain();
-          mix1.gain.value = 0;
-          mix2.gain.value = 0;
-
-          fade1.connect(mix1.gain);
-          fade2.connect(mix2.gain);
-
-          this.inputGain.connect(delay1);
-          this.inputGain.connect(delay2);
-          delay1.connect(mix1);
-          delay2.connect(mix2);
-          mix1.connect(this.wetGain);
-          mix2.connect(this.wetGain);
-
-          this.inputGain.connect(this.bypassGain);
-          this.bypassGain.connect(this.outputGain);
-          this.wetGain.connect(this.outputGain);
-
-          this.outputGain.connect(this.ctx.destination);
-
-          const t = this.ctx.currentTime + 0.050;
-          const t2 = t + bufferTime - fadeTime;
-          mod1.start(t);
-          mod2.start(t2);
-          mod3.start(t);
-          mod4.start(t2);
-          fade1.start(t);
-          fade2.start(t2);
-
-          this.source = this.ctx.createMediaElementSource(mediaEl);
-          this.source.connect(this.inputGain);
-
-          this.isInit = true;
-        } catch (err) {
-          console.warn('WebAudioPitchEngine init:', err);
-        }
-      }
-
-      public setPitch(semitones: number) {
-        if (this.ctx && this.ctx.state === 'suspended') {
-          this.ctx.resume().catch(() => {});
-        }
-
-        if (!this.isInit || !this.ctx || !this.mod1Gain || !this.mod2Gain || !this.mod3Gain || !this.mod4Gain || !this.modGain1 || !this.modGain2 || !this.bypassGain || !this.wetGain) {
-          return;
-        }
-
-        if (semitones === 0) {
-          this.bypassGain.gain.setValueAtTime(1, this.ctx.currentTime);
-          this.wetGain.gain.setValueAtTime(0, this.ctx.currentTime);
-          this.modGain1.gain.setValueAtTime(0, this.ctx.currentTime);
-          this.modGain2.gain.setValueAtTime(0, this.ctx.currentTime);
-          return;
-        }
-
-        this.bypassGain.gain.setValueAtTime(0, this.ctx.currentTime);
-        this.wetGain.gain.setValueAtTime(1, this.ctx.currentTime);
-
-        const mult = Math.pow(2, semitones / 12) - 1;
-        if (mult > 0) {
-          this.mod3Gain.gain.setValueAtTime(1, this.ctx.currentTime);
-          this.mod4Gain.gain.setValueAtTime(1, this.ctx.currentTime);
-          this.mod1Gain.gain.setValueAtTime(0, this.ctx.currentTime);
-          this.mod2Gain.gain.setValueAtTime(0, this.ctx.currentTime);
-        } else {
-          this.mod3Gain.gain.setValueAtTime(0, this.ctx.currentTime);
-          this.mod4Gain.gain.setValueAtTime(0, this.ctx.currentTime);
-          this.mod1Gain.gain.setValueAtTime(1, this.ctx.currentTime);
-          this.mod2Gain.gain.setValueAtTime(1, this.ctx.currentTime);
-        }
-
-        const delay = 0.100 * Math.abs(mult);
-        this.modGain1.gain.setTargetAtTime(0.5 * delay, this.ctx.currentTime, 0.010);
-        this.modGain2.gain.setTargetAtTime(0.5 * delay, this.ctx.currentTime, 0.010);
-      }
-    }
-
-    pitchEngineRef.current = new WebAudioPitchEngine();
-  }, []);
+  // ==================== MOTOR DE TONO (SOUNDTOUCH WSOLA PITCH SHIFTER) ====================
+  // Modulación real de tono en semitonos (-6 a +6) SIN MODIFICAR EL TIEMPO NI LA VELOCIDAD
+  const pitchPlayerRef = useRef<PitchAudioPlayer | null>(null);
 
   // ==================== KARAOKE & PISTAS AUDIO ====================
   const [karaokeCancion, setKaraokeCancion] = useState<Song>(INITIAL_FEATURED_SONGS[0]);
@@ -1478,16 +2149,36 @@ export default function App() {
   const [karaokeVolume, setKaraokeVolume] = useState<number>(85);
   const [karaokeMuted, setKaraokeMuted] = useState<boolean>(false);
   const [karaokeSeccionIdx, setKaraokeSeccionIdx] = useState<number>(0);
+  const [mostrarModalEliminarPistaActual, setMostrarModalEliminarPistaActual] = useState<boolean>(false);
+  const [karaokeItemAEliminar, setKaraokeItemAEliminar] = useState<{ item: KaraokeItem; index: number } | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioInputRef = useRef<HTMLInputElement | null>(null);
   const karaokeSetlistFileInputRef = useRef<HTMLInputElement | null>(null);
 
+  useEffect(() => {
+    const player = new PitchAudioPlayer();
+    pitchPlayerRef.current = player;
+    player.setVolume(karaokeVolume, karaokeMuted);
+    player.setPitch(pitchSemitonos);
+
+    player.onTimeUpdate((curr, dur) => {
+      setKaraokeCurrentTime(curr);
+      if (dur > 0) setKaraokeDuration(dur);
+    });
+
+    player.onEnd(() => {
+      setKaraokePlaying(false);
+      setKaraokeCurrentTime(0);
+    });
+
+    return () => {
+      player.clear();
+    };
+  }, []);
+
   // Eliminar la pista de audio cargada actualmente y dejar el reproductor limpio
   const eliminarPistaActual = () => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-    }
+    pitchPlayerRef.current?.clear();
     setKaraokePlaying(false);
     setKaraokePistaUrl('');
     setKaraokePistaNombre('Sin pista cargada');
@@ -1500,65 +2191,46 @@ export default function App() {
   };
 
   const toggleKaraokePlay = () => {
-    if (audioRef.current && karaokePistaUrl) {
-      try {
-        pitchEngineRef.current?.init(audioRef.current);
-        pitchEngineRef.current?.setPitch(pitchSemitonos);
-      } catch (e) {}
+    if (!karaokePistaUrl && !audioFileCargado) {
+      mostrarToast('Primero carga una pista MP3 o selecciona una del Setlist', 'info');
+      return;
+    }
 
-      if (karaokePlaying) {
-        audioRef.current.pause();
-        setKaraokePlaying(false);
-      } else {
-        audioRef.current.play().then(() => setKaraokePlaying(true)).catch(() => {});
-      }
+    if (karaokePlaying) {
+      pitchPlayerRef.current?.pause();
+      setKaraokePlaying(false);
+      mostrarToast('Pista en pausa', 'info');
     } else {
-      setKaraokePlaying(!karaokePlaying);
-      mostrarToast(karaokePlaying ? 'Pista en pausa' : 'Reproduciendo pista de alabanza...', 'info');
+      pitchPlayerRef.current?.play();
+      setKaraokePlaying(true);
+      mostrarToast('Reproduciendo pista de alabanza...', 'info');
     }
   };
 
   const stopKaraoke = () => {
-    if (audioRef.current && karaokePistaUrl) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-    }
+    pitchPlayerRef.current?.stop();
     setKaraokePlaying(false);
     setKaraokeCurrentTime(0);
   };
 
   const handleSeekKaraoke = (val: number) => {
     setKaraokeCurrentTime(val);
-    if (audioRef.current) {
-      audioRef.current.currentTime = val;
-    }
+    pitchPlayerRef.current?.seek(val);
   };
 
   const cambiarPitchSemitonos = (deltaOVal: number, esAbsoluto = false) => {
     const nuevo = esAbsoluto ? deltaOVal : Math.max(-6, Math.min(6, pitchSemitonos + deltaOVal));
     setPitchSemitonos(nuevo);
-
-    if (audioRef.current) {
-      try {
-        // Velocidad y tiempo de la canción 100% CONSTANTES (no se frena ni se acelera)
-        audioRef.current.playbackRate = 1.0;
-        (audioRef.current as any).preservesPitch = true;
-
-        // Modulación de tono pura por Web Audio API
-        pitchEngineRef.current?.init(audioRef.current);
-        pitchEngineRef.current?.setPitch(nuevo);
-      } catch (e) {
-        console.warn('Error ajustando pitch:', e);
-      }
-    }
+    pitchPlayerRef.current?.setPitch(nuevo);
 
     const desc = nuevo === 0
       ? 'Tono Original (0)'
       : nuevo > 0
       ? `+${nuevo} semitono${nuevo > 1 ? 's' : ''} (más agudo)`
       : `${nuevo} semitono${Math.abs(nuevo) > 1 ? 's' : ''} (más grave)`;
-    mostrarToast(`Tono ajustado: ${desc} • Ritmo y velocidad 100% constantes`, 'info');
+    mostrarToast(`Tono ajustado: ${desc} • Velocidad y tiempo 100% constantes`, 'info');
   };
+
 
   // Free text / Announcements
   const [textoLibre, setTextoLibre] = useState<string>('');
@@ -1719,15 +2391,22 @@ export default function App() {
     mostrarToast('Orden de pistas actualizado');
   };
 
-  const eliminarKaraokeDeSetlist = (idx: number, e?: React.MouseEvent) => {
+  const pedirEliminarKaraokeDeSetlist = (idx: number, e?: React.MouseEvent) => {
     e?.stopPropagation();
+    const item = karaokeSetlistItems[idx];
+    if (item) {
+      setKaraokeItemAEliminar({ item, index: idx });
+    }
+  };
+
+  const confirmarEliminarKaraokeDeSetlist = (idx: number) => {
     const nuevaLista = karaokeSetlistItems.filter((_, i) => i !== idx);
     const nuevoState = { ...karaokeSetlists, [karaokeSetlistActual]: nuevaLista };
     setKaraokeSetlists(nuevoState);
     try {
       localStorage.setItem('lbc_karaoke_setlists', JSON.stringify(nuevoState));
     } catch (e) {}
-    mostrarToast('Pista retirada de la lista', 'info');
+    mostrarToast('Pista retirada del setlist', 'info');
   };
 
   const seleccionarKaraokeItem = (item: KaraokeItem) => {
@@ -1736,6 +2415,11 @@ export default function App() {
     if (item.pistaUrl) {
       setKaraokePistaUrl(item.pistaUrl);
       setKaraokePistaNombre(item.pistaNombre || item.songTitle);
+      pitchPlayerRef.current?.load(item.pistaUrl, pitchSemitonos).then((dur) => {
+        if (dur) setKaraokeDuration(dur);
+        setKaraokeCurrentTime(0);
+        setKaraokePlaying(false);
+      }).catch(() => {});
     } else {
       setKaraokePistaNombre(`Pista de ${item.songTitle}`);
     }
@@ -1748,7 +2432,7 @@ export default function App() {
 
     // Si ya es la pista actual y está sonando, alternar pausa
     if (karaokePistaUrl === item.pistaUrl && karaokePlaying) {
-      if (audioRef.current) audioRef.current.pause();
+      pitchPlayerRef.current?.pause();
       setKaraokePlaying(false);
       return;
     }
@@ -1762,24 +2446,21 @@ export default function App() {
       setKaraokePistaNombre(item.pistaNombre || item.songTitle);
       setKaraokeCurrentTime(0);
 
-      // Iniciar reproducción instantánea
-      setTimeout(() => {
-        if (audioRef.current) {
-          audioRef.current.currentTime = 0;
-          audioRef.current.playbackRate = 1.0;
-          try {
-            pitchEngineRef.current?.init(audioRef.current);
-            pitchEngineRef.current?.setPitch(pitchSemitonos);
-          } catch (err) {}
-          audioRef.current.play().then(() => setKaraokePlaying(true)).catch(() => {});
-        }
-      }, 100);
+      // Iniciar reproducción instantánea con motor SoundTouch (tempo constante, pitch activo)
+      pitchPlayerRef.current?.load(item.pistaUrl, pitchSemitonos).then((dur) => {
+        if (dur) setKaraokeDuration(dur);
+        pitchPlayerRef.current?.play();
+        setKaraokePlaying(true);
+      }).catch((err) => {
+        console.warn('Error reproduciendo pista:', err);
+      });
 
       mostrarToast(`▶ Reproduciendo pista: "${item.pistaNombre || item.songTitle}"`, 'success');
     } else {
       mostrarToast(`"${item.songTitle}" no tiene archivo de audio MP3 adjunto. Súbelo con "+ Pistas MP3".`, 'info');
     }
   };
+
 
   // Subir múltiples canciones y pistas de audio a la vez (4, 8, 10, 20 pistas) al Setlist del día seleccionado
   const handleSubirPistasAlSetlist = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1907,7 +2588,7 @@ export default function App() {
   };
 
   return (
-    <div className={`min-h-screen flex flex-col font-sans transition-colors duration-200 selection:bg-blue-600 selection:text-white ${
+    <div className={`h-screen max-h-screen overflow-hidden flex flex-col font-sans select-none transition-colors duration-200 selection:bg-blue-600 selection:text-white ${
       temaOperador === 'claro' ? 'bg-slate-100 text-slate-900' : 'bg-slate-950 text-slate-100'
     }`}>
       
@@ -1930,20 +2611,62 @@ export default function App() {
       <input type="file" ref={bibleFileInputRef} onChange={handleCargaArchivosBiblia} multiple accept=".json" className="hidden" />
       <input type="file" ref={folderInputRef} onChange={handleCargaArchivosBiblia} multiple {...({ webkitdirectory: '', directory: '' } as any)} className="hidden" />
       <input type="file" ref={imageFileInputRef} onChange={handleSubirImagenes} multiple accept="image/*" className="hidden" />
+      <input type="file" ref={galeriaFileInputRef} onChange={handleSubirImagenGaleria} multiple accept="image/*" className="hidden" />
       <input type="file" ref={fondoFileInputRef} onChange={handleSubirFondo} accept="image/*,video/mp4,video/webm" className="hidden" />
-      <input type="file" ref={videoInputRef} onChange={(e) => {
-        const file = e.target.files?.[0];
-        if (file) setVideoUrl(URL.createObjectURL(file));
-      }} accept="video/*" className="hidden" />
+      <input
+  type="file"
+  ref={videoInputRef}
+  onChange={async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formulario = new FormData();
+    formulario.append('video', file);
+
+    try {
+      mostrarToast('Enviando video al servidor...');
+
+      const respuesta = await fetch('http://127.0.0.1:3001/api/upload-video', {
+        method: 'POST',
+        body: formulario
+      });
+
+      const resultado = await respuesta.json();
+
+      if (!respuesta.ok || !resultado.url) {
+        throw new Error(resultado.error || 'No se pudo cargar el video');
+      }
+
+      setVideoUrl(resultado.url);
+      mostrarToast('Video cargado correctamente');
+    } catch (error) {
+      console.error('Error al cargar video:', error);
+      mostrarToast('No se pudo enviar el video al servidor');
+    }
+  }}
+  accept="video/*"
+  className="hidden"
+/>
       <input type="file" ref={audioInputRef} onChange={async (e) => {
         const file = e.target.files?.[0];
         if (file) {
           setAudioFileCargado(file);
           setKaraokePistaNombre(file.name);
-          setKaraokePistaUrl(URL.createObjectURL(file));
+          const objUrl = URL.createObjectURL(file);
+          setKaraokePistaUrl(objUrl);
           setKaraokeCurrentTime(0);
           setKaraokePlaying(false);
-          mostrarToast(`Pista "${file.name}" cargada para Karaoke`);
+          setCargandoAudio(true);
+          try {
+            const dur = await pitchPlayerRef.current?.load(file, pitchSemitonos);
+            if (dur) setKaraokeDuration(dur);
+            mostrarToast(`Pista "${file.name}" cargada para Karaoke • Tono ajustable`);
+          } catch (err) {
+            console.warn('Error cargando audio:', err);
+            mostrarToast(`Pista cargada: ${file.name}`);
+          } finally {
+            setCargandoAudio(false);
+          }
         }
       }} accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg" className="hidden" />
 
@@ -1957,13 +2680,14 @@ export default function App() {
         className="hidden"
       />
 
-      {/* Audio element for Karaoke */}
+      {/* Audio element for Karaoke (muted to prevent un-pitch-shifted bleed) */}
       {karaokePistaUrl && (
         <audio
           ref={audioRef}
           src={karaokePistaUrl}
+          muted
           crossOrigin="anonymous"
-          onTimeUpdate={(e) => setKaraokeCurrentTime((e.target as HTMLAudioElement).currentTime)}
+          className="hidden"
           onLoadedMetadata={(e) => setKaraokeDuration((e.target as HTMLAudioElement).duration)}
           onEnded={() => {
             setKaraokePlaying(false);
@@ -1980,739 +2704,870 @@ export default function App() {
         />
       )}
 
-      {/* ==================== BARRA SUPERIOR (HEADER) ==================== */}
-      <header className={`border-b sticky top-0 z-40 px-4 py-2 flex flex-wrap items-center justify-between gap-3 shadow-md ${
-        temaOperador === 'claro' ? 'border-slate-300 bg-white text-slate-800' : 'border-slate-800/80 bg-slate-900/95 text-slate-100'
-      }`}>
-        {/* Church Brand & Logo (Adaptive high-contrast branding) */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2.5 cursor-pointer select-none" onClick={() => setModuloActivo('portada')}>
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-red-600 via-blue-600 to-amber-500 flex items-center justify-center font-bold text-white shadow-md shadow-blue-500/20">
-              ✝
-            </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <span className={`font-extrabold text-sm tracking-tight ${temaOperador === 'claro' ? 'text-slate-950' : 'text-white'}`}>
-                  {nombreCongregacion}
-                </span>
-                <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-500 border border-amber-500/30">
-                  ICC
-                </span>
-              </div>
-              <p className="text-[10px] text-slate-400">Proyector ICC • {horaActual}</p>
-            </div>
-          </div>
+      
 
-          <div className="hidden lg:flex items-center gap-1.5 pl-3 border-l border-slate-700/40 text-[11px] text-slate-400">
-            <span>Creado por: <strong className="text-amber-400 font-bold">LuftmandMauricio</strong></span>
-          </div>
+{/* ==================== BARRA SUPERIOR (HEADER) ==================== */}
+<header className="border-b border-[#303946] flex-shrink-0 z-40 px-3 py-2 flex flex-col gap-2 shadow-lg bg-[#171A20] text-[#F1F3F5]">
+
+  {/* PRIMERA FILA: IDENTIDAD Y CONTROLES */}
+  <div className="flex flex-wrap xl:flex-nowrap items-center justify-between gap-2">
+
+    {/* Identidad de ICC */}
+    <div className="flex items-center gap-3 shrink-0">
+      <div
+        className="flex items-center gap-2.5 cursor-pointer select-none"
+        onClick={() => setModuloActivo('portada')}
+      >
+        <div className="w-10 h-10 rounded-xl bg-[#D6AD62] flex items-center justify-center font-bold text-[#171A20] text-xl shadow-md">
+          ✝
         </div>
 
-        {/* Function Modules Tabs */}
-        <nav className={`flex items-center gap-1 p-1 rounded-xl border text-xs ${
-          temaOperador === 'claro' ? 'bg-slate-200 border-slate-300' : 'bg-slate-950/80 border-slate-800'
-        }`}>
-          {[
-            { id: 'portada', label: 'Portada', icon: Home },
-            { id: 'biblia', label: 'Biblia', icon: BookOpen },
-            { id: 'canciones', label: 'Canciones', icon: Music },
-            { id: 'predica', label: 'Prédica & Bosquejo', icon: ScrollText },
-            { id: 'fondos', label: 'Fondos', icon: Image },
-            { id: 'video', label: 'Video', icon: Video },
-            { id: 'karaoke', label: 'Karaoke', icon: Mic },
-            { id: 'anuncios', label: 'Diapositivas & Canva', icon: Sparkles },
-            { id: 'obs', label: 'OBS Studio', icon: Radio },
-            { id: 'config', label: 'Ajustes', icon: Settings }
-          ].map((item) => {
-            const Icon = item.icon;
-            const activo = moduloActivo === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => setModuloActivo(item.id as any)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
-                  activo
-                    ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
-                    : temaOperador === 'claro'
-                    ? 'text-slate-600 hover:text-slate-950 hover:bg-slate-300'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
-                }`}
-              >
-                <Icon className="w-3.5 h-3.5" />
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
-        </nav>
-
-        {/* Quick Projection Controls */}
-        <div className="flex items-center gap-2">
-          {/* Font Size Slider */}
-          <div className={`hidden xl:flex items-center gap-2 px-2.5 py-1 rounded-lg border text-[11px] ${
-            temaOperador === 'claro' ? 'bg-slate-100 border-slate-300 text-slate-700' : 'bg-slate-950/60 border-slate-800 text-slate-400'
-          }`}>
-            <span>A</span>
-            <input
-              type="range"
-              min="32"
-              max="76"
-              value={tamanoFuente}
-              onChange={(e) => cambiarTamanoFuente(Number(e.target.value))}
-              className="w-16 h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
-              title={`Tamaño de letra en proyector: ${tamanoFuente}px`}
-            />
-            <span className="text-sm font-bold">A</span>
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="font-extrabold text-sm tracking-tight text-[#F1F3F5]">
+              {nombreCongregacion}
+            </span>
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#D6AD62]/15 text-[#D6AD62] border border-[#D6AD62]/30">
+              ICC
+            </span>
           </div>
-
-          {/* Blackout (B / F5) */}
-          <button
-            onClick={toggleBlackout}
-            title="Presiona 'B' o F5 para pantalla negra de inmediato"
-            className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold border transition cursor-pointer ${
-              isBlackout
-                ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-lg shadow-amber-500/30'
-                : temaOperador === 'claro'
-                ? 'bg-slate-100 text-slate-700 border-slate-300 hover:border-slate-500'
-                : 'bg-slate-900 text-slate-300 border-slate-700 hover:border-slate-500'
-            }`}
-          >
-            {isBlackout ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5 text-amber-500" />}
-            <span>{isBlackout ? 'BLACKOUT' : 'Blackout (B)'}</span>
-          </button>
-
-          {/* Limpiar (C / F4) */}
-          <button
-            onClick={limpiarPantalla}
-            title="Presiona 'C' o F4 para limpiar texto de la pantalla"
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-rose-600/20 text-rose-400 border border-rose-500/30 hover:bg-rose-600/30 transition cursor-pointer"
-          >
-            <span>Limpiar (C)</span>
-          </button>
-
-          {/* Botón Emergencia: Quitar Video en Vivo (visible desde cualquier pestaña si hay video transmitiendo) */}
-          {(youtubeEnProyector || videoEnProyector) && (
-            <button
-              onClick={() => {
-                if (youtubeEnProyector) detenerYoutubeEnProyector();
-                if (videoEnProyector) detenerVideoEnProyector();
-                setYoutubeVideoId('');
-                setYoutubeInputUrl('');
-                setVideoUrl('');
-                mostrarToast('⏹️ Video detenido y quitado de la pantalla', 'info');
-              }}
-              title="Detener y quitar inmediatamente el video que está transmitiendo en el proyector"
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-black bg-rose-600 hover:bg-rose-500 text-white animate-pulse shadow-lg shadow-rose-600/40 cursor-pointer"
-            >
-              <Square className="w-3.5 h-3.5 fill-white" />
-              <span>⏹️ Quitar Video</span>
-            </button>
-          )}
-
-          {/* Abrir / Desactivar Proyector Pantalla 2 (TV) */}
-          <button
-            onClick={toggleVentanaProyector}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition shadow cursor-pointer ${
-              proyectorConectado
-                ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-rose-600/30 ring-2 ring-rose-400/50'
-                : 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-amber-500/20'
-            }`}
-            title={proyectorConectado ? 'Clic para desactivar la proyección en la Pantalla 2 (TV)' : 'Clic para proyectar automáticamente en la Pantalla 2 (TV)'}
-          >
-            <Monitor className="w-3.5 h-3.5" />
-            <span>{proyectorConectado ? '⏹️ Apagar TV (Pantalla 2)' : '🖥️ Proyectar en TV (Pantalla 2)'}</span>
-          </button>
-
-          {/* Botón Centro de Ayuda (?) */}
-          <button
-            onClick={() => setMostrarAyuda(true)}
-            className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold border transition cursor-pointer ${
-              temaOperador === 'claro'
-                ? 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100'
-                : 'bg-blue-950/60 text-blue-300 border-blue-800/80 hover:bg-blue-900/60'
-            }`}
-            title="Abrir Manual de Ayuda y Atajos de Teclado"
-          >
-            <HelpCircle className="w-3.5 h-3.5 text-blue-400" />
-            <span>Ayuda</span>
-          </button>
-
-          {/* Botón ZIP Opcional en Cabecera */}
-          {mostrarBotonZip && (
-            <a
-              href="/Proyector-LBC-Completo.zip"
-              download="Proyector-LBC-Completo.zip"
-              onClick={() => mostrarToast('Descargando Proyector-LBC-Completo.zip (9 MB)...', 'info')}
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow transition cursor-pointer"
-              title="Descargar paquete ZIP completo (9 MB) con archivos .bat y código listo"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span>ZIP</span>
-            </a>
-          )}
+          <p className="text-[11px] text-[#AAB4C0]">
+            Proyector ICC • {horaActual}
+          </p>
         </div>
-      </header>
+      </div>
+    </div>
+
+    {/* Controles de proyección */}
+    <div className="flex flex-wrap items-center justify-end gap-2">
+
+      {/* Tamaño de letra */}
+      <div className="hidden xl:flex items-center gap-2 px-2.5 py-2 rounded-lg border border-[#303946] bg-[#222831] text-[#AAB4C0]">
+        <span className="text-xs">A</span>
+        <input
+          type="range"
+          min="32"
+          max="76"
+          value={tamanoFuente}
+          onChange={(e) => cambiarTamanoFuente(Number(e.target.value))}
+          className="w-16 h-1 bg-[#46515F] rounded-lg appearance-none cursor-pointer accent-[#D6AD62]"
+          title={`Tamaño de letra en proyector: ${tamanoFuente}px`}
+        />
+        <span className="text-sm font-bold text-[#F1F3F5]">A</span>
+      </div>
+
+      {/* Blackout */}
+      <button
+        onClick={toggleBlackout}
+        title="Presiona 'B' o F5 para pantalla negra de inmediato"
+        className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold border transition cursor-pointer ${
+          isBlackout
+            ? 'bg-[#D6AD62] text-[#171A20] border-[#D6AD62] shadow-md'
+            : 'bg-[#222831] text-[#F1F3F5] border-[#303946] hover:bg-[#303946]'
+        }`}
+      >
+        {isBlackout ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5 text-[#D6AD62]" />}
+        <span>{isBlackout ? 'BLACKOUT' : 'Blackout'}</span>
+      </button>
+
+      {/* Limpiar pantalla */}
+      <button
+        onClick={limpiarPantalla}
+        title="Presiona 'C' o F4 para limpiar texto de la pantalla"
+        className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-[#38262B] text-[#F0A5AE] border border-[#70404A] hover:bg-[#4A2D34] transition cursor-pointer"
+      >
+        <span>Limpiar</span>
+      </button>
+
+      {/* Emergencia: quitar video */}
+      {(youtubeEnProyector || videoEnProyector) && (
+        <button
+          onClick={() => {
+            if (youtubeEnProyector) detenerYoutubeEnProyector();
+            if (videoEnProyector) detenerVideoEnProyector();
+            setYoutubeVideoId('');
+            setYoutubeInputUrl('');
+            setVideoUrl('');
+            mostrarToast('⏹️ Video detenido y quitado de la pantalla', 'info');
+          }}
+          title="Detener y quitar inmediatamente el video que está transmitiendo en el proyector"
+          className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white shadow-md cursor-pointer"
+        >
+          <Square className="w-3.5 h-3.5 fill-white" />
+          <span>Quitar Video</span>
+        </button>
+      )}
+
+      {/* Proyector TV */}
+      <button
+        onClick={toggleVentanaProyector}
+        className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition shadow cursor-pointer ${
+          proyectorConectado
+            ? 'bg-rose-600 hover:bg-rose-500 text-white'
+            : 'bg-[#D6AD62] hover:bg-[#E3BD7C] text-[#171A20]'
+        }`}
+        title={proyectorConectado ? 'Clic para desactivar la proyección en la Pantalla 2 (TV)' : 'Clic para proyectar automáticamente en la Pantalla 2 (TV)'}
+      >
+        <Monitor className="w-3.5 h-3.5" />
+        <span>{proyectorConectado ? 'Apagar TV' : 'Proyectar'}</span>
+      </button>
+
+      {/* Ayuda */}
+      <button
+        onClick={() => setMostrarAyuda(true)}
+        className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold border border-[#303946] bg-[#222831] text-[#AAB4C0] hover:bg-[#303946] hover:text-[#F1F3F5] transition cursor-pointer"
+        title="Abrir Manual de Ayuda y Atajos de Teclado"
+      >
+        <HelpCircle className="w-3.5 h-3.5" />
+        <span>Ayuda</span>
+      </button>
+
+    </div>
+  </div>
+
+  {/* SEGUNDA FILA: NAVEGACIÓN DE MÓDULOS */}
+  <nav className="flex flex-nowrap items-center gap-1 p-1 rounded-xl border border-[#303946] bg-[#222831] text-xs shadow-lg">
+    {[
+      { id: 'portada', label: 'Portada', icon: Home },
+      { id: 'biblia', label: 'Biblia', icon: BookOpen },
+      { id: 'canciones', label: 'Canciones', icon: Music },
+      { id: 'predica', label: 'Prédica & Bosquejo', icon: ScrollText },
+      { id: 'fondos', label: 'Fondos', icon: Image },
+      { id: 'video', label: 'Video', icon: Video },
+      { id: 'karaoke', label: 'Karaoke', icon: Mic },
+      { id: 'anuncios', label: 'Diapositivas & Canva', icon: Sparkles },
+      { id: 'obs', label: 'OBS Studio', icon: Radio },
+      { id: 'config', label: 'Ajustes', icon: Settings }
+    ].map((item) => {
+      const Icon = item.icon;
+      const activo = moduloActivo === item.id;
+
+      return (
+        <button
+          key={item.id}
+          onClick={() => setModuloActivo(item.id as any)}
+          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg font-semibold transition-all duration-200 cursor-pointer whitespace-nowrap ${
+            activo
+              ? 'bg-[#D6AD62] text-[#171A20] shadow-md'
+              : 'text-[#AAB4C0] hover:text-[#F1F3F5] hover:bg-[#303946]'
+          }`}
+        >
+          <Icon className="w-4 h-4 shrink-0" />
+          <span>{item.label}</span>
+        </button>
+      );
+    })}
+  </nav>
+
+</header>
+
 
       {/* ==================== CUERPO PRINCIPAL ==================== */}
-      <main className="flex-1 p-3.5 max-w-[1850px] w-full mx-auto">
+      <main className="flex-1 min-h-0 overflow-hidden p-2.5 max-w-[1850px] w-full mx-auto flex flex-col">
         
-        {/* ==================== MÓDULO 1: PORTADA CUADRANGULAR ==================== */}
+        
+        {/* ==================== MÓDULO 1: PORTADA ICC ==================== */}
         {moduloActivo === 'portada' && (
-          <div className="flex flex-col items-center justify-center min-h-[72vh] text-center px-4 space-y-6">
-            <div className="relative">
-              <img
-                src="assets/logo_cuadrangular_icono.png"
-                alt="Emblema Iglesia Cuadrangular"
-                className="w-32 h-32 md:w-44 md:h-44 object-contain drop-shadow-[0_10px_25px_rgba(0,0,0,0.5)] mx-auto"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = 'assets/logo_cuadrangular_4simbolos.png';
-                }}
-              />
-            </div>
+          <div className="h-full min-h-0 w-full overflow-y-auto px-3 py-3 md:px-6">
+            <div className="max-w-5xl mx-auto min-h-full flex flex-col gap-4">
 
-            <div className="space-y-2 max-w-2xl">
-              <h1 className={`text-2xl md:text-4xl font-black tracking-tight ${temaOperador === 'claro' ? 'text-slate-900' : 'text-white'}`}>
-                {nombreCongregacion}
-              </h1>
-              <h2 className="text-lg md:text-xl font-bold text-amber-500">
-                Barrio Las Brisas • Proyector ICC
-              </h2>
-              <p className={`text-sm italic font-serif ${temaOperador === 'claro' ? 'text-slate-600' : 'text-slate-300'}`}>
-                "Jesucristo es el mismo ayer, y hoy, y por los siglos."
-                <span className="block not-italic text-xs text-amber-500 font-sans mt-0.5 font-bold">— Hebreos 13:8</span>
-              </p>
-            </div>
+              {/* IDENTIDAD PRINCIPAL */}
+              <section className="relative overflow-hidden rounded-2xl border border-[#303946] bg-gradient-to-br from-[#222831] to-[#171A20] p-5 md:p-6 shadow-xl">
+                <div className="absolute -right-16 -top-20 w-64 h-64 rounded-full bg-[#D6AD62]/[0.06] blur-3xl pointer-events-none" />
 
-            {/* 4 Pillars of Foursquare Gospel (Alto contraste tanto en Modo Oscuro como en Modo Claro) */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-3xl w-full text-xs">
-              <div className={`p-3.5 rounded-xl border space-y-1 transition ${
-                temaOperador === 'claro'
-                  ? 'bg-red-50 border-red-300 text-red-950 shadow-sm'
-                  : 'bg-red-950/40 border-red-500/40 text-red-200'
-              }`}>
-                <span className={`font-extrabold block text-sm ${temaOperador === 'claro' ? 'text-red-700' : 'text-red-400'}`}>✝ La Cruz</span>
-                <p className={`text-[11px] ${temaOperador === 'claro' ? 'text-red-900 font-semibold' : 'text-red-200/80'}`}>Jesucristo es el Salvador</p>
-              </div>
+                
+<div className="relative flex flex-col sm:flex-row items-center text-center sm:text-left gap-4">
 
-              <div className={`p-3.5 rounded-xl border space-y-1 transition ${
-                temaOperador === 'claro'
-                  ? 'bg-blue-50 border-blue-300 text-blue-950 shadow-sm'
-                  : 'bg-blue-950/40 border-blue-500/40 text-blue-200'
-              }`}>
-                <span className={`font-extrabold block text-sm ${temaOperador === 'claro' ? 'text-blue-700' : 'text-blue-400'}`}>🏆 La Copa</span>
-                <p className={`text-[11px] ${temaOperador === 'claro' ? 'text-blue-900 font-semibold' : 'text-blue-200/80'}`}>Jesucristo es el Sanador</p>
-              </div>
+  {/* LOGO */}
+  <div className="w-20 h-20 shrink-0 rounded-2xl border border-[#D6AD62]/30 bg-[#171A20] flex items-center justify-center shadow-lg shadow-black/30">
+    <img
+      src="assets/logo_cuadrangular_icono.png"
+      alt="Emblema Iglesia Cuadrangular"
+      className="w-16 h-16 object-contain"
+      onError={(e) => {
+        (e.target as HTMLImageElement).src = 'assets/logo_cuadrangular_4simbolos.png';
+      }}
+    />
+  </div>
 
-              <div className={`p-3.5 rounded-xl border space-y-1 transition ${
-                temaOperador === 'claro'
-                  ? 'bg-amber-50 border-amber-300 text-amber-950 shadow-sm'
-                  : 'bg-amber-950/40 border-amber-500/40 text-amber-200'
-              }`}>
-                <span className={`font-extrabold block text-sm ${temaOperador === 'claro' ? 'text-amber-800' : 'text-amber-400'}`}>🕊 La Paloma</span>
-                <p className={`text-[11px] ${temaOperador === 'claro' ? 'text-amber-900 font-semibold' : 'text-amber-200/80'}`}>Bautizador con el Espíritu Santo</p>
-              </div>
+  {/* NOMBRE Y DESCRIPCIÓN */}
+  <div className="min-w-0 flex-1 space-y-1.5">
+    <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[#D6AD62]/30 bg-[#D6AD62]/10 text-[#D6AD62] text-[10px] font-bold tracking-[0.2em] uppercase">
+      <span className="w-1.5 h-1.5 rounded-full bg-[#D6AD62]" />
+      Proyector para Iglesias
+    </span>
 
-              <div className={`p-3.5 rounded-xl border space-y-1 transition ${
-                temaOperador === 'claro'
-                  ? 'bg-purple-50 border-purple-300 text-purple-950 shadow-sm'
-                  : 'bg-purple-950/40 border-purple-500/40 text-purple-200'
-              }`}>
-                <span className={`font-extrabold block text-sm ${temaOperador === 'claro' ? 'text-purple-700' : 'text-purple-400'}`}>👑 La Corona</span>
-                <p className={`text-[11px] ${temaOperador === 'claro' ? 'text-purple-900 font-semibold' : 'text-purple-200/80'}`}>Jesucristo es el Rey que Viene</p>
-              </div>
-            </div>
+    <h1 className="text-xl md:text-3xl font-extrabold tracking-tight text-[#F1F3F5]">
+      {nombreCongregacion}
+    </h1>
 
-            {/* Quick Actions Grid */}
-            <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-              <button
-                onClick={() => setModuloActivo('biblia')}
-                className="px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-lg shadow-blue-600/30 flex items-center gap-2 transition cursor-pointer"
-              >
-                <BookOpen className="w-4 h-4" />
-                <span>Sagradas Escrituras</span>
-              </button>
+    <p className="text-sm text-[#AAB4C0] font-medium">
+      Sistema de presentación congregacional
+    </p>
 
-              <button
-                onClick={() => setModuloActivo('canciones')}
-                className={`px-5 py-3 rounded-xl border font-bold text-xs flex items-center gap-2 transition cursor-pointer ${
-                  temaOperador === 'claro'
-                    ? 'bg-white hover:bg-slate-50 text-slate-900 border-slate-300 shadow-sm'
-                    : 'bg-slate-900 hover:bg-slate-800 text-amber-400 border-slate-700'
-                }`}
-              >
-                <Music className="w-4 h-4" />
-                <span>Canciones & Setlists ({repertorio.length})</span>
-              </button>
+    <p className="text-sm text-[#D5D9DF] italic">
+      Todo el servicio, en una sola plataforma.
+    </p>
+  </div>
+</div>
+</section>
 
-              <button
-                onClick={() => setModuloActivo('fondos')}
-                className={`px-5 py-3 rounded-xl border font-bold text-xs flex items-center gap-2 transition cursor-pointer ${
-                  temaOperador === 'claro'
-                    ? 'bg-white hover:bg-slate-50 text-slate-900 border-slate-300 shadow-sm'
-                    : 'bg-slate-900 hover:bg-slate-800 text-teal-300 border-slate-700'
-                }`}
-              >
-                <Image className="w-4 h-4" />
-                <span>Fondos Visuales</span>
-              </button>
+{/* DISTRIBUCIÓN EN DOS COLUMNAS */}
+<div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
 
-              <button
-                onClick={toggleVentanaProyector}
-                className={`px-5 py-3 rounded-xl font-black text-xs shadow-lg transition flex items-center gap-2 cursor-pointer ${
-                  proyectorConectado
-                    ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-rose-600/30'
-                    : 'bg-amber-500 hover:bg-amber-400 text-slate-950'
-                }`}
-              >
-                <Monitor className="w-4 h-4" />
-                <span>{proyectorConectado ? '⏹️ Apagar Pantalla 2 (TV)' : '🖥️ Proyectar en Pantalla 2 (TV)'}</span>
-              </button>
-            </div>
+  {/* COLUMNA DERECHA: LOS CUATRO PILARES */}
+<section className="space-y-2.5 lg:col-start-2 lg:row-start-1">
+  <div>
+  <div className="flex items-center gap-2">
+    <h2 className="text-sm font-bold text-[#F1F3F5]">
+      Nuestra identidad
+    </h2>
 
-            {/* Creador del Software */}
-            <div className="pt-4 text-center space-y-1">
-              <p className={`text-xs font-semibold ${temaOperador === 'claro' ? 'text-slate-600' : 'text-slate-400'}`}>
-                Creado por: <strong className="text-amber-500 font-bold">LuftmandMauricio</strong>
-              </p>
-              <p className="text-[10px] text-slate-500">
-                Iglesia Cristiana Cuadrangular Barrio Las Brisas • Proyector ICC © 2026
-              </p>
-            </div>
-          </div>
-        )}
+    <span className="px-2 py-0.5 rounded-md border border-[#D6AD62]/30 bg-[#D6AD62]/10 text-[9px] font-bold tracking-wider text-[#D6AD62] uppercase">
+      Cuadrangular
+    </span>
+  </div>
+
+  <p className="text-xs text-[#AAB4C0] mt-0.5">
+    Los cuatro pilares del Evangelio
+  </p>
+</div>
+
+  <div className="grid grid-cols-2 gap-2.5">
+    {[
+      { icono: '✝', titulo: 'La Cruz', descripcion: 'Jesucristo es el Salvador' },
+      { icono: '🏆', titulo: 'La Copa', descripcion: 'Jesucristo es el Sanador' },
+      { icono: '🕊', titulo: 'La Paloma', descripcion: 'Bautizador con el Espíritu Santo' },
+      { icono: '👑', titulo: 'La Corona', descripcion: 'Jesucristo es el Rey que Viene' }
+    ].map((pilar) => (
+      <div
+        key={pilar.titulo}
+        className="rounded-xl border border-[#303946] bg-[#222831] px-2.5 py-3 flex flex-col items-center text-center gap-1.5 transition-all duration-200 hover:border-[#D6AD62]/50 hover:bg-[#303946]"
+      >
+        <span className="text-xl text-[#D6AD62]">
+          {pilar.icono}
+        </span>
+        <h3 className="text-xs font-bold text-[#D6AD62]">
+          {pilar.titulo}
+        </h3>
+        <p className="text-[10px] leading-snug text-[#AAB4C0]">
+          {pilar.descripcion}
+        </p>
+      </div>
+    ))}
+  </div>
+</section>
+
+{/* ACCESOS RÁPIDOS */}
+<section className="space-y-2.5 lg:col-start-1 lg:row-start-1">
+  <div>
+    <h2 className="text-sm font-bold text-[#F1F3F5]">
+      Accesos rápidos
+    </h2>
+    <p className="text-xs text-[#AAB4C0] mt-0.5">
+      Herramientas principales para el servicio
+    </p>
+  </div>
+
+  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+
+    {/* 1. CONECTAR PROYECTOR */}
+    <button
+      onClick={toggleVentanaProyector}
+      className={`group flex items-center gap-3 p-3 rounded-xl border text-left transition-all duration-200 cursor-pointer ${
+        proyectorConectado
+          ? 'bg-[#D6AD62]/15 border-[#D6AD62]/50 hover:bg-[#D6AD62]/20'
+          : 'bg-[#222831] border-[#D6AD62]/40 hover:bg-[#303946] hover:border-[#D6AD62]'
+      }`}
+    >
+      <div className="w-10 h-10 shrink-0 rounded-lg bg-[#D6AD62]/15 border border-[#D6AD62]/30 flex items-center justify-center">
+        <Monitor className="w-5 h-5 text-[#D6AD62]" />
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <h3 className="text-sm font-bold text-[#D6AD62]">
+          {proyectorConectado ? 'Apagar proyector' : 'Conectar proyector'}
+        </h3>
+        <p className="text-xs text-[#AAB4C0] mt-0.5">
+          {proyectorConectado
+            ? 'La pantalla externa está conectada'
+            : 'Enviar contenido a la pantalla externa'}
+        </p>
+      </div>
+
+      <span className="text-[#D6AD62] text-lg group-hover:translate-x-1 transition-transform">
+        ›
+      </span>
+    </button>
+
+    {/* 2. BIBLIA */}
+    <button
+      onClick={() => setModuloActivo('biblia')}
+      className="group flex items-center gap-3 p-3 rounded-xl border border-[#303946] bg-[#222831] hover:bg-[#303946] hover:border-[#D6AD62]/50 text-left transition-all duration-200 cursor-pointer"
+    >
+      <div className="w-10 h-10 shrink-0 rounded-lg bg-[#D6AD62]/10 border border-[#D6AD62]/20 flex items-center justify-center">
+        <BookOpen className="w-5 h-5 text-[#D6AD62]" />
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <h3 className="text-sm font-bold text-[#F1F3F5]">
+          Sagradas Escrituras
+        </h3>
+        <p className="text-xs text-[#AAB4C0] mt-0.5">
+          Buscar y proyectar versículos bíblicos
+        </p>
+      </div>
+
+      <span className="text-[#D6AD62] text-lg group-hover:translate-x-1 transition-transform">
+        ›
+      </span>
+    </button>
+
+    {/* 3. PRÉDICA Y BOSQUEJO */}
+    <button
+      onClick={() => setModuloActivo('predica')}
+      className="group flex items-center gap-3 p-3 rounded-xl border border-[#303946] bg-[#222831] hover:bg-[#303946] hover:border-[#D6AD62]/50 text-left transition-all duration-200 cursor-pointer"
+    >
+      <div className="w-10 h-10 shrink-0 rounded-lg bg-[#D6AD62]/10 border border-[#D6AD62]/20 flex items-center justify-center">
+        <span className="text-xl">📝</span>
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <h3 className="text-sm font-bold text-[#F1F3F5]">
+          Prédica y Bosquejo
+        </h3>
+        <p className="text-xs text-[#AAB4C0] mt-0.5">
+          Preparar y proyectar mensajes
+        </p>
+      </div>
+
+      <span className="text-[#D6AD62] text-lg group-hover:translate-x-1 transition-transform">
+        ›
+      </span>
+    </button>
+
+    {/* 4. DIAPOSITIVAS Y CANVA */}
+    <button
+      onClick={() => setModuloActivo('anuncios')}
+      className="group flex items-center gap-3 p-3 rounded-xl border border-[#303946] bg-[#222831] hover:bg-[#303946] hover:border-[#D6AD62]/50 text-left transition-all duration-200 cursor-pointer"
+    >
+      <div className="w-10 h-10 shrink-0 rounded-lg bg-[#D6AD62]/10 border border-[#D6AD62]/20 flex items-center justify-center">
+        <span className="text-xl">🖼️</span>
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <h3 className="text-sm font-bold text-[#F1F3F5]">
+          Diapositivas y Canva
+        </h3>
+        <p className="text-xs text-[#AAB4C0] mt-0.5">
+          Anuncios, imágenes y diapositivas
+        </p>
+      </div>
+
+      <span className="text-[#D6AD62] text-lg group-hover:translate-x-1 transition-transform">
+        ›
+      </span>
+    
+    </button>
+
+    </div>
+</section>
+
+</div>
+
+
+{/* CRÉDITO DE DESARROLLO */}
+<div className="mt-auto pt-4 pb-2 text-center relative top-2">
+  <div className="border-t border-[#303946] mb-3" />
+  <p className="text-xs font-medium tracking-wide text-[#AAB4C0]">
+    Desarrollado por{' '}
+    <strong className="text-[#D6AD62] font-bold">
+      LuftmandMauricio
+    </strong>
+  </p>
+</div>
+
+
+ </div>
+</div>
+)}
+
 
         {/* ==================== MÓDULO 2: SAGRADAS ESCRITURAS ==================== */}
         {moduloActivo === 'biblia' && (
-          <div className="flex flex-col gap-2.5 h-[calc(100vh-105px)] pb-1">
+          <div className="h-full min-h-0 flex-1 flex flex-col gap-2 overflow-hidden">
             
-            {/* Top Toolbar for Bible */}
-            <div className={`border rounded-xl px-4 py-2 flex flex-wrap items-center justify-between gap-3 shadow-md flex-shrink-0 ${
-              temaOperador === 'claro' ? 'bg-white border-slate-300 text-slate-800' : 'bg-slate-900/90 border-slate-800 text-white'
-            }`}>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-black flex items-center gap-1.5">
-                  <BookOpen className="w-4 h-4 text-amber-500" />
-                  Sagradas Escrituras
-                </span>
-                <span className="text-[11px] text-slate-400 hidden lg:inline">
-                  • Selecciona libro, capítulo y versículo para proyectar en vivo
-                </span>
-              </div>
+            {/* BARRA DE HERRAMIENTAS BÍBLICA */}
+<div className="flex items-center justify-between gap-3 px-3 py-2 rounded-xl border border-[#303946] bg-[#222831] shadow-md flex-shrink-0">
 
-              {/* Bible Importer Button */}
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => folderInputRef.current?.click()}
-                  title="Carga la carpeta de la Biblia de tu computadora para tener todos los libros en memoria"
-                  className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-1.5 shadow transition cursor-pointer"
-                >
-                  <FolderOpen className="w-3.5 h-3.5" />
-                  <span>📂 Cargar Biblia</span>
-                </button>
+  <div className="flex items-center gap-2 text-[#F1F3F5]">
+    <BookOpen className="w-4 h-4 text-[#D6AD62]" />
+    <span className="text-sm font-bold">Biblia</span>
+    <span className="text-xs text-[#AAB4C0]">
+      {libroSeleccionado.nombre} {capituloActual}
+    </span>
+  </div>
 
-                <button
-                  onClick={() => bibleFileInputRef.current?.click()}
-                  title="Cargar archivos JSON individuales de libros"
-                  className={`px-2.5 py-1.5 rounded-lg font-bold text-xs border transition cursor-pointer ${
-                    temaOperador === 'claro' ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300' : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'
-                  }`}
-                >
-                  <Upload className="w-3.5 h-3.5" />
-                  <span>Cargar Archivo(s) JSON</span>
-                </button>
-              </div>
-            </div>
+  <div className="flex items-center gap-2">
+
+    <button
+      onClick={() => folderInputRef.current?.click()}
+      title="Cargar una carpeta completa de la Biblia"
+      className="px-3 py-1.5 rounded-lg bg-[#D6AD62] hover:bg-[#E3BD7C] text-[#171A20] font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
+    >
+      <FolderOpen className="w-3.5 h-3.5" />
+      <span>Cargar carpeta</span>
+    </button>
+
+    <button
+      onClick={() => bibleFileInputRef.current?.click()}
+      title="Importar archivos JSON individuales"
+      className="px-3 py-1.5 rounded-lg bg-[#303946] hover:bg-[#46515F] text-[#F1F3F5] border border-[#46515F] font-semibold text-xs flex items-center gap-1.5 transition cursor-pointer"
+    >
+      <Upload className="w-3.5 h-3.5" />
+      <span>Cargar libro</span>
+    </button>
+
+  </div>
+</div>
 
             {/* 4 Columns Area */}
-            <div className="grid grid-cols-1 xl:grid-cols-12 gap-3 flex-1 overflow-hidden">
+            <div className="grid grid-cols-1 xl:grid-cols-12 gap-2.5 flex-1 min-h-0 overflow-hidden">
               
-              {/* Columna 1: Libros (39 Antiguo / 27 Nuevo) (3 cols) */}
-              <div className={`xl:col-span-3 border rounded-2xl p-3 flex flex-col gap-2 overflow-hidden shadow-xl ${
-                temaOperador === 'claro' ? 'bg-white border-slate-300' : 'bg-slate-900/80 border-slate-800'
-              }`}>
-                {/* Search book */}
-                <div className="relative">
-                  <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-400" />
-                  <input
-                    type="text"
-                    value={busquedaLibro}
-                    onChange={(e) => setBusquedaLibro(e.target.value)}
-                    placeholder="Buscar libro bíblico..."
-                    className={`w-full pl-8 pr-7 py-1.5 border rounded-xl text-xs focus:outline-none focus:border-blue-500 ${
-                      temaOperador === 'claro' ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-slate-950 border-slate-800 text-white'
-                    }`}
-                  />
-                  {busquedaLibro && (
-                    <button onClick={() => setBusquedaLibro('')} className="absolute right-2.5 top-2 text-slate-400 hover:text-white text-xs">
-                      ✕
-                    </button>
-                  )}
-                </div>
+              
+{/* Columna 1: Libros (3 cols) */}
+<div className="xl:col-span-3 border border-[#303946] rounded-2xl p-3 flex flex-col gap-2 overflow-hidden shadow-xl bg-[#222831]">
 
-                {/* Testament Tabs */}
-                <div className={`grid grid-cols-2 gap-1 p-1 rounded-xl border text-[11px] font-bold text-center ${
-                  temaOperador === 'claro' ? 'bg-slate-100 border-slate-200' : 'bg-slate-950 border-slate-800'
-                }`}>
-                  <button
-                    onClick={() => setFiltroTestamento(filtroTestamento === 'antiguo' ? 'todos' : 'antiguo')}
-                    className={`py-1 rounded-lg transition ${
-                      filtroTestamento === 'antiguo' ? 'bg-amber-500 text-slate-950 font-black shadow' : 'text-slate-500 hover:text-slate-900'
-                    }`}
-                  >
-                    ANTIGUO (39)
-                  </button>
-                  <button
-                    onClick={() => setFiltroTestamento(filtroTestamento === 'nuevo' ? 'todos' : 'nuevo')}
-                    className={`py-1 rounded-lg transition ${
-                      filtroTestamento === 'nuevo' ? 'bg-amber-500 text-slate-950 font-black shadow' : 'text-slate-500 hover:text-slate-900'
-                    }`}
-                  >
-                    NUEVO (27)
-                  </button>
-                </div>
+  {/* Buscador de libros */}
+  <div className="relative">
+    <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-[#AAB4C0]" />
+    <input
+      type="text"
+      value={busquedaLibro}
+      onChange={(e) => setBusquedaLibro(e.target.value)}
+      placeholder="Buscar libro bíblico..."
+      className="w-full pl-8 pr-7 py-1.5 border border-[#303946] rounded-xl text-xs focus:outline-none focus:border-[#D6AD62] bg-[#171A20] text-[#F1F3F5] placeholder:text-[#AAB4C0]"
+    />
+    {busquedaLibro && (
+      <button
+        onClick={() => setBusquedaLibro('')}
+        className="absolute right-2.5 top-2 text-[#AAB4C0] hover:text-white text-xs"
+      >
+        ✕
+      </button>
+    )}
+  </div>
 
-                {/* Books Scroll List */}
-                <div className="flex-1 overflow-y-auto space-y-1 pr-1 pb-10">
-                  {librosFiltrados.map((libro) => {
-                    const isSelected = libroSeleccionado.id === libro.id;
-                    return (
-                      <button
-                        key={libro.id}
-                        onClick={() => {
-                          setLibroSeleccionado(libro);
-                          setCapituloActual('1');
-                        }}
-                        className={`w-full px-3 py-2 rounded-xl text-xs font-semibold text-left transition flex items-center justify-between ${
-                          isSelected
-                            ? 'bg-purple-600 text-white font-bold shadow-md shadow-purple-600/30'
-                            : temaOperador === 'claro'
-                            ? 'bg-slate-50 text-slate-800 hover:bg-slate-200 border border-slate-200'
-                            : 'bg-slate-950/60 text-slate-300 hover:bg-slate-800 border border-slate-800/60'
-                        }`}
-                      >
-                        <span>{libro.nombre}</span>
-                        <span className="text-[10px] opacity-60 font-mono">{libro.capitulos} cap</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+  {/* Filtros de testamento */}
+  <div className="grid grid-cols-2 gap-1 p-1 rounded-xl border border-[#303946] bg-[#171A20] text-[11px] font-bold text-center">
+    <button
+      onClick={() => setFiltroTestamento(filtroTestamento === 'antiguo' ? 'todos' : 'antiguo')}
+      className={`py-1 rounded-lg transition ${
+        filtroTestamento === 'antiguo'
+          ? 'bg-[#D6AD62] text-[#171A20] font-black shadow'
+          : 'text-[#AAB4C0] hover:bg-[#303946] hover:text-[#F1F3F5]'
+      }`}
+    >
+      ANTIGUO (39)
+    </button>
 
-              {/* Columna 2: Versiones y Capítulos (2 cols) */}
-              <div className={`xl:col-span-2 border rounded-2xl p-3 flex flex-col gap-3 shadow-xl overflow-hidden ${
-                temaOperador === 'claro' ? 'bg-white border-slate-300' : 'bg-slate-900/80 border-slate-800'
-              }`}>
-                <div>
-                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider block mb-1.5">
-                    VERSIÓN BÍBLICA
-                  </label>
-                  <div className="grid grid-cols-2 gap-1.5">
-                    {VERSIONES_BIBLIA.map((v) => (
-                      <button
-                        key={v.codigo}
-                        onClick={() => setVersionBiblia(v.codigo)}
-                        className={`py-1.5 rounded-lg text-xs font-black uppercase transition border ${
-                          versionBiblia === v.codigo
-                            ? 'bg-teal-500 text-slate-950 border-teal-400 shadow'
-                            : temaOperador === 'claro'
-                            ? 'bg-slate-100 border-slate-300 text-slate-700 hover:bg-slate-200'
-                            : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
-                        }`}
-                      >
-                        {v.codigo}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+    <button
+      onClick={() => setFiltroTestamento(filtroTestamento === 'nuevo' ? 'todos' : 'nuevo')}
+      className={`py-1 rounded-lg transition ${
+        filtroTestamento === 'nuevo'
+          ? 'bg-[#D6AD62] text-[#171A20] font-black shadow'
+          : 'text-[#AAB4C0] hover:bg-[#303946] hover:text-[#F1F3F5]'
+      }`}
+    >
+      NUEVO (27)
+    </button>
+  </div>
 
-                {/* Chapters Grid with pb-24 so caps 49 and 50 are NEVER cut off */}
-                <div className="flex-1 flex flex-col overflow-hidden">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider">
-                      CAPÍTULOS ({libroSeleccionado.capitulos})
-                    </label>
-                    <span className="text-xs font-bold text-amber-500">{libroSeleccionado.nombre}</span>
-                  </div>
+  {/* Lista de libros */}
+  <div className="flex-1 overflow-y-auto space-y-1 pr-1 pb-10">
+    {librosFiltrados.map((libro) => {
+      const isSelected = libroSeleccionado.id === libro.id;
 
-                  <div className="grid grid-cols-4 gap-1.5 flex-1 overflow-y-auto pr-1 pb-24">
-                    {Array.from({ length: libroSeleccionado.capitulos }, (_, i) => String(i + 1)).map((cap) => {
-                      const isSelected = capituloActual === cap;
-                      return (
-                        <button
-                          key={cap}
-                          onClick={() => setCapituloActual(cap)}
-                          className={`h-9 rounded-lg text-xs font-black transition border flex items-center justify-center ${
-                            isSelected
-                              ? 'bg-purple-600 text-white border-purple-400 shadow-md'
-                              : temaOperador === 'claro'
-                              ? 'bg-slate-100 border-slate-300 text-slate-700 hover:bg-slate-200'
-                              : 'bg-slate-950 border-slate-800 text-slate-300 hover:bg-slate-800'
-                          }`}
-                        >
-                          {cap}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
+      return (
+        <button
+          key={libro.id}
+          onClick={() => {
+            setLibroSeleccionado(libro);
+            setCapituloActual('1');
+          }}
+          className={`w-full px-3 py-2 rounded-xl text-xs text-left transition flex items-center justify-between border ${
+            isSelected
+              ? 'bg-[#D6AD62] text-[#171A20] border-[#D6AD62] font-black shadow-md'
+              : 'bg-[#171A20] text-[#F1F3F5] hover:bg-[#303946] border-[#303946] font-semibold'
+          }`}
+        >
+          <span>{libro.nombre}</span>
+          <span className="text-[10px] opacity-70 font-mono">{libro.capitulos} cap</span>
+        </button>
+      );
+    })}
+  </div>
+</div>
 
-              {/* Columna 3: Versículos con texto completo (4 cols) */}
-              <div className={`xl:col-span-4 border rounded-2xl p-3 flex flex-col gap-2 shadow-xl overflow-hidden ${
-                temaOperador === 'claro' ? 'bg-white border-slate-300' : 'bg-slate-900/80 border-slate-800'
-              }`}>
-                <div className={`flex items-center justify-between border-b pb-2 ${temaOperador === 'claro' ? 'border-slate-200' : 'border-slate-800'}`}>
-                  <div className="flex items-center gap-2">
-                    <span className="font-black text-xs text-amber-500 uppercase">
-                      VERSÍCULOS • {libroSeleccionado.nombre} {capituloActual}
-                    </span>
-                    <span className={`text-[10px] font-mono px-1.5 rounded ${temaOperador === 'claro' ? 'bg-slate-200 text-slate-800' : 'bg-slate-800 text-slate-300'}`}>
-                      {versiculosFiltrados.length}
-                    </span>
-                  </div>
+              
+{/* Columna 2: Versiones y Capítulos (2 cols) */}
+<div className="xl:col-span-2 border border-[#303946] rounded-2xl p-3 flex flex-col gap-3 shadow-xl overflow-hidden bg-[#222831]">
 
-                  <div className="relative w-44">
-                    <Search className="w-3 h-3 absolute left-2.5 top-2 text-slate-400" />
-                    <input
-                      type="text"
-                      value={busquedaVersiculoTexto}
-                      onChange={(e) => setBusquedaVersiculoTexto(e.target.value)}
-                      placeholder="Filtrar versículo..."
-                      className={`w-full pl-7 pr-2 py-1 border rounded-lg text-[11px] focus:outline-none ${
-                        temaOperador === 'claro' ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-slate-950 border-slate-800 text-white'
-                      }`}
-                    />
-                  </div>
-                </div>
+  {/* Versiones bíblicas */}
+  <div>
+    <label className="text-[10px] font-black text-[#AAB4C0] uppercase tracking-wider block mb-1.5">
+      VERSIONES BÍBLICAS
+    </label>
 
-                {/* Verses Scroll List */}
-                <div className="flex-1 overflow-y-auto space-y-2 pr-1 pb-16">
-                  {versiculosFiltrados.map((ver) => {
-                    const isProjecting = proyeccionActual?.id === `biblia-${libroSeleccionado.id}-${capituloActual}-${ver.numero}`;
-                    return (
-                      <div
-                        key={ver.numero}
-                        onClick={() => proyectarVersiculo(ver)}
-                        className={`p-3 rounded-xl border text-left cursor-pointer transition-all ${
-                          isProjecting
-                            ? 'bg-blue-600/30 border-blue-400 text-white shadow-lg ring-2 ring-blue-500/50'
-                            : temaOperador === 'claro'
-                            ? 'bg-slate-50 border-slate-200 text-slate-800 hover:bg-slate-100'
-                            : 'bg-slate-950/70 border-slate-800/80 text-slate-200 hover:bg-slate-800/70'
-                        }`}
-                      >
-                        <div className="flex items-start gap-2.5">
-                          <span className={`text-sm font-black font-mono w-6 h-6 rounded flex items-center justify-center flex-shrink-0 ${
-                            isProjecting ? 'bg-amber-400 text-slate-950' : 'bg-slate-800 text-teal-400 border border-slate-700'
-                          }`}>
-                            {ver.numero}
-                          </span>
-                          <p className="text-xs leading-relaxed flex-1 font-medium">
-                            {ver.texto}
-                          </p>
-                        </div>
-                        {isProjecting && (
-                          <div className="mt-2 text-right">
-                            <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-amber-400 text-slate-950">
-                              PROYECTANDO EN VIVO
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
+    <div className="grid grid-cols-2 gap-1.5">
+      {VERSIONES_BIBLIA.map((v) => (
+        <button
+          key={v.codigo}
+          onClick={() => setVersionBiblia(v.codigo)}
+          className={`py-1.5 rounded-lg text-xs font-black uppercase transition border ${
+            versionBiblia === v.codigo
+              ? 'bg-[#D6AD62] text-[#171A20] border-[#D6AD62] shadow'
+              : 'bg-[#171A20] border-[#303946] text-[#AAB4C0] hover:bg-[#303946] hover:text-[#F1F3F5]'
+          }`}
+        >
+          {v.codigo}
+        </button>
+      ))}
+    </div>
+  </div>
 
-              {/* Columna 4: Previsualización & Historial (3 cols) */}
-              <div className="xl:col-span-3 flex flex-col gap-3 overflow-hidden">
-                {/* Confidence Monitor Preview */}
-                <div className={`border rounded-2xl p-3 shadow-xl flex flex-col ${
-                  temaOperador === 'claro' ? 'bg-white border-slate-300' : 'bg-slate-900/80 border-slate-800'
-                }`}>
-                  <div className={`flex items-center justify-between border-b pb-1.5 mb-2 ${
-                    temaOperador === 'claro' ? 'border-slate-200' : 'border-slate-800'
-                  }`}>
-                    <span className={`text-xs font-black flex items-center gap-1.5 ${temaOperador === 'claro' ? 'text-slate-900' : 'text-white'}`}>
-                      <Monitor className="w-3.5 h-3.5 text-emerald-500" />
-                      PREVISUALIZACIÓN EN PANTALLA
-                    </span>
-                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
-                      isBlackout ? 'bg-rose-500/20 text-rose-500' : proyeccionActual ? 'bg-emerald-500/20 text-emerald-600' : 'bg-slate-200 text-slate-600'
-                    }`}>
-                      {isBlackout ? 'BLACKOUT' : proyeccionActual ? 'EN VIVO' : 'EN ESPERA'}
-                    </span>
-                  </div>
+  {/* Capítulos */}
+  <div className="flex-1 flex flex-col overflow-hidden">
+    <div className="flex items-center justify-between mb-1.5 gap-2">
+      <label className="text-[10px] font-black text-[#AAB4C0] uppercase tracking-wider">
+        CAPÍTULOS ({libroSeleccionado.capitulos})
+      </label>
 
-                  <div className="h-44 rounded-xl border border-slate-800 bg-black flex flex-col justify-center items-center p-3 text-center">
-                    {isBlackout ? (
-                      <span className="text-xs font-mono text-slate-600 font-bold uppercase tracking-widest">
-                        PANTALLA NEGRA (BLACKOUT)
-                      </span>
-                    ) : proyeccionActual ? (
-                      <div className="space-y-2">
-                        <p className="text-xs font-bold text-white line-clamp-4 leading-relaxed whitespace-pre-line">
-                          {proyeccionActual.texto}
-                        </p>
-                        {proyeccionActual.pie && (
-                          <span className="text-[10px] font-bold text-amber-400 block uppercase tracking-wide">
-                            {proyeccionActual.pie}
-                          </span>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="space-y-1 text-slate-500">
-                        <span className="text-xs font-semibold block">Sin proyección activa</span>
-                        <span className="text-[10px]">Toca cualquier versículo para proyectar</span>
-                      </div>
-                    )}
-                  </div>
+      <span className="text-xs font-bold text-[#D6AD62] truncate">
+        {libroSeleccionado.nombre}
+      </span>
+    </div>
 
-                  <div className="grid grid-cols-2 gap-2 mt-2">
-                    <button
-                      onClick={toggleBlackout}
-                      className="py-1.5 rounded-lg text-xs font-bold bg-slate-950 border border-slate-800 hover:bg-slate-800 text-amber-400 flex items-center justify-center gap-1 cursor-pointer"
-                    >
-                      <Eye className="w-3 h-3" />
-                      <span>Blackout (B)</span>
-                    </button>
-                    <button
-                      onClick={limpiarPantalla}
-                      className="py-1.5 rounded-lg text-xs font-bold bg-rose-950/40 border border-rose-900/60 hover:bg-rose-900/40 text-rose-300 flex items-center justify-center gap-1 cursor-pointer"
-                    >
-                      <span>Limpiar (C)</span>
-                    </button>
-                  </div>
-                </div>
+    <div className="grid grid-cols-4 gap-1.5 flex-1 overflow-y-auto pr-1 pb-24">
+      {Array.from({ length: libroSeleccionado.capitulos }, (_, i) => String(i + 1)).map((cap) => {
+        const isSelected = capituloActual === cap;
 
-                {/* History of projected verses */}
-                <div className={`border rounded-2xl p-3 shadow-xl flex-1 flex flex-col overflow-hidden ${
-                  temaOperador === 'claro' ? 'bg-white border-slate-300' : 'bg-slate-900/80 border-slate-800'
-                }`}>
-                  <div className={`flex items-center justify-between border-b pb-1.5 mb-2 ${
-                    temaOperador === 'claro' ? 'border-slate-200' : 'border-slate-800'
-                  }`}>
-                    <span className="text-xs font-black text-slate-500 uppercase">HISTORIAL DE CITAS</span>
-                    {historialVersiculos.length > 0 && (
-                      <button
-                        onClick={() => setHistorialVersiculos([])}
-                        className="text-[10px] text-rose-500 hover:underline"
-                      >
-                        Limpiar
-                      </button>
-                    )}
-                  </div>
+        return (
+          <button
+            key={cap}
+            onClick={() => setCapituloActual(cap)}
+            className={`h-9 rounded-lg text-xs font-black transition border flex items-center justify-center ${
+              isSelected
+                ? 'bg-[#D6AD62] text-[#171A20] border-[#D6AD62] shadow-md'
+                : 'bg-[#171A20] border-[#303946] text-[#F1F3F5] hover:bg-[#303946]'
+            }`}
+          >
+            {cap}
+          </button>
+        );
+      })}
+    </div>
+  </div>
+</div>
 
-                  <div className="flex-1 overflow-y-auto space-y-1.5 pr-1 pb-10">
-                    {historialVersiculos.length === 0 ? (
-                      <div className="py-6 text-center text-slate-400 text-xs">
-                        No hay versículos en el historial aún
-                      </div>
-                    ) : (
-                      historialVersiculos.map((item) => (
-                        <div
-                          key={item.id}
-                          onClick={() => {
-                            setProyeccionActual({
-                              id: item.id,
-                              tipo: 'biblia',
-                              texto: `"${item.texto}"`,
-                              pie: `— ${item.cita} (${item.version})`,
-                              titulo: item.cita
-                            });
-                            enviarAlProyector({
-                              accion: 'mostrar',
-                              texto: `"${item.texto}"\n\n— ${item.cita} (${item.version})`,
-                              tipo: 'biblia'
-                            });
-                          }}
-                          className={`p-2 rounded-xl border text-left cursor-pointer transition text-xs space-y-1 ${
-                            temaOperador === 'claro' ? 'bg-slate-50 border-slate-200 hover:bg-slate-100' : 'bg-slate-950/60 border-slate-800/60 hover:bg-slate-800/60'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between font-bold text-amber-500 text-[11px]">
-                            <span>{item.cita}</span>
-                            <span className="text-[9px] font-mono opacity-50">{item.hora}</span>
-                          </div>
-                          <p className="line-clamp-1 text-[11px] text-slate-400">{item.texto}</p>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </div>
-              </div>
+              
+{/* Columna 3: Versículos con texto completo (4 cols) */}
+<div className="xl:col-span-4 border border-[#303946] rounded-2xl p-3 flex flex-col gap-2 shadow-xl overflow-hidden bg-[#222831]">
+
+  {/* Encabezado y filtro */}
+  <div className="flex items-center justify-between border-b border-[#303946] pb-2 gap-2">
+    <div className="flex items-center gap-2 min-w-0">
+      <span className="font-black text-xs text-[#D6AD62] uppercase truncate">
+        VERSÍCULOS • {libroSeleccionado.nombre} {capituloActual}
+      </span>
+
+      <span className="text-[10px] font-mono px-1.5 rounded bg-[#303946] text-[#F1F3F5]">
+        {versiculosFiltrados.length}
+      </span>
+    </div>
+
+    <div className="relative w-44 flex-shrink-0">
+      <Search className="w-3 h-3 absolute left-2.5 top-2 text-[#AAB4C0]" />
+
+      <input
+        type="text"
+        value={busquedaVersiculoTexto}
+        onChange={(e) => setBusquedaVersiculoTexto(e.target.value)}
+        placeholder="Filtrar versículo..."
+        className="w-full pl-7 pr-7 py-1 border border-[#303946] rounded-lg text-[11px] focus:outline-none focus:border-[#D6AD62] bg-[#171A20] text-[#F1F3F5] placeholder:text-[#AAB4C0]"
+      />
+
+      {busquedaVersiculoTexto && (
+        <button
+          onClick={() => setBusquedaVersiculoTexto('')}
+          className="absolute right-2.5 top-1 text-[#AAB4C0] hover:text-white text-xs"
+        >
+          ✕
+        </button>
+      )}
+    </div>
+  </div>
+
+  {/* Lista de versículos */}
+  <div ref={listaVersiculosRef} className="flex-1 overflow-y-auto space-y-2 pr-1 pb-16">
+    {versiculosFiltrados.map((ver) => {
+    const isProjecting =
+  proyectorConectado &&
+  !isBlackout &&
+  proyeccionActual?.id === `biblia-${libroSeleccionado.id}-${capituloActual}-${ver.numero}`;
+
+   return (
+       <div
+          key={ver.numero}
+          data-versiculo={ver.numero}
+          onClick={() => proyectarVersiculo(ver)}
+          className={`p-3 rounded-xl border text-left cursor-pointer transition-all ${
+            isProjecting
+              ? 'bg-[#D6AD62]/15 border-[#D6AD62] text-[#F1F3F5] shadow-md ring-1 ring-[#D6AD62]/50'
+              : 'bg-[#171A20] border-[#303946] text-[#F1F3F5] hover:bg-[#303946] hover:border-[#46515F]'
+          }`}
+        >
+          <div className="flex items-start gap-2.5">
+            <span className={`text-sm font-black font-mono w-6 h-6 rounded flex items-center justify-center flex-shrink-0 ${
+              isProjecting
+                ? 'bg-[#D6AD62] text-[#171A20]'
+                : 'bg-[#303946] text-[#F1F3F5] border border-[#46515F]'
+            }`}>
+              {ver.numero}
+            </span>
+
+            <p className="text-xs leading-relaxed flex-1 font-medium">
+              {ver.texto}
+            </p>
+          </div>
+
+          {isProjecting && (
+            <div className="mt-2 text-right">
+              <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-[#D6AD62] text-[#171A20]">
+                PROYECTANDO EN VIVO
+              </span>
+            </div>
+          )}
+        </div>
+      );
+    })}
+  </div>
+</div>
+
+              
+{/* Columna 4: Previsualización & Historial (3 cols) */}
+<div className="xl:col-span-3 flex flex-col gap-3 overflow-hidden">
+
+  {/* Previsualización en pantalla */}
+  <div className="border border-[#303946] rounded-2xl p-3 shadow-xl flex flex-col bg-[#222831]">
+
+    <div className="flex items-center justify-between border-b border-[#303946] pb-1.5 mb-2">
+      <span className="text-xs font-black flex items-center gap-1.5 text-[#F1F3F5]">
+        <Monitor className="w-3.5 h-3.5 text-[#D6AD62]" />
+        PREVISUALIZACIÓN EN PANTALLA
+      </span>
+
+      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+        isBlackout
+          ? 'bg-[#303946] text-[#AAB4C0] border border-[#46515F]'
+          : proyeccionActual && proyectorConectado
+            ? 'bg-[#D6AD62] text-[#171A20]'
+            : proyeccionActual
+              ? 'bg-[#303946] text-[#F1F3F5] border border-[#46515F]'
+              : 'bg-[#171A20] text-[#AAB4C0] border border-[#303946]'
+      }`}>
+        {isBlackout
+          ? 'BLACKOUT'
+          : proyeccionActual && proyectorConectado
+            ? 'EN VIVO'
+            : proyeccionActual
+              ? 'PREPARADO'
+              : 'EN ESPERA'}
+      </span>
+    </div>
+
+    <div className="h-36 rounded-xl border border-[#303946] bg-black flex flex-col justify-center items-center p-3 text-center">
+      {isBlackout ? (
+        <span className="text-xs font-mono text-[#AAB4C0] font-bold uppercase tracking-widest">
+          PANTALLA NEGRA (BLACKOUT)
+        </span>
+      ) : proyeccionActual ? (
+        <div className="space-y-2">
+          <p className="text-xs font-bold text-[#F1F3F5] line-clamp-4 leading-relaxed whitespace-pre-line">
+            {proyeccionActual.texto}
+          </p>
+
+          {proyeccionActual.pie && (
+            <span className="text-[10px] font-bold text-[#D6AD62] block uppercase tracking-wide">
+              {proyeccionActual.pie}
+            </span>
+          )}
+        </div>
+      ) : (
+        <div className="space-y-1 text-[#AAB4C0]">
+          <span className="text-xs font-semibold block">
+            Sin contenido preparado
+          </span>
+          <span className="text-[10px]">
+            Selecciona un versículo para previsualizarlo
+          </span>
+        </div>
+      )}
+    </div>
+  </div>
+
+  {/* Historial de citas */}
+  <div className="border border-[#303946] rounded-2xl p-3 shadow-xl flex-1 flex flex-col overflow-hidden bg-[#222831]">
+
+    <div className="flex items-center justify-between border-b border-[#303946] pb-1.5 mb-2">
+      <span className="text-xs font-black text-[#F1F3F5] uppercase">
+        HISTORIAL DE CITAS
+      </span>
+
+      {historialVersiculos.length > 0 && (
+        <button
+          onClick={() => setHistorialVersiculos([])}
+          className="text-[10px] font-semibold text-[#AAB4C0] hover:text-[#D6AD62] transition"
+        >
+          Limpiar
+        </button>
+      )}
+    </div>
+
+    <div className="flex-1 overflow-y-auto space-y-1.5 pr-1 pb-10">
+      {historialVersiculos.length === 0 ? (
+        <div className="py-6 text-center text-[#AAB4C0] text-xs">
+          No hay versículos en el historial aún
+        </div>
+      ) : (
+        historialVersiculos.map((item) => (
+          <div
+            key={item.id}
+            onClick={() => {
+              setProyeccionActual({
+                id: item.id,
+                tipo: 'biblia',
+                texto: `"${item.texto}"`,
+                pie: `— ${item.cita} (${item.version})`,
+                titulo: item.cita
+              });
+
+              enviarAlProyector({
+                accion: 'mostrar',
+                texto: `"${item.texto}"\n\n— ${item.cita} (${item.version})`,
+                tipo: 'biblia'
+              });
+            }}
+            className="p-2 rounded-xl border border-[#303946] bg-[#171A20] hover:bg-[#303946] hover:border-[#46515F] text-left cursor-pointer transition text-xs space-y-1"
+          >
+            <div className="flex items-center justify-between font-bold text-[#D6AD62] text-[11px]">
+              <span>{item.cita}</span>
+              <span className="text-[9px] font-mono text-[#AAB4C0] opacity-70">
+                {item.hora}
+              </span>
+            </div>
+
+            <p className="line-clamp-1 text-[11px] text-[#AAB4C0]">
+              {item.texto}
+            </p>
+          </div>
+        ))
+      )}
+    </div>
+  </div>
+</div>
+
             </div>
           </div>
         )}
 
         {/* ==================== MÓDULO 3: CANCIONES & SETLISTS ==================== */}
         {moduloActivo === 'canciones' && (
-          <div className="grid grid-cols-1 xl:grid-cols-12 gap-3 h-[calc(100vh-105px)]">
-            {/* Columna 1: Cancionero & Búsqueda (4 cols) */}
-            <div className={`xl:col-span-4 border rounded-2xl p-3 flex flex-col gap-2.5 overflow-hidden shadow-xl ${
-              temaOperador === 'claro' ? 'bg-white border-slate-300' : 'bg-slate-900/80 border-slate-800'
-            }`}>
-              <div className="flex items-center justify-between">
-                <span className="font-black text-xs uppercase flex items-center gap-1.5">
-                  <Music className="w-4 h-4 text-amber-500" />
-                  REPERTORIO ({repertorio.length})
-                </span>
-                <div className="flex items-center gap-1.5">
+          <div className="grid grid-cols-1 xl:grid-cols-12 gap-2.5 h-full min-h-0 flex-1 overflow-hidden">
+            
+            {/* Columna 1: Repertorio */}
+            <div className="xl:col-span-4 border border-[#303946] rounded-2xl p-3 flex flex-col gap-3 overflow-hidden shadow-xl bg-[#222831]">
+
+              {/* Encabezado */}
+              <div className="flex items-center justify-between gap-2 border-b border-[#303946] pb-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <Music className="w-4 h-4 text-[#D6AD62] shrink-0" />
+                  <span className="font-black text-xs uppercase tracking-wide text-[#F1F3F5]">
+                    REPERTORIO
+                  </span>
+                  <span className="text-[10px] font-bold text-[#D6AD62] bg-[#303946] px-2 py-1 rounded-lg shrink-0">
+                    {repertorio.length}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-1.5 shrink-0">
                   <button
                     onClick={() => songFileInputRef.current?.click()}
-                    title="Cargar archivos de canciones (.JS como Canciones.js o .JSON como Corario.json)"
-                    className="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-1 transition cursor-pointer"
+                    title="Cargar archivos de canciones (.JS o .JSON)"
+                    className="px-2.5 py-1.5 rounded-lg bg-[#303946] border border-[#46515F] hover:border-[#D6AD62] hover:bg-[#394554] text-[#F1F3F5] font-bold text-[11px] flex items-center gap-1.5 transition cursor-pointer"
                   >
-                    <Upload className="w-3 h-3" />
-                    <span>+ Cargar Cancionero (.JS / .JSON)</span>
+                    <span>Cargar cancionero</span>
                   </button>
-                  <button
-                    onClick={() => setMostrarModalNuevaCancion(true)}
-                    className="px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs flex items-center gap-1 transition cursor-pointer"
-                  >
-                    <Plus className="w-3 h-3" />
-                    <span>Nueva</span>
-                  </button>
-                </div>
-              </div>
 
-              {/* Instant Real-Time Search */}
-              <div className="space-y-1.5">
+<button
+  onClick={() => {
+    setErrorNuevaCancion(false);
+    setMostrarModalNuevaCancion(true);
+  }}
+  className="px-2.5 py-1.5 rounded-lg bg-[#D6AD62] hover:bg-[#E3BD7B] text-[#171A20] font-black text-[11px] flex items-center gap-1.5 transition cursor-pointer"
+>
+  <span>Nueva canción</span>
+</button>
+
+</div>
+</div>
+
+              {/* Buscador */}
+              <div className="space-y-2">
                 <div className="relative">
-                  <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-400" />
+                  <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-[#AAB4C0]" />
+
                   <input
                     type="text"
                     value={busquedaCanciones}
                     onChange={(e) => setBusquedaCanciones(e.target.value)}
-                    placeholder="Buscar canción por título, coro o autor..."
-                    className={`w-full pl-8 pr-7 py-1.5 border rounded-xl text-xs focus:outline-none focus:border-amber-500 ${
-                      temaOperador === 'claro' ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-slate-950 border-slate-800 text-white'
-                    }`}
+                    placeholder="Buscar por título, coro o autor..."
+                    className="w-full pl-9 pr-8 py-2 border border-[#303946] rounded-xl text-xs bg-[#171A20] text-[#F1F3F5] placeholder:text-[#778391] focus:outline-none focus:border-[#D6AD62] transition"
                   />
+
                   {busquedaCanciones && (
-                    <button onClick={() => setBusquedaCanciones('')} className="absolute right-2.5 top-2 text-slate-400 hover:text-white text-xs">
+                    <button
+                      onClick={() => setBusquedaCanciones('')}
+                      title="Limpiar búsqueda"
+                      className="absolute right-2.5 top-2 text-[#AAB4C0] hover:text-[#D6AD62] text-xs transition"
+                    >
                       ✕
                     </button>
                   )}
                 </div>
 
-                <div className="flex items-center justify-between text-[11px] text-slate-400 px-1">
-                  <label className="flex items-center gap-1.5 cursor-pointer">
+                <div className="flex items-center justify-between gap-2 px-1">
+                  <label className="flex items-center gap-1.5 cursor-pointer text-[10px] text-[#AAB4C0]">
                     <input
                       type="checkbox"
                       checked={buscarEnLetra}
                       onChange={(e) => setBuscarEnLetra(e.target.checked)}
-                      className="rounded border-slate-700 accent-amber-500"
+                      className="rounded border-[#46515F] accent-[#D6AD62]"
                     />
                     <span>Buscar dentro de las letras</span>
                   </label>
-                  <span>{cancionesFiltradas.length} resultados</span>
+
+                  <span className="text-[10px] font-semibold text-[#D6AD62] shrink-0">
+                    {cancionesFiltradas.length} resultados
+                  </span>
                 </div>
               </div>
 
-              {/* Songs List */}
+              {/* Lista de canciones */}
               <div className="flex-1 overflow-y-auto space-y-1.5 pr-1 pb-10">
-                {cancionesFiltradas.map((cancion) => {
+                {cancionesFiltradas.slice(0, 100).map((cancion) => {
                   const isSelected = cancionSeleccionada?.id === cancion.id;
+
                   return (
                     <div
                       key={cancion.id}
@@ -2720,50 +3575,80 @@ export default function App() {
                         setCancionSeleccionada(cancion);
                         setSeccionActivaIdx(-1);
                       }}
-                      className={`p-2.5 rounded-xl border text-left cursor-pointer transition flex items-center justify-between ${
+                      className={`p-2.5 rounded-xl border text-left cursor-pointer transition flex items-center justify-between gap-2 ${
                         isSelected
-                          ? 'bg-amber-500/20 border-amber-500 text-white shadow-md'
-                          : temaOperador === 'claro'
-                          ? 'bg-slate-50 border-slate-200 text-slate-800 hover:bg-slate-100'
-                          : 'bg-slate-950/60 border-slate-800/60 text-slate-300 hover:bg-slate-800/60'
+                          ? 'bg-[#303946] border-[#D6AD62] text-[#F1F3F5] shadow-md'
+                          : 'bg-[#171A20] border-[#303946] text-[#AAB4C0] hover:bg-[#303946] hover:border-[#46515F]'
                       }`}
                     >
-                      <div className="space-y-0.5 max-w-[85%]">
-                        <span className="font-bold text-xs block truncate">{cancion.title}</span>
-                        <div className="flex items-center gap-2 text-[10px] text-slate-400 font-mono">
-                          {cancion.author && <span>{cancion.author}</span>}
-                          <span>{cancion.sections.length} partes</span>
+                      <div className="space-y-0.5 flex-1 min-w-0 pr-1">
+                        <span className={`font-bold text-xs block truncate ${
+                          isSelected ? 'text-[#F1F3F5]' : 'text-[#E1E5E9]'
+                        }`}>
+                          {cancion.title}
+                        </span>
+
+                        <div className="flex items-center gap-2 text-[10px] text-[#AAB4C0]">
+                          {cancion.author && (
+                            <span className="truncate">{cancion.author}</span>
+                          )}
+                          <span className="shrink-0">
+                            {cancion.sections.length} partes
+                          </span>
                         </div>
                       </div>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const nuevoSetlist = [...setlistItems, cancion];
-                          setSetlists(prev => ({ ...prev, [setlistActual]: nuevoSetlist }));
-                          localStorage.setItem('lbc_setlists', JSON.stringify({ ...setlists, [setlistActual]: nuevoSetlist }));
-                          mostrarToast(`Añadida "${cancion.title}" al setlist`);
-                        }}
-                        title="Agregar a Setlist de culto"
-                        className="w-7 h-7 rounded-lg bg-slate-800 hover:bg-amber-500 hover:text-slate-950 text-slate-300 flex items-center justify-center transition"
-                      >
-                        <Plus className="w-3.5 h-3.5" />
-                      </button>
+
+                      <div className="flex items-center gap-1 shrink-0">
+
+                        {/* Agregar al Setlist */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const nuevoSetlist = [...setlistItems, cancion];
+                            setSetlists(prev => ({ ...prev, [setlistActual]: nuevoSetlist }));
+                            localStorage.setItem('lbc_setlists', JSON.stringify({ ...setlists, [setlistActual]: nuevoSetlist }));
+                            mostrarToast(`Añadida "${cancion.title}" al setlist`);
+                          }}
+                          title="Agregar a Setlist de culto"
+                          className="w-7 h-7 rounded-lg bg-[#303946] hover:bg-[#D6AD62] text-[#D6AD62] hover:text-[#171A20] flex items-center justify-center transition cursor-pointer"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                        </button>
+
+                        {/* Eliminar canción */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setCancionAEliminar(cancion);
+                          }}
+                          title="Eliminar esta canción del repertorio"
+                          className="w-7 h-7 rounded-lg bg-[#303946] hover:bg-rose-700 text-[#AAB4C0] hover:text-white flex items-center justify-center transition cursor-pointer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+
+                      </div>
                     </div>
                   );
                 })}
+
+                {cancionesFiltradas.length > 100 && (
+                  <div className="text-center text-[10px] text-[#AAB4C0] py-3 border-t border-[#303946] mt-2">
+                    Mostrando 100 de {cancionesFiltradas.length} canciones.
+                    Escribe en el buscador para filtrar más.
+                  </div>
+                )}
               </div>
             </div>
 
             {/* Columna 2: Bloques y Estrofas de la Canción (5 cols) */}
-            <div className={`xl:col-span-5 border rounded-2xl p-3 flex flex-col gap-2.5 overflow-hidden shadow-xl ${
-              temaOperador === 'claro' ? 'bg-white border-slate-300' : 'bg-slate-900/80 border-slate-800'
-            }`}>
+            <div className="xl:col-span-5 bg-[#222831] border border-[#303946] rounded-2xl p-3 flex flex-col gap-2.5 overflow-hidden shadow-xl">
               {cancionSeleccionada ? (
                 <>
-                  <div className={`flex items-center justify-between border-b pb-2 ${temaOperador === 'claro' ? 'border-slate-200' : 'border-slate-800'}`}>
+                  <div className="flex items-center justify-between border-b border-[#303946] pb-2">
                     <div>
-                      <h2 className="text-sm font-black text-amber-500">{cancionSeleccionada.title}</h2>
-                      <p className="text-[11px] text-slate-400">
+                      <h2 className="text-sm font-black text-[#D6AD62]">{cancionSeleccionada.title}</h2>
+                      <p className="text-[11px] text-[#AAB4C0]">
                         {cancionSeleccionada.author || 'Dominio Público'} • {cancionSeleccionada.sections.length} secciones
                       </p>
                     </div>
@@ -2772,7 +3657,7 @@ export default function App() {
                       <button
                         onClick={() => abrirModalEditarCancion(cancionSeleccionada)}
                         title="Editar letra, estrofas o título de esta alabanza"
-                        className="px-2.5 py-1 rounded-lg bg-amber-500/20 border border-amber-500/50 hover:bg-amber-500/30 text-amber-300 font-bold text-xs flex items-center gap-1 shadow transition cursor-pointer"
+                        className="px-2.5 py-1.5 rounded-lg bg-[#303946] border border-[#D6AD62]/50 hover:bg-[#394554] hover:border-[#D6AD62] text-[#D6AD62] font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
                       >
                         <Pencil className="w-3.5 h-3.5" />
                         <span>Editar Letra</span>
@@ -2781,16 +3666,18 @@ export default function App() {
                       <button
                         onClick={retrocederEstrofa}
                         title="Estrofa anterior (Flecha Izq)"
-                        className="px-2.5 py-1 rounded-lg bg-slate-800 text-xs font-bold hover:bg-slate-700 text-slate-200"
+                        className="px-2.5 py-1.5 rounded-lg bg-[#303946] border border-[#46515F] text-[#F1F3F5] text-xs font-bold hover:bg-[#394554] hover:border-[#AAB4C0] transition cursor-pointer"
                       >
-                        ⬅ Anterior
+                        <span className="text-sm leading-none">‹</span>
+Anterior
                       </button>
                       <button
                         onClick={avanzarEstrofa}
                         title="Estrofa siguiente (Flecha Der)"
-                        className="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white shadow"
+                        className="px-2.5 py-1.5 rounded-lg bg-[#D6AD62] hover:bg-[#E3BD7B] text-[#171A20] text-xs font-black transition cursor-pointer"
                       >
-                        Siguiente ➡
+                        Siguiente
+<span className="text-sm leading-none">›</span>
                       </button>
                     </div>
                   </div>
@@ -2806,32 +3693,29 @@ export default function App() {
                           key={idx}
                           onClick={() => proyectarEstrofa(seccion, cancionSeleccionada, idx)}
                           className={`p-3.5 rounded-xl border text-left cursor-pointer transition relative ${
-                            isActive
-                              ? 'bg-blue-600/30 border-blue-400 text-white shadow-xl ring-2 ring-blue-500/50'
-                              : esCoro
-                              ? 'bg-amber-950/25 border-amber-600/40 text-amber-100 hover:bg-amber-950/40'
-                              : esPuente
-                              ? 'bg-purple-950/25 border-purple-600/40 text-purple-100 hover:bg-purple-950/40'
-                              : temaOperador === 'claro'
-                              ? 'bg-slate-50 border-slate-200 text-slate-800 hover:bg-slate-100'
-                              : 'bg-slate-950/70 border-slate-800/80 text-slate-200 hover:bg-slate-800/70'
-                          }`}
+  isActive
+    ? 'bg-[#D6AD62]/15 border-[#D6AD62] text-[#F1F3F5] shadow-lg ring-1 ring-[#D6AD62]/30'
+    : 'bg-[#171A20] border-[#303946] text-[#F1F3F5] hover:bg-[#222831] hover:border-[#46515F]'
+}`}
                         >
                           <div className="flex items-center justify-between mb-1.5">
-                            <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded ${
-                              esCoro
-                                ? 'bg-amber-500 text-slate-950'
-                                : esPuente
-                                ? 'bg-purple-500 text-white'
-                                : 'bg-slate-800 text-slate-300'
-                            }`}>
+                            <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-md border ${
+  esCoro
+    ? 'bg-[#D6AD62]/15 border-[#D6AD62]/50 text-[#D6AD62]'
+    : esPuente
+    ? 'bg-[#303946] border-[#46515F] text-[#AAB4C0]'
+    : 'bg-[#303946] border-[#46515F] text-[#F1F3F5]'
+}`}>
                               {seccion.label}
                             </span>
-                            {isActive && (
-                              <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-emerald-500 text-slate-950 animate-pulse">
-                                ● EN PANTALLA
-                              </span>
-                            )}
+                            {isActive &&
+  proyectorConectado &&
+  !isBlackout &&
+  proyeccionActual?.id === `${cancionSeleccionada.id}-sec-${idx}` && (
+    <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-[#D6AD62] text-[#171A20]">
+      PROYECTANDO EN VIVO
+    </span>
+)}
                           </div>
                           <p className="text-xs font-medium leading-relaxed whitespace-pre-line">
                             {seccion.lines.join('\n')}
@@ -2849,143 +3733,185 @@ export default function App() {
               )}
             </div>
 
-            {/* Columna 3: Setlist de Culto & Monitor (3 cols) */}
-            <div className="xl:col-span-3 flex flex-col gap-3 overflow-hidden">
-              {/* Setlist */}
-              <div className={`border rounded-2xl p-3 shadow-xl flex-1 flex flex-col overflow-hidden ${
-                temaOperador === 'claro' ? 'bg-white border-slate-300' : 'bg-slate-900/80 border-slate-800'
-              }`}>
-                <div className={`flex items-center justify-between border-b pb-2 mb-2 ${temaOperador === 'claro' ? 'border-slate-200' : 'border-slate-800'}`}>
-                  <div className="flex items-center gap-1.5">
-                    <span className="font-black text-xs uppercase">SETLIST DE CULTO</span>
-                    <span className={`text-[10px] font-mono px-1.5 rounded ${temaOperador === 'claro' ? 'bg-slate-200 text-slate-800' : 'bg-slate-800 text-slate-300'}`}>
-                      {setlistItems.length}
-                    </span>
-                  </div>
+            
+{/* Columna 3: Previsualización y Setlist (3 cols) */}
+<div className="xl:col-span-3 flex flex-col gap-3 overflow-hidden">
 
-                  <select
-                    value={setlistActual}
-                    onChange={(e) => setSetlistActual(e.target.value)}
-                    className={`border rounded-lg text-xs font-bold px-2 py-1 focus:outline-none ${
-                      temaOperador === 'claro' ? 'bg-slate-50 border-slate-300 text-amber-600' : 'bg-slate-950 border-slate-800 text-amber-400'
-                    }`}
-                  >
-                    <option value="domingo">Domingo</option>
-                    <option value="miercoles">Miércoles</option>
-                    <option value="sabado">Sábado</option>
-                    <option value="general">Especial</option>
-                  </select>
-                </div>
+  {/* Previsualización en pantalla */}
+  <div className="border border-[#303946] rounded-2xl p-3 shadow-xl flex flex-col bg-[#222831]">
 
-                <div className="flex-1 overflow-y-auto space-y-1.5 pr-1 pb-10">
-                  {setlistItems.map((cancion, idx) => (
-                    <div
-                      key={`${cancion.id}-${idx}`}
-                      draggable
-                      onDragStart={(e) => {
-                        e.dataTransfer.setData('text/plain', String(idx));
-                        setArrastrandoCancionIdx(idx);
-                      }}
-                      onDragOver={(e) => e.preventDefault()}
-                      onDrop={(e) => {
-                        e.preventDefault();
-                        const src = parseInt(e.dataTransfer.getData('text/plain'), 10);
-                        if (!isNaN(src)) reordenarCancionEnSetlist(src, idx);
-                        setArrastrandoCancionIdx(null);
-                      }}
-                      onDragEnd={() => setArrastrandoCancionIdx(null)}
-                      onClick={() => {
-                        setCancionSeleccionada(cancion);
-                        setSeccionActivaIdx(-1);
-                      }}
-                      className={`p-2 rounded-xl border text-left text-xs flex items-center justify-between cursor-pointer group transition select-none ${
-                        arrastrandoCancionIdx === idx
-                          ? 'opacity-40 border-dashed border-amber-400 bg-amber-500/10'
-                          : temaOperador === 'claro'
-                          ? 'bg-slate-50 border-slate-200 hover:bg-slate-100 hover:border-slate-300'
-                          : 'bg-slate-950/70 border-slate-800 hover:bg-slate-800 hover:border-slate-700'
-                      }`}
-                    >
-                      <div className="flex items-center gap-1.5 truncate flex-1 pr-1">
-                        <GripVertical className="w-3.5 h-3.5 text-slate-500 group-hover:text-amber-400 cursor-grab flex-shrink-0" />
-                        <div className="truncate">
-                          <span className="font-bold block truncate">
-                            {idx + 1}. {cancion.title}
-                          </span>
-                          <span className="text-[10px] text-slate-400 font-mono">
-                            {cancion.sections.length} partes
-                          </span>
-                        </div>
-                      </div>
+    <div className="flex items-center justify-between border-b border-[#303946] pb-1.5 mb-2">
+      <span className="text-xs font-black flex items-center gap-1.5 text-[#F1F3F5]">
+        <Monitor className="w-3.5 h-3.5 text-[#D6AD62]" />
+        PREVISUALIZACIÓN EN PANTALLA
+      </span>
 
-                      <div className="flex items-center gap-0.5 flex-shrink-0">
-                        {/* Botones de subir / bajar orden con mouse */}
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            moverCancionEnSetlist(idx, 'arriba');
-                          }}
-                          disabled={idx === 0}
-                          title="Subir canción en el orden"
-                          className="p-1 rounded text-slate-400 hover:text-amber-400 disabled:opacity-20 cursor-pointer"
-                        >
-                          <ArrowUp className="w-3 h-3" />
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            moverCancionEnSetlist(idx, 'abajo');
-                          }}
-                          disabled={idx === setlistItems.length - 1}
-                          title="Bajar canción en el orden"
-                          className="p-1 rounded text-slate-400 hover:text-amber-400 disabled:opacity-20 cursor-pointer"
-                        >
-                          <ArrowDown className="w-3 h-3" />
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            const nuevo = setlistItems.filter((_, i) => i !== idx);
-                            setSetlists(prev => ({ ...prev, [setlistActual]: nuevo }));
-                            localStorage.setItem('lbc_setlists', JSON.stringify({ ...setlists, [setlistActual]: nuevo }));
-                          }}
-                          title="Eliminar de la lista"
-                          className="text-slate-400 hover:text-rose-500 p-1 transition cursor-pointer"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+        isBlackout
+          ? 'bg-[#303946] text-[#AAB4C0] border border-[#46515F]'
+          : proyeccionActual && proyectorConectado
+            ? 'bg-[#D6AD62] text-[#171A20]'
+            : proyeccionActual
+              ? 'bg-[#303946] text-[#F1F3F5] border border-[#46515F]'
+              : 'bg-[#171A20] text-[#AAB4C0] border border-[#303946]'
+      }`}>
+        {isBlackout
+          ? 'BLACKOUT'
+          : proyeccionActual && proyectorConectado
+            ? 'EN VIVO'
+            : proyeccionActual
+              ? 'PREPARADO'
+              : 'EN ESPERA'}
+      </span>
+    </div>
 
-              {/* Confidence Monitor for Song */}
-              <div className={`border rounded-2xl p-3 shadow-xl ${
-                temaOperador === 'claro' ? 'bg-white border-slate-300' : 'bg-slate-900/80 border-slate-800'
-              }`}>
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-xs font-bold flex items-center gap-1.5">
-                    <Monitor className="w-3.5 h-3.5 text-emerald-500" />
-                    MONITOR SALIDA
-                  </span>
-                  <span className="text-[10px] font-mono text-slate-400">
-                    {isBlackout ? 'BLACKOUT' : proyeccionActual ? 'PROYECTANDO' : 'EN ESPERA'}
-                  </span>
-                </div>
-                <div className="h-32 rounded-xl bg-black border border-slate-800 p-3 flex flex-col items-center justify-center text-center">
-                  {proyeccionActual ? (
-                    <p className="text-xs font-bold text-white line-clamp-3 leading-relaxed whitespace-pre-line">
-                      {proyeccionActual.texto}
-                    </p>
-                  ) : (
-                    <span className="text-[11px] text-slate-500">Ninguna letra proyectada</span>
-                  )}
-                </div>
-              </div>
+    <div className="h-36 rounded-xl border border-[#303946] bg-black flex flex-col justify-center items-center p-3 text-center">
+      {isBlackout ? (
+        <span className="text-xs font-mono text-[#AAB4C0] font-bold uppercase tracking-widest">
+          PANTALLA NEGRA (BLACKOUT)
+        </span>
+      ) : proyeccionActual ? (
+        <div className="space-y-2">
+          <p className="text-xs font-bold text-[#F1F3F5] line-clamp-4 leading-relaxed whitespace-pre-line">
+            {proyeccionActual.texto}
+          </p>
+
+          {proyeccionActual.pie && (
+            <span className="text-[10px] font-bold text-[#D6AD62] block uppercase tracking-wide">
+              {proyeccionActual.pie}
+            </span>
+          )}
+        </div>
+      ) : (
+        <div className="space-y-1 text-[#AAB4C0]">
+          <span className="text-xs font-semibold block">
+            Sin contenido preparado
+          </span>
+          <span className="text-[10px]">
+            Selecciona una estrofa para previsualizarla
+          </span>
+        </div>
+      )}
+    </div>
+  </div>
+
+  {/* Setlist de culto */}
+  <div className="border border-[#303946] rounded-2xl p-3 shadow-xl flex-1 flex flex-col overflow-hidden bg-[#222831]">
+
+    <div className="flex items-center justify-between border-b border-[#303946] pb-2 mb-2 gap-2">
+      <div className="flex items-center gap-1.5 min-w-0">
+        <span className="font-black text-xs uppercase text-[#F1F3F5]">
+          SETLIST DE CULTO
+        </span>
+
+        <span className="text-[10px] font-mono px-1.5 rounded bg-[#303946] text-[#F1F3F5]">
+          {setlistItems.length}
+        </span>
+      </div>
+
+      <select
+        value={setlistActual}
+        onChange={(e) => setSetlistActual(e.target.value)}
+        className="border border-[#303946] rounded-lg text-xs font-bold px-2 py-1 focus:outline-none focus:border-[#D6AD62] bg-[#171A20] text-[#D6AD62]"
+      >
+        <option value="domingo">Domingo</option>
+        <option value="miercoles">Miércoles</option>
+        <option value="sabado">Sábado</option>
+        <option value="general">Especial</option>
+      </select>
+    </div>
+
+    <div className="flex-1 overflow-y-auto space-y-1.5 pr-1 pb-10">
+      {setlistItems.map((cancion, idx) => (
+        <div
+          key={`${cancion.id}-${idx}`}
+          draggable
+          onDragStart={(e) => {
+            e.dataTransfer.setData('text/plain', String(idx));
+            setArrastrandoCancionIdx(idx);
+          }}
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={(e) => {
+            e.preventDefault();
+            const src = parseInt(e.dataTransfer.getData('text/plain'), 10);
+            if (!isNaN(src)) reordenarCancionEnSetlist(src, idx);
+            setArrastrandoCancionIdx(null);
+          }}
+          onDragEnd={() => setArrastrandoCancionIdx(null)}
+          onClick={() => {
+            setCancionSeleccionada(cancion);
+            setSeccionActivaIdx(-1);
+          }}
+          className={`p-2 rounded-xl border text-left text-xs flex items-center justify-between cursor-pointer group transition select-none ${
+            arrastrandoCancionIdx === idx
+              ? 'opacity-40 border-dashed border-[#D6AD62] bg-[#D6AD62]/10'
+              : 'bg-[#171A20] border-[#303946] hover:bg-[#303946] hover:border-[#46515F]'
+          }`}
+        >
+          <div className="flex items-center gap-1.5 truncate flex-1 pr-1">
+            <GripVertical className="w-3.5 h-3.5 text-[#AAB4C0] group-hover:text-[#D6AD62] cursor-grab flex-shrink-0" />
+
+            <div className="truncate">
+              <span className="font-bold block truncate text-[#F1F3F5]">
+                {idx + 1}. {cancion.title}
+              </span>
+
+              <span className="text-[10px] text-[#AAB4C0] font-mono">
+                {cancion.sections.length} partes
+              </span>
             </div>
           </div>
-        )}
+
+          <div className="flex items-center gap-0.5 flex-shrink-0">
+
+            {/* Subir canción */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                moverCancionEnSetlist(idx, 'arriba');
+              }}
+              disabled={idx === 0}
+              title="Subir canción en el orden"
+              className="p-1 rounded text-[#AAB4C0] hover:text-[#D6AD62] disabled:opacity-20 cursor-pointer"
+            >
+              <ArrowUp className="w-3 h-3" />
+            </button>
+
+            {/* Bajar canción */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                moverCancionEnSetlist(idx, 'abajo');
+              }}
+              disabled={idx === setlistItems.length - 1}
+              title="Bajar canción en el orden"
+              className="p-1 rounded text-[#AAB4C0] hover:text-[#D6AD62] disabled:opacity-20 cursor-pointer"
+            >
+              <ArrowDown className="w-3 h-3" />
+            </button>
+
+            {/* Quitar canción de la lista */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                const nuevo = setlistItems.filter((_, i) => i !== idx);
+                setSetlists(prev => ({ ...prev, [setlistActual]: nuevo }));
+                localStorage.setItem('lbc_setlists', JSON.stringify({ ...setlists, [setlistActual]: nuevo }));
+              }}
+              title="Eliminar de la lista"
+              className="text-[#AAB4C0] hover:text-rose-400 p-1 transition cursor-pointer"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+</div>
+</div>
+)}
 
         {/* ==================== MÓDULO: PRÉDICA & BOSQUEJOS ==================== */}
         {moduloActivo === 'predica' && (
@@ -2998,7 +3924,7 @@ export default function App() {
 
         {/* ==================== MÓDULO 4: FONDOS DINÁMICOS ==================== */}
         {moduloActivo === 'fondos' && (
-          <div className="space-y-4">
+          <div className="h-full min-h-0 flex-1 overflow-y-auto space-y-3 pr-1">
             <div className={`border rounded-2xl p-4 shadow-xl space-y-4 ${
               temaOperador === 'claro' ? 'bg-white border-slate-300' : 'bg-slate-900/80 border-slate-800'
             }`}>
@@ -3178,7 +4104,7 @@ export default function App() {
                 }`}
                 style={{
                   backgroundColor: '#020617',
-                  backgroundImage: (tipoFondoActivo !== 'anim' && !fondoActivo.startsWith('video:') && (fondoActivo.startsWith('http') || fondoActivo.startsWith('data:') || fondoActivo.includes('assets/')))
+                  backgroundImage: (tipoFondoActivo !== 'anim' && !fondoActivo.startsWith('video:') && (fondoActivo.startsWith('http') || fondoActivo.startsWith('data:') || fondoActivo.includes('assets/') || fondoActivo.includes('fondos/') || /\.(jpg|jpeg|png|webp)/i.test(fondoActivo)))
                     ? `url('${fondoActivo}')`
                     : (tipoFondoActivo === 'estatico' && !fondoActivo.startsWith('data:') && !fondoActivo.startsWith('http') ? fondoActivo : undefined),
                   backgroundSize: modoAjusteFondo === 'fill' ? '100% 100%' : modoAjusteFondo,
@@ -3209,7 +4135,7 @@ export default function App() {
 
         {/* ==================== MÓDULO 5: VIDEO ==================== */}
         {moduloActivo === 'video' && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 h-full min-h-0 flex-1 overflow-y-auto pr-1">
             <div className={`lg:col-span-8 border rounded-2xl p-4 shadow-xl space-y-4 ${
               temaOperador === 'claro' ? 'bg-white border-slate-300' : 'bg-slate-900/80 border-slate-800'
             }`}>
@@ -3359,7 +4285,7 @@ export default function App() {
                   <div className="space-y-3 pt-1">
                     <div className="aspect-video w-full rounded-xl overflow-hidden bg-black border border-slate-800">
                       <iframe
-                        src={`https://www.youtube.com/embed/${youtubeVideoId}?enablejsapi=1&origin=${encodeURIComponent(typeof window !== 'undefined' && window.location.origin.startsWith('http') ? window.location.origin : 'https://www.youtube.com')}&autoplay=1&rel=0&modestbranding=1`}
+                        src={`https://www.youtube.com/embed/${youtubeVideoId}?enablejsapi=1&origin=${encodeURIComponent('http://localhost:3000')}&autoplay=0&rel=0&modestbranding=1`}
                         className="w-full h-full border-none"
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                         referrerPolicy="strict-origin-when-cross-origin"
@@ -3451,7 +4377,7 @@ export default function App() {
 
         {/* ==================== MÓDULO 6: KARAOKE / PISTAS DE ALABANZA ==================== */}
         {moduloActivo === 'karaoke' && (
-          <div className="grid grid-cols-1 xl:grid-cols-12 gap-4">
+          <div className="grid grid-cols-1 xl:grid-cols-12 gap-3 h-full min-h-0 flex-1 overflow-y-auto pr-1">
             {/* Reproductor y Controles de Audio (5 cols) */}
             <div className={`xl:col-span-5 border rounded-2xl p-4 shadow-xl space-y-4 flex flex-col justify-between ${
               temaOperador === 'claro' ? 'bg-white border-slate-300' : 'bg-slate-900/80 border-slate-800'
@@ -3497,7 +4423,7 @@ export default function App() {
                     {/* Botón para Eliminar la Canción / Pista subida y dejar el reproductor limpio */}
                     {karaokePistaUrl && (
                       <button
-                        onClick={eliminarPistaActual}
+                        onClick={() => setMostrarModalEliminarPistaActual(true)}
                         className="px-2.5 py-1.5 rounded-lg bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white border border-rose-500/30 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer shrink-0 shadow-sm"
                         title="Eliminar esta canción subida para dejar el reproductor limpio"
                       >
@@ -3550,6 +4476,7 @@ export default function App() {
                           const m = !karaokeMuted;
                           setKaraokeMuted(m);
                           if (audioRef.current) audioRef.current.muted = m;
+                          pitchPlayerRef.current?.setVolume(karaokeVolume, m);
                         }}
                         className="text-slate-400 hover:text-slate-200"
                       >
@@ -3564,6 +4491,7 @@ export default function App() {
                           const v = Number(e.target.value);
                           setKaraokeVolume(v);
                           if (audioRef.current) audioRef.current.volume = v / 100;
+                          pitchPlayerRef.current?.setVolume(v, karaokeMuted);
                         }}
                         className="w-16 h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-teal-500"
                       />
@@ -3796,7 +4724,34 @@ export default function App() {
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-0.5 flex-shrink-0">
+                          <div className="flex items-center gap-1 flex-shrink-0">
+                            {/* Ajuste rápido de tono (Pitch) directamente en la pista del Setlist */}
+                            <div className="flex items-center gap-0.5 bg-slate-950/80 border border-slate-800 rounded-lg px-1.5 py-0.5" title="Ajustar tono (pitch) de la alabanza">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  cambiarPitchSemitonos(-1);
+                                }}
+                                title="Bajar medio tono (-1 semitono)"
+                                className="w-4 h-4 flex items-center justify-center text-indigo-400 hover:text-indigo-300 font-bold text-xs cursor-pointer rounded hover:bg-slate-800"
+                              >
+                                -
+                              </button>
+                              <span className="text-[9px] font-mono font-bold text-teal-300 min-w-[26px] text-center" title="Semitonos actuales">
+                                {pitchSemitonos === 0 ? '0st' : pitchSemitonos > 0 ? `+${pitchSemitonos}st` : `${pitchSemitonos}st`}
+                              </span>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  cambiarPitchSemitonos(1);
+                                }}
+                                title="Subir medio tono (+1 semitono)"
+                                className="w-4 h-4 flex items-center justify-center text-emerald-400 hover:text-emerald-300 font-bold text-xs cursor-pointer rounded hover:bg-slate-800"
+                              >
+                                +
+                              </button>
+                            </div>
+
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -3820,7 +4775,7 @@ export default function App() {
                               <ArrowDown className="w-3 h-3" />
                             </button>
                             <button
-                              onClick={(e) => eliminarKaraokeDeSetlist(idx, e)}
+                              onClick={(e) => pedirEliminarKaraokeDeSetlist(idx, e)}
                               title="Quitar pista de la lista"
                               className="p-1 text-slate-400 hover:text-rose-400 cursor-pointer"
                             >
@@ -3978,100 +4933,163 @@ export default function App() {
 
         {/* ==================== MÓDULO 7: DIAPOSITIVAS & IMÁGENES (CANVA) ==================== */}
         {moduloActivo === 'anuncios' && (
-          <div className="grid grid-cols-1 xl:grid-cols-12 gap-4">
+          <div className="grid grid-cols-1 xl:grid-cols-12 gap-3 h-full min-h-0 flex-1 overflow-hidden">
             {/* Galería Principal de Imágenes y Diapositivas (8 cols) */}
-            <div className={`xl:col-span-8 border rounded-2xl p-4 shadow-xl space-y-4 ${
+            <div className={`xl:col-span-8 border rounded-2xl p-3 shadow-xl flex flex-col gap-2 overflow-hidden ${
               temaOperador === 'claro' ? 'bg-white border-slate-300' : 'bg-slate-900/80 border-slate-800'
             }`}>
-              <div className={`flex flex-wrap items-center justify-between gap-3 border-b pb-3 ${
+              {/* Selector de Sub-Pestañas: Diapositivas de la Iglesia vs Galería de Paisajes */}
+              <div className={`flex flex-wrap items-center justify-between gap-2.5 border-b pb-2 flex-shrink-0 ${
                 temaOperador === 'claro' ? 'border-slate-200' : 'border-slate-800'
               }`}>
-                <div>
-                  <h2 className="font-bold text-base flex items-center gap-2">
-                    <Image className="w-5 h-5 text-amber-500" />
-                    <span>Galería de Diapositivas, Flyers & Imágenes (Canva)</span>
-                  </h2>
-                  <p className="text-xs text-slate-400 mt-0.5">
-                    Sube banners de bienvenida, flyers de cultos especiales (ej. Culto de Niños) o afiches de Canva para proyectar en pantalla completa.
-                  </p>
+                {/* Botones de cambio de Sub-Pestaña */}
+                <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-950/60 border border-slate-800">
+                  <button
+                    onClick={() => setSubPestanaDiapositivas('iglesia')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-black flex items-center gap-2 transition cursor-pointer ${
+                      subPestanaDiapositivas === 'iglesia'
+                        ? 'bg-amber-500 text-slate-950 shadow-md'
+                        : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                    }`}
+                  >
+                    <span>🏛️ Diapositivas de la Iglesia</span>
+                    <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded font-bold ${
+                      subPestanaDiapositivas === 'iglesia' ? 'bg-slate-950 text-amber-400' : 'bg-slate-800 text-slate-300'
+                    }`}>
+                      {diapositivasIglesia.length}
+                    </span>
+                  </button>
+
+                  <button
+                    onClick={() => setSubPestanaDiapositivas('galeria')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-black flex items-center gap-2 transition cursor-pointer ${
+                      subPestanaDiapositivas === 'galeria'
+                        ? 'bg-teal-500 text-slate-950 shadow-md'
+                        : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                    }`}
+                  >
+                    <span>🌄 Galería de Paisajes & Fondos</span>
+                    <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded font-bold ${
+                      subPestanaDiapositivas === 'galeria' ? 'bg-slate-950 text-teal-300' : 'bg-slate-800 text-slate-300'
+                    }`}>
+                      {galeriaPaisajes.length}
+                    </span>
+                  </button>
                 </div>
 
-                <button
-                  onClick={() => imageFileInputRef.current?.click()}
-                  className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs flex items-center gap-2 shadow-lg transition cursor-pointer"
-                >
-                  <Upload className="w-4 h-4" />
-                  <span>+ Subir Flyer / Imagen (Canva, PNG, JPG)</span>
-                </button>
+                {/* Botón de subida contextual según la sub-pestaña activa */}
+                {subPestanaDiapositivas === 'iglesia' ? (
+                  <button
+                    onClick={() => imageFileInputRef.current?.click()}
+                    className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs flex items-center gap-2 shadow-lg transition cursor-pointer"
+                    title="Subir afiches de Canva, anuncios o imágenes de culto para la iglesia"
+                  >
+                    <Upload className="w-3.5 h-3.5" />
+                    <span>+ Subir Diapositiva / Flyer (Canva, PNG, JPG)</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => galeriaFileInputRef.current?.click()}
+                    className="px-3 py-1.5 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-black text-xs flex items-center gap-2 shadow-lg transition cursor-pointer"
+                    title="Subir fotos de paisajes, cielo o biblias a la galería"
+                  >
+                    <Upload className="w-3.5 h-3.5" />
+                    <span>+ Subir Foto a Galería (PNG, JPG)</span>
+                  </button>
+                )}
               </div>
 
-              {/* Grid de Diapositivas Guardadas */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5 max-h-[560px] overflow-y-auto pr-1">
-                {imagenesGuardadas.map((slide, idx) => {
+              {/* Subtítulo informativo */}
+              <div className="flex items-center justify-between text-[11px] text-slate-400 px-1 flex-shrink-0">
+                <span>
+                  {subPestanaDiapositivas === 'iglesia'
+                    ? 'Banners oficiales de cultos (Bienvenida, Santa Cena, Diezmos, etc.) y afiches personalizados de Canva.'
+                    : '13 fotografías litúrgicas de alta calidad (cielos y sagradas escrituras) y fotos de paisajes subidas.'}
+                </span>
+                <span className="font-mono text-slate-500">
+                  {subPestanaDiapositivas === 'iglesia' ? `${diapositivasIglesia.length} diapositivas` : `${galeriaPaisajes.length} imágenes`}
+                </span>
+              </div>
+
+              {/* Grid de Diapositivas Guardadas con Miniaturas Reales */}
+              {/* Grid Fotográfico de Diapositivas y Paisajes (La Imagen es 100% la Protagonista, Sin Franjas Negras Gigantes) */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-3 flex-1 min-h-0 overflow-y-auto pr-1 pb-2 content-start">
+                {(subPestanaDiapositivas === 'iglesia' ? diapositivasIglesia : galeriaPaisajes).map((slide, idx) => {
                   const isCurrent = proyeccionActual?.id === slide.id && proyeccionActual?.tipo === 'imagen';
                   return (
                     <div
                       key={slide.id}
-                      className={`group rounded-xl border overflow-hidden flex flex-col justify-between transition-all duration-200 ${
+                      onClick={() => proyectarImagen(slide, idx)}
+                      className={`group relative aspect-video w-full rounded-xl overflow-hidden border shadow-md hover:shadow-2xl transition-all duration-200 cursor-pointer bg-slate-950 select-none ${
                         isCurrent
-                          ? 'border-amber-400 ring-4 ring-amber-400/40 shadow-2xl scale-[1.01]'
-                          : temaOperador === 'claro'
-                          ? 'bg-slate-50 border-slate-300 hover:border-amber-400'
-                          : 'bg-slate-950/70 border-slate-800 hover:border-slate-700'
+                          ? 'border-amber-400 ring-4 ring-amber-400/50 scale-[1.02] shadow-amber-500/20'
+                          : 'border-slate-800 hover:border-amber-400 hover:scale-[1.01]'
                       }`}
+                      title={`Haz clic para proyectar inmediatamente: ${slide.titulo}`}
                     >
-                      {/* Thumbnail Container */}
-                      <div
-                        onClick={() => proyectarImagen(slide, idx)}
-                        className="aspect-video bg-black/60 relative cursor-pointer overflow-hidden flex items-center justify-center"
+                      {/* Imagen 100% Completa que Llena Toda la Tarjeta sin Cortes */}
+                      <img
+                        src={slide.dataUrl}
+                        alt={slide.titulo}
+                        onError={(e) => {
+                          const target = e.currentTarget;
+                          target.onerror = null;
+                          target.src = obtenerFallbackArteSVG(slide.id, slide.titulo);
+                        }}
+                        className="w-full h-full object-cover group-hover:scale-105 transition duration-300 pointer-events-none"
+                      />
+
+                      {/* Badge EN PANTALLA cuando está proyectada */}
+                      {isCurrent && (
+                        <div className="absolute top-2 left-2 bg-amber-400 text-slate-950 text-[9px] font-black uppercase px-2 py-0.5 rounded-full shadow-lg flex items-center gap-1 z-20 pointer-events-none">
+                          <span className="w-1.5 h-1.5 rounded-full bg-slate-950 animate-pulse"></span>
+                          <span>EN PANTALLA</span>
+                        </div>
+                      )}
+
+                      {/* Botón de Papelera en la esquina superior derecha (No ocupa espacio) */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setImagenAEliminar(slide);
+                        }}
+                        title="Eliminar diapositiva"
+                        className="absolute top-2 right-2 p-1.5 rounded-lg bg-black/60 hover:bg-rose-600 text-slate-300 hover:text-white transition z-20 backdrop-blur cursor-pointer shadow opacity-80 hover:opacity-100"
                       >
-                        <img
-                          src={slide.dataUrl}
-                          alt={slide.titulo}
-                          className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
-                        />
-                        {isCurrent && (
-                          <div className="absolute top-2 left-2 bg-amber-400 text-slate-950 text-[10px] font-black uppercase px-2 py-0.5 rounded-full shadow-md flex items-center gap-1">
-                            <span className="w-2 h-2 rounded-full bg-slate-950 animate-pulse"></span>
-                            <span>EN PANTALLA</span>
-                          </div>
-                        )}
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+
+                      {/* Overlay translúcido al pasar el ratón para confirmar proyección */}
+                      <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 pointer-events-none z-10">
+                        <div className="px-3 py-1.5 rounded-xl bg-blue-600/90 text-white font-black text-xs shadow-2xl flex items-center gap-1.5 backdrop-blur">
+                          <Monitor className="w-4 h-4 text-amber-400" />
+                          <span>Proyectar en TV</span>
+                        </div>
                       </div>
 
-                      {/* Info & Action Buttons */}
-                      <div className="p-3 space-y-2">
-                        <div className="flex items-start justify-between gap-1">
-                          <h4 className="text-xs font-bold truncate leading-tight flex-1" title={slide.titulo}>
-                            {slide.titulo}
-                          </h4>
-                          {slide.fecha && (
-                            <span className="text-[10px] text-slate-400 font-mono">
-                              {slide.fecha}
-                            </span>
-                          )}
-                        </div>
+                      {/* Cinta Inferior Mínima y Translúcida con Título y Botón */}
+                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent pt-4 pb-1.5 px-2.5 flex items-center justify-between gap-1.5 z-20">
+                        <span
+                          className="text-[11px] font-bold text-white truncate drop-shadow flex-1 leading-tight"
+                          title={slide.titulo}
+                        >
+                          {slide.titulo}
+                        </span>
 
-                        <div className="flex items-center gap-1.5 pt-1">
-                          <button
-                            onClick={() => proyectarImagen(slide, idx)}
-                            className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer ${
-                              isCurrent
-                                ? 'bg-amber-400 text-slate-950'
-                                : 'bg-blue-600 hover:bg-blue-500 text-white'
-                            }`}
-                          >
-                            <Monitor className="w-3.5 h-3.5" />
-                            <span>{isCurrent ? 'Actualizar' : 'Proyectar'}</span>
-                          </button>
-
-                          <button
-                            onClick={(e) => eliminarImagen(slide.id, e)}
-                            title="Eliminar imagen de la lista"
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition cursor-pointer"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            proyectarImagen(slide, idx);
+                          }}
+                          className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition flex items-center gap-1 shadow cursor-pointer shrink-0 ${
+                            isCurrent
+                              ? 'bg-amber-400 text-slate-950 font-black'
+                              : 'bg-blue-600 hover:bg-blue-500 text-white'
+                          }`}
+                        >
+                          <Monitor className="w-3 h-3" />
+                          <span>{isCurrent ? 'Activa' : 'Proyectar'}</span>
+                        </button>
                       </div>
                     </div>
                   );
@@ -4079,7 +5097,7 @@ export default function App() {
               </div>
 
               {/* Sección de Avisos de Texto Rápido */}
-              <div className={`mt-4 pt-3 border-t space-y-3 ${temaOperador === 'claro' ? 'border-slate-200' : 'border-slate-800'}`}>
+              <div className={`mt-2 pt-2 border-t space-y-2 flex-shrink-0 ${temaOperador === 'claro' ? 'border-slate-200' : 'border-slate-800'}`}>
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold uppercase text-slate-400">Plantillas de Avisos de Culto (Texto):</span>
                   <span className="text-[11px] text-slate-500">Haz clic para rellenar rápido</span>
@@ -4130,7 +5148,7 @@ export default function App() {
             </div>
 
             {/* Monitor de Escena & Previsualización (4 cols) */}
-            <div className={`xl:col-span-4 border rounded-2xl p-4 shadow-xl space-y-4 flex flex-col justify-between ${
+            <div className={`xl:col-span-4 border rounded-2xl p-3 shadow-xl space-y-2.5 flex flex-col justify-between overflow-y-auto ${
               temaOperador === 'claro' ? 'bg-white border-slate-300' : 'bg-slate-900/80 border-slate-800'
             }`}>
               <div className="space-y-3">
@@ -4218,6 +5236,11 @@ export default function App() {
                       <img
                         src={proyeccionActual.url}
                         alt="Proyección Activa"
+                        onError={(e) => {
+                          const target = e.currentTarget;
+                          target.onerror = null;
+                          target.src = obtenerFallbackArteSVG(proyeccionActual.id || '', proyeccionActual.titulo || proyeccionActual.texto || 'Diapositiva');
+                        }}
                         style={{
                           objectFit: modoAjusteDiapositiva,
                           width: '100%',
@@ -4271,7 +5294,7 @@ export default function App() {
 
         {/* ==================== MÓDULO 8: CONFIGURACIÓN Y AJUSTES ==================== */}
         {moduloActivo === 'config' && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 h-full min-h-0 flex-1 overflow-y-auto pr-1">
             
             {/* Opciones de Tipografía y Proyector (6 cols) */}
             <div className={`lg:col-span-6 border rounded-2xl p-5 shadow-xl space-y-4 ${
@@ -4466,27 +5489,6 @@ export default function App() {
                     </button>
                   </div>
                 </div>
-
-                {/* Ocultar / Mostrar botón ZIP en la barra superior */}
-                <div className={`flex items-center justify-between pt-2 border-t ${temaOperador === 'claro' ? 'border-slate-200' : 'border-slate-800'}`}>
-                  <div>
-                    <span className="text-xs font-bold block">Botón de Descargar ZIP</span>
-                    <span className="text-[11px] text-slate-400">Ocultar de la cabecera una vez instalado en tu PC</span>
-                  </div>
-                  <button
-                    onClick={() => {
-                      const nuevo = !mostrarBotonZip;
-                      setMostrarBotonZip(nuevo);
-                      localStorage.setItem('lbc_mostrar_zip', String(nuevo));
-                      mostrarToast(nuevo ? 'Botón ZIP visible en cabecera' : 'Botón ZIP ocultado');
-                    }}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
-                      mostrarBotonZip ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-400'
-                    }`}
-                  >
-                    {mostrarBotonZip ? 'Visible' : 'Oculto'}
-                  </button>
-                </div>
               </div>
 
               {/* Estadísticas y Diagnóstico */}
@@ -4598,54 +5600,123 @@ export default function App() {
       {/* Modal: Nueva Canción */}
       {mostrarModalNuevaCancion && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 max-w-lg w-full space-y-4 shadow-2xl">
-            <h3 className="text-base font-bold text-amber-400">Registrar Nueva Alabanza</h3>
+          <div className="bg-[#222831] border border-[#D6AD62]/35 rounded-2xl p-5 max-w-lg w-full space-y-4 shadow-2xl shadow-black/40">
+            <h3 className="text-base font-black tracking-wide text-[#D6AD62]"> Registrar Nueva Alabanza </h3>
             <div className="space-y-2">
               <input
                 type="text"
                 value={nuevaTitulo}
                 onChange={(e) => setNuevaTitulo(e.target.value)}
                 placeholder="Título de la alabanza (ej: Al que está sentado en el trono)..."
-                className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-amber-500"
+                className="w-full px-3 py-2.5 rounded-xl border border-[#46515F] bg-[#171A20] text-[#F1F3F5] text-sm placeholder:text-[#778391] focus:outline-none focus:border-[#D6AD62] focus:ring-1 focus:ring-[#D6AD62]/30 transition"
               />
+                {errorNuevaCancion && (
+                <p className="text-[11px] font-semibold text-rose-300 bg-rose-950/40 border border-rose-500/30 rounded-lg px-3 py-2">
+                  Ingresa un título para la canción.
+                </p>
+              )}
               <input
                 type="text"
                 value={nuevaAutor}
                 onChange={(e) => setNuevaAutor(e.target.value)}
                 placeholder="Autor o ministerio (opcional)..."
-                className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none"
+                className="w-full px-3 py-2.5 rounded-xl border border-[#46515F] bg-[#171A20] text-[#F1F3F5] text-sm placeholder:text-[#778391] focus:outline-none focus:border-[#D6AD62] focus:ring-1 focus:ring-[#D6AD62]/30 transition"
               />
+              <div className="flex flex-wrap items-center justify-between gap-1.5 bg-[#171A20] p-2.5 rounded-xl border border-[#303946]">
+  <span className="text-[11px] text-[#AAB4C0] font-medium">Marcadores rápidos:</span>
+  <div className="flex items-center gap-1.5">
+    <button
+      type="button"
+      onClick={() => insertarMarcador('CORO', nuevaLetraRef.current, setNuevaLetra)}
+      className="px-2.5 py-1 rounded-lg bg-[#303946] border border-[#46515F] text-[#D6AD62] hover:bg-[#394554] hover:border-[#D6AD62] text-[11px] font-bold transition cursor-pointer"
+    >
+      + [CORO]
+    </button>
+    <button
+      type="button"
+      onClick={() => insertarMarcador('ESTROFA', nuevaLetraRef.current, setNuevaLetra)}
+      className="px-2.5 py-1 rounded-lg bg-[#303946] border border-[#46515F] text-[#D6AD62] hover:bg-[#394554] hover:border-[#D6AD62] text-[11px] font-bold transition cursor-pointer"
+    >
+      + [ESTROFA]
+    </button>
+    <button
+      type="button"
+      onClick={() => insertarMarcador('PUENTE', nuevaLetraRef.current, setNuevaLetra)}
+      className="px-2.5 py-1 rounded-lg bg-[#303946] border border-[#46515F] text-[#D6AD62] hover:bg-[#394554] hover:border-[#D6AD62] text-[11px] font-bold transition cursor-pointer"
+    >
+      + [PUENTE]
+    </button>
+  </div>
+</div>
               <textarea
-                rows={8}
-                value={nuevaLetra}
+              ref={nuevaLetraRef}
+              rows={8}
+              value={nuevaLetra}
                 onChange={(e) => setNuevaLetra(e.target.value)}
                 placeholder="Pega o escribe aquí la letra completa de la canción..."
-                className="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-600 focus:outline-none"
+                className="w-full min-h-[180px] px-3 py-3 rounded-xl border border-[#46515F] bg-[#171A20] text-[#F1F3F5] text-sm placeholder:text-[#778391] focus:outline-none focus:border-[#D6AD62] focus:ring-1 focus:ring-[#D6AD62]/30 transition resize-y"
               ></textarea>
             </div>
             <div className="flex gap-2">
               <button
                 onClick={() => setMostrarModalNuevaCancion(false)}
-                className="flex-1 py-2 rounded-xl bg-slate-800 text-xs font-bold text-slate-300 hover:bg-slate-700"
+                className="flex-1 px-4 py-2.5 rounded-xl bg-[#303946] border border-[#46515F] hover:border-[#AAB4C0] hover:bg-[#394554] text-[#F1F3F5] font-bold text-xs transition cursor-pointer"
               >
                 Cancelar
               </button>
               <button
                 onClick={() => {
-                  if (!nuevaTitulo.trim()) {
-                    mostrarToast('Ingresa un título para la canción', 'error');
-                    return;
-                  }
-                  const rawSections = nuevaLetra.split('\n\n').filter(Boolean);
-                  const sections: SongSection[] = rawSections.map((sec, i) => {
-                    const lines = sec.split('\n').filter(Boolean);
-                    const isChorus = lines[0]?.toLowerCase().includes('coro') || lines.some(l => l.toLowerCase().includes('aleluya') || l.toLowerCase().includes('santo'));
-                    return {
-                      label: isChorus ? `Coro` : `Verso ${i + 1}`,
-                      type: isChorus ? 'chorus' : 'verse',
-                      lines
-                    };
-                  });
+if (!nuevaTitulo.trim()) {
+setErrorNuevaCancion(true);
+return;
+}
+
+setErrorNuevaCancion(false);
+// Parsear bloques separados por renglón vacío y reconocer marcadores
+const rawSections = nuevaLetra.split(/\n\s*\n/).map(b => b.trim()).filter(Boolean);
+let contadorEstrofa = 1;
+
+const sections: SongSection[] = rawSections.map(bloque => {
+  const rawLines = bloque.split('\n').map(l => l.trim()).filter(Boolean);
+  let label = '';
+  let type: SongSection['type'] = 'verse';
+  let lines = rawLines;
+
+  if (rawLines.length > 0) {
+    const firstLine = rawLines[0];
+    const matchTag = firstLine.match(/^\[(coro|chorus|puente|bridge|estrofa|verso)\]:?$/i);
+
+    if (matchTag) {
+      const tag = matchTag[1].toLowerCase();
+
+      if (tag === 'coro' || tag === 'chorus') {
+        type = 'chorus';
+        label = 'Coro';
+      } else if (tag === 'puente' || tag === 'bridge') {
+        type = 'bridge';
+        label = 'Puente';
+      } else {
+        type = 'verse';
+        label = `Estrofa ${contadorEstrofa++}`;
+      }
+
+      lines = rawLines.slice(1);
+    } else if (firstLine.toLowerCase().includes('coro')) {
+      type = 'chorus';
+      label = 'Coro';
+    }
+  }
+
+  if (!label) {
+    label = `Estrofa ${contadorEstrofa++}`;
+  }
+
+  return {
+    label,
+    type,
+    lines
+  };
+});
                   const nueva: Song = {
                     id: `cancion-local-${Date.now()}`,
                     title: nuevaTitulo.trim(),
@@ -4662,7 +5733,7 @@ export default function App() {
                   setNuevaLetra('');
                   mostrarToast(`¡Canción "${nueva.title}" registrada exitosamente!`);
                 }}
-                className="flex-1 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs shadow cursor-pointer"
+                className="flex-1 px-4 py-2.5 rounded-xl bg-[#D6AD62] hover:bg-[#E3BD7B] text-[#171A20] font-black text-xs transition shadow-lg shadow-black/20 cursor-pointer"
               >
                 Guardar Canción
               </button>
@@ -4674,15 +5745,15 @@ export default function App() {
       {/* Modal: Editar Canción y Letras */}
       {mostrarModalEditarCancion && cancionEditando && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-700 rounded-2xl p-5 max-w-xl w-full space-y-4 shadow-2xl text-left max-h-[90vh] flex flex-col">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div className="bg-[#222831] border border-[#D6AD62]/35 rounded-2xl p-5 max-w-xl w-full space-y-4 shadow-2xl shadow-black/40 text-left max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between border-b border-[#303946] pb-3">
               <div className="flex items-center gap-2.5">
-                <div className="p-2 rounded-xl bg-amber-500/20 text-amber-400">
+                <div className="p-2 rounded-xl bg-[#D6AD62]/15 text-[#D6AD62] border border-[#D6AD62]/30">
                   <Pencil className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-white">Editar Letra & Estrofas</h3>
-                  <p className="text-[11px] text-slate-400">
+                  <h3 className="text-base font-black tracking-wide text-[#D6AD62]">Editar Letra & Estrofas</h3>
+                  <p className="text-[11px] text-[#AAB4C0]">
                     Modifica el título, autor o separa las estrofas para la proyección
                   </p>
                 </div>
@@ -4707,7 +5778,7 @@ export default function App() {
                     value={editTitulo}
                     onChange={(e) => setEditTitulo(e.target.value)}
                     placeholder="Título de la alabanza..."
-                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-amber-500"
+                    className="w-full px-3 py-2.5 rounded-xl border border-[#46515F] bg-[#171A20] text-[#F1F3F5] text-sm placeholder:text-[#778391] focus:outline-none focus:border-[#D6AD62] focus:ring-1 focus:ring-[#D6AD62]/30 transition"
                   />
                 </div>
                 <div>
@@ -4719,36 +5790,36 @@ export default function App() {
                     value={editAutor}
                     onChange={(e) => setEditAutor(e.target.value)}
                     placeholder="Autor o ministerio..."
-                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-amber-500"
+                    className="w-full px-3 py-2.5 rounded-xl border border-[#46515F] bg-[#171A20] text-[#F1F3F5] text-sm placeholder:text-[#778391] focus:outline-none focus:border-[#D6AD62] focus:ring-1 focus:ring-[#D6AD62]/30 transition"
                   />
                 </div>
               </div>
 
-              {/* Botones de ayuda rápida para insertar etiquetas de estrofas */}
-              <div className="flex flex-wrap items-center justify-between gap-1.5 bg-slate-950/70 p-2.5 rounded-xl border border-slate-800">
-                <span className="text-[11px] text-slate-400 font-medium">Marcadores rápidos:</span>
-                <div className="flex items-center gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => setEditLetra(prev => prev + (prev.endsWith('\n') ? '' : '\n\n') + '[CORO]\n')}
-                    className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 text-[11px] font-bold transition"
-                  >
-                    + [CORO]
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setEditLetra(prev => prev + (prev.endsWith('\n') ? '' : '\n\n') + '[ESTROFA]\n')}
-                    className="px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 text-[11px] font-bold transition"
-                  >
-                    + [ESTROFA]
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setEditLetra(prev => prev + (prev.endsWith('\n') ? '' : '\n\n') + '[PUENTE]\n')}
-                    className="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 text-[11px] font-bold transition"
-                  >
-                    + [PUENTE]
-                  </button>
+{/* Botones de ayuda rápida para insertar etiquetas de estrofas */}
+<div className="flex flex-wrap items-center justify-between gap-1.5 bg-[#171A20] p-2.5 rounded-xl border border-[#303946]">
+<span className="text-[11px] text-[#AAB4C0] font-medium">Marcadores rápidos:</span>
+<div className="flex items-center gap-1.5">
+<button
+type="button"
+onClick={() => insertarMarcador('CORO', editLetraRef.current, setEditLetra)}
+className="px-2.5 py-1 rounded-lg bg-[#303946] border border-[#46515F] text-[#D6AD62] hover:bg-[#394554] hover:border-[#D6AD62] text-[11px] font-bold transition cursor-pointer"
+>
++ [CORO]
+</button>
+<button
+type="button"
+onClick={() => insertarMarcador('ESTROFA', editLetraRef.current, setEditLetra)}
+className="px-2.5 py-1 rounded-lg bg-[#303946] border border-[#46515F] text-[#D6AD62] hover:bg-[#394554] hover:border-[#D6AD62] text-[11px] font-bold transition cursor-pointer"
+>
++ [ESTROFA]
+</button>
+<button
+  type="button"
+  onClick={() => insertarMarcador('PUENTE', editLetraRef.current, setEditLetra)}
+  className="px-2.5 py-1 rounded-lg bg-[#303946] border border-[#46515F] text-[#D6AD62] hover:bg-[#394554] hover:border-[#D6AD62] text-[11px] font-bold transition cursor-pointer"
+>
+  + [PUENTE]
+</button>
                 </div>
               </div>
 
@@ -4762,20 +5833,21 @@ export default function App() {
                   </span>
                 </div>
                 <textarea
-                  rows={10}
-                  value={editLetra}
+                ref={editLetraRef}
+                rows={10}
+                value={editLetra}
                   onChange={(e) => setEditLetra(e.target.value)}
                   placeholder="Escribe o pega la letra aquí. Separa cada estrofa con un espacio en blanco..."
-                  className="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-600 focus:outline-none focus:border-amber-500 font-mono leading-relaxed"
+                  className="w-full min-h-[180px] p-3 bg-[#171A20] border border-[#46515F] rounded-xl text-sm text-[#F1F3F5] placeholder:text-[#778391] focus:outline-none focus:border-[#D6AD62] focus:ring-1 focus:ring-[#D6AD62]/30 font-mono leading-relaxed transition resize-y"
                 ></textarea>
               </div>
             </div>
 
-            <div className="flex items-center justify-between gap-2 border-t border-slate-800 pt-3">
+            <div className="flex items-center justify-between gap-2 border-t border-[#303946] pt-3">
               <button
                 type="button"
                 onClick={eliminarCancionActual}
-                className="px-3 py-2 rounded-xl bg-rose-950/40 border border-rose-900/60 hover:bg-rose-900/50 text-rose-300 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
+                className="px-3 py-2 rounded-xl bg-[#3A2528] border border-[#8B454B] hover:bg-[#513035] text-[#F0A5A5] text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
                 title="Eliminar permanentemente esta canción del cancionero"
               >
                 <Trash2 className="w-3.5 h-3.5" />
@@ -4786,14 +5858,14 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => setMostrarModalEditarCancion(false)}
-                  className="px-4 py-2 rounded-xl bg-slate-800 text-xs font-bold text-slate-300 hover:bg-slate-700 transition cursor-pointer"
+                  className="px-4 py-2.5 rounded-xl bg-[#303946] border border-[#46515F] hover:border-[#AAB4C0] hover:bg-[#394554] text-[#F1F3F5] font-bold text-xs transition cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="button"
                   onClick={guardarEdicionCancion}
-                  className="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs shadow-lg flex items-center gap-1.5 transition cursor-pointer"
+                  className="px-5 py-2.5 rounded-xl bg-[#D6AD62] hover:bg-[#E3BD7B] text-[#171A20] font-black text-xs shadow-lg shadow-black/20 flex items-center gap-1.5 transition cursor-pointer"
                 >
                   <Check className="w-4 h-4" />
                   <span>Guardar Cambios</span>
@@ -4804,20 +5876,248 @@ export default function App() {
         </div>
       )}
 
-      {/* Footer */}
-      <footer className={`border-t py-2.5 px-4 text-center text-[11px] flex flex-wrap items-center justify-between gap-2 ${
-        temaOperador === 'claro' ? 'border-slate-300 bg-white text-slate-600' : 'border-slate-800/60 bg-slate-950 text-slate-500'
-      }`}>
-        <div className="flex items-center gap-2">
-          <span>2026 © {nombreCongregacion}. Todos los derechos reservados.</span>
-          <span className="text-slate-500">•</span>
-          <span>Creado por: <strong className="text-amber-500 font-bold">LuftmandMauricio</strong></span>
+
+      {/* Modal: Confirmar eliminación de canción */}
+      {mostrarConfirmarEliminarCancion && cancionEditando && (
+        <div className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#222831] border border-[#8B454B]/60 rounded-2xl p-5 max-w-md w-full shadow-2xl shadow-black/50">
+
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-3 rounded-xl bg-[#3A2528] border border-[#8B454B]/50 text-[#F0A5A5]">
+                <Trash2 className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-black text-[#F0A5A5]">
+                  Eliminar canción
+                </h3>
+                <p className="text-[11px] text-[#AAB4C0]">
+                  Confirmación de eliminación
+                </p>
+              </div>
+            </div>
+
+            <p className="text-sm text-[#F1F3F5] leading-relaxed mb-2">
+              ¿Estás seguro de que deseas eliminar esta canción del cancionero?
+            </p>
+
+            <div className="bg-[#171A20] border border-[#303946] rounded-xl p-3 mb-5">
+              <p className="text-sm font-bold text-[#D6AD62] break-words">
+                {cancionEditando.title}
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setMostrarConfirmarEliminarCancion(false)}
+                className="px-4 py-2.5 rounded-xl bg-[#303946] border border-[#46515F] hover:border-[#AAB4C0] hover:bg-[#394554] text-[#F1F3F5] font-bold text-xs transition cursor-pointer"
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="button"
+                onClick={confirmarEliminarCancion}
+                className="px-4 py-2.5 rounded-xl bg-[#8B454B] hover:bg-[#A6535A] text-white font-black text-xs transition cursor-pointer"
+              >
+                <Trash2 className="w-3.5 h-3.5 inline mr-1.5" />
+                Eliminar canción
+              </button>
+            </div>
+
+          </div>
         </div>
-        <div className="flex items-center gap-3">
-          <span>Proyector ICC v3.4</span>
-          <span className="text-emerald-500 font-semibold">● Canal Dual Activo (0ms)</span>
+      )}
+
+      {/* Modal de Confirmación para Eliminar Canción con Aceptar y Cancelar */}
+      {cancionAEliminar && (
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className={`w-full max-w-md p-6 rounded-2xl border shadow-2xl space-y-4 animate-in zoom-in-95 duration-200 ${
+            temaOperador === 'claro' ? 'bg-white border-slate-300 text-slate-900' : 'bg-slate-900 border-slate-700 text-white'
+          }`}>
+            <div className="flex items-center gap-3 text-rose-500">
+              <div className="w-10 h-10 rounded-full bg-rose-500/20 flex items-center justify-center shrink-0">
+                <Trash2 className="w-5 h-5 text-rose-500" />
+              </div>
+              <div>
+                <h3 className="font-bold text-base leading-tight">¿Deseas eliminar esta canción?</h3>
+                <p className="text-xs text-slate-400 mt-0.5">Esta acción quitará la canción de tu repertorio.</p>
+              </div>
+            </div>
+
+            <div className={`p-3 rounded-xl border space-y-1 ${
+              temaOperador === 'claro' ? 'bg-slate-100 border-slate-200' : 'bg-slate-950 border-slate-800'
+            }`}>
+              <p className="text-sm font-bold text-amber-400">{cancionAEliminar.title}</p>
+              {cancionAEliminar.author && (
+                <p className="text-xs text-slate-400">{cancionAEliminar.author}</p>
+              )}
+              <p className="text-[11px] text-slate-500 font-mono">{cancionAEliminar.sections.length} partes / estrofas</p>
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5 pt-2">
+              <button
+                type="button"
+                onClick={() => setCancionAEliminar(null)}
+                className="px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 transition cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  eliminarCancionDelRepertorio(cancionAEliminar.id);
+                  setCancionAEliminar(null);
+                }}
+                className="px-4 py-2 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white shadow-lg shadow-rose-600/30 transition cursor-pointer"
+              >
+                Aceptar y Eliminar
+              </button>
+            </div>
+          </div>
         </div>
-      </footer>
+      )}
+
+      {/* Modal de Confirmación: Eliminar Diapositiva / Imagen */}
+      {imagenAEliminar && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 max-w-md w-full shadow-2xl space-y-4 animate-in fade-in zoom-in-95">
+            <div className="flex items-center gap-3 text-rose-400">
+              <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20">
+                <Trash2 className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="font-black text-sm text-white">¿Deseas eliminar esta diapositiva?</h3>
+                <p className="text-xs text-slate-400">Esta acción quitará la imagen de tu lista de proyección.</p>
+              </div>
+            </div>
+
+            <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 space-y-2">
+              <div className="aspect-video w-full rounded-lg overflow-hidden bg-black/50 border border-slate-800">
+                <img src={imagenAEliminar.dataUrl} alt={imagenAEliminar.titulo} className="w-full h-full object-cover" />
+              </div>
+              <p className="text-xs font-bold text-amber-400 truncate">{imagenAEliminar.titulo}</p>
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5 pt-1">
+              <button
+                type="button"
+                onClick={() => setImagenAEliminar(null)}
+                className="px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 transition cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  eliminarImagen(imagenAEliminar.id);
+                  setImagenAEliminar(null);
+                }}
+                className="px-4 py-2 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white shadow-lg shadow-rose-600/30 transition cursor-pointer"
+              >
+                Aceptar y Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Confirmación: Eliminar Pista de Audio Actual del Reproductor */}
+      {mostrarModalEliminarPistaActual && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 max-w-md w-full shadow-2xl space-y-4 animate-in fade-in zoom-in-95">
+            <div className="flex items-center gap-3 text-rose-400">
+              <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20">
+                <Trash2 className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="font-black text-sm text-white">¿Deseas eliminar la pista actual?</h3>
+                <p className="text-xs text-slate-400">Se detendrá la reproducción y podrás subir una nueva canción.</p>
+              </div>
+            </div>
+
+            <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800">
+              <p className="text-xs font-bold text-amber-400 truncate">{karaokePistaNombre}</p>
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5 pt-1">
+              <button
+                type="button"
+                onClick={() => setMostrarModalEliminarPistaActual(false)}
+                className="px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 transition cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  eliminarPistaActual();
+                  setMostrarModalEliminarPistaActual(false);
+                }}
+                className="px-4 py-2 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white shadow-lg shadow-rose-600/30 transition cursor-pointer"
+              >
+                Aceptar y Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Confirmación: Quitar Pista del Setlist de Pistas */}
+      {karaokeItemAEliminar && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 max-w-md w-full shadow-2xl space-y-4 animate-in fade-in zoom-in-95">
+            <div className="flex items-center gap-3 text-rose-400">
+              <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20">
+                <Trash2 className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="font-black text-sm text-white">¿Deseas quitar esta pista del setlist?</h3>
+                <p className="text-xs text-slate-400">Se quitará de la lista de pistas del culto.</p>
+              </div>
+            </div>
+
+            <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 space-y-1">
+              <p className="text-xs font-bold text-teal-300 truncate">{karaokeItemAEliminar.item.songTitle}</p>
+              <p className="text-[11px] text-slate-400 truncate font-mono">{karaokeItemAEliminar.item.pistaNombre || 'Pista de alabanza'}</p>
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5 pt-1">
+              <button
+                type="button"
+                onClick={() => setKaraokeItemAEliminar(null)}
+                className="px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 transition cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  confirmarEliminarKaraokeDeSetlist(karaokeItemAEliminar.index);
+                  setKaraokeItemAEliminar(null);
+                }}
+                className="px-4 py-2 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white shadow-lg shadow-rose-600/30 transition cursor-pointer"
+              >
+                Aceptar y Quitar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      
+{/* Footer */}
+<footer className={`border-t flex-shrink-0 py-1.5 px-4 text-center text-[10px] flex items-center justify-between gap-2 ${
+  temaOperador === 'claro' ? 'border-slate-300 bg-white text-slate-600' : 'border-slate-800/60 bg-slate-950 text-slate-500'
+}`}>
+  <span>
+    © {new Date().getFullYear()} · Todos los derechos reservados.
+  </span>
+  <span className="text-[#D6AD62] font-semibold">
+    Proyector para Iglesias
+  </span>
+</footer>
+
     </div>
   );
 }
