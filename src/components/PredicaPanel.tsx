@@ -204,7 +204,7 @@ export const PredicaPanel: React.FC<PredicaPanelProps> = ({
   };
 
   return (
-    <div className="grid grid-cols-1 xl:grid-cols-12 gap-3 h-[calc(100vh-105px)] overflow-hidden">
+    <div className="grid grid-cols-1 xl:grid-cols-12 gap-3 h-full min-h-0 flex-1 overflow-hidden">
       
       {/* Columna Izquierda: Editor y Configuración del Bosquejo (6 cols) */}
       <div className={`xl:col-span-6 border rounded-2xl p-4 flex flex-col gap-3 shadow-xl overflow-y-auto ${
