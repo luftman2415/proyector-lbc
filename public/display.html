@@ -378,8 +378,8 @@
     function procesarMensaje(data) {
       if (!data) return;
 
-      if (data.accion === 'mostrar') {
-        detenerMedia();
+            if (data.accion === 'mostrar') {
+        detenerReproductoresVideo();
         aplicarBlackout(false);
         mostrarContenido(data.texto, data.pie, data.tipo);
       } else if (data.accion === 'mostrarMedia') {
@@ -402,8 +402,21 @@
         limpiarPantalla();
       } else if (data.accion === 'blackout') {
         aplicarBlackout(data.activo);
-      } else if (data.accion === 'fondo') {
-        aplicarFondo(data.fondo, data.tipoFondo, { modoAjuste: data.modoAjuste, opacidadScrim: data.opacidadScrim });
+            } else if (data.accion === 'fondo') {
+        // Retirar la diapositiva anterior al seleccionar un fondo nuevo.
+        if (projectorImgEl) {
+          projectorImgEl.src = '';
+          projectorImgEl.classList.add('hidden');
+        }
+
+        // Ocultar la capa multimedia, pero conservar el texto proyectado.
+        mediaStageEl.classList.add('hidden');
+
+        // Aplicar el nuevo fondo.
+        aplicarFondo(data.fondo, data.tipoFondo, {
+          modoAjuste: data.modoAjuste,
+          opacidadScrim: data.opacidadScrim
+        });
       } else if (data.accion === 'ajusteFondo' || data.tipo === 'fondo_ajuste') {
         if (data.modoAjuste) localStorage.setItem('lbc_modo_ajuste_fondo', data.modoAjuste);
         if (data.opacidadScrim !== undefined) localStorage.setItem('lbc_scrim_fondo', String(data.opacidadScrim));
@@ -506,7 +519,7 @@
 
       // 3. Fondos estáticos (imágenes subidas / logos / gradientes / colores)
       bgAnimEl.className = 'bg-animated-layer hidden';
-      if (fondo.startsWith('http') || fondo.startsWith('data:') || fondo.includes('assets/')) {
+      if (fondo.startsWith('http') || fondo.startsWith('data:') || fondo.includes('assets/') || fondo.includes('fondos/') || /\.(jpg|jpeg|png|webp|jfif)/i.test(fondo)) {
         stageEl.style.background = '#020617';
         stageEl.style.backgroundImage = 'url("' + fondo + '")';
         stageEl.style.backgroundSize = (modoAjuste === 'fill') ? '100% 100%' : modoAjuste;
@@ -551,20 +564,34 @@
         citationEl.style.display = 'none';
       }
 
-      // Hide media and standby, show text content
-      detenerMedia();
+      // Conservar la imagen de Canva si existe y mostrar el texto encima.
+      detenerReproductoresVideo();
       standbyEl.classList.add('hidden');
+
+      if (
+        projectorImgEl &&
+        !projectorImgEl.classList.contains('hidden') &&
+        projectorImgEl.src
+      ) {
+        mediaStageEl.classList.remove('hidden');
+      } else {
+        mediaStageEl.classList.add('hidden');
+      }
+
       contentEl.classList.remove('hidden');
     }
 
     function mostrarMedia(data) {
-      // Hide text & standby
-      contentEl.classList.add('hidden');
-      standbyEl.classList.add('hidden');
-      mediaStageEl.classList.remove('hidden');
+    // Mantener el texto visible sobre la imagen cuando corresponda.
+    standbyEl.classList.add('hidden');
+    mediaStageEl.classList.remove('hidden');
 
       if (data.tipo === 'imagen') {
         detenerReproductoresVideo();
+        projectorImgEl.onerror = function() {
+          this.onerror = null;
+          this.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080"><defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="%230f172a"/><stop offset="50%" stop-color="%231e1b4b"/><stop offset="100%" stop-color="%23020617"/></linearGradient></defs><rect width="1920" height="1080" fill="url(%23g)"/><text x="50%" y="45%" font-family="sans-serif" font-size="64" font-weight="900" fill="%23fbbf24" text-anchor="middle">✝️ ' + encodeURIComponent(data.titulo || 'Diapositiva') + '</text><text x="50%" y="60%" font-family="sans-serif" font-size="32" fill="%23cbd5e1" text-anchor="middle">Iglesia Cristiana Cuadrangular Las Brisas</text></svg>';
+        };
         projectorImgEl.src = data.url;
         const modo = data.modoAjuste || localStorage.getItem('lbc_modo_ajuste_diapositiva') || 'contain';
         projectorImgEl.style.objectFit = (modo === 'fill') ? 'fill' : (modo === 'cover' ? 'cover' : 'contain');
@@ -670,13 +697,6 @@
         tamano: tamanoPrevio ? Number(tamanoPrevio) : 52
       });
 
-      const actualGuardado = localStorage.getItem('proyector_lbc_actual');
-      if (actualGuardado) {
-        const obj = JSON.parse(actualGuardado);
-        if (obj && obj.texto) {
-          mostrarContenido(obj.texto, obj.pie, obj.tipo);
-        }
-      }
     } catch (e) {}
 
     // Double click to toggle Fullscreen

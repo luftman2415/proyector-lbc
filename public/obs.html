@@ -11,13 +11,13 @@
       padding: 0;
     }
     body, html {
-      width: 1920px;
-      height: 1080px;
-      overflow: hidden;
-      background: transparent !important;
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-      user-select: none;
-    }
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: transparent !important;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  user-select: none;
+}
 
     #obs-stage {
       width: 100%;
@@ -112,14 +112,16 @@
     }
 
     .lyrics-text {
-      font-size: 38px;
-      font-weight: 800;
-      line-height: 1.35;
-      color: #ffffff;
-      white-space: pre-line;
-      text-shadow: 0 3px 12px rgba(0, 0, 0, 0.95), 0 1px 3px rgba(0, 0, 0, 0.9);
-      letter-spacing: 0.3px;
-    }
+  font-size: 38px;
+  font-weight: 800;
+  line-height: 1.35;
+  color: #ffffff;
+  white-space: pre-line;
+  text-align: center;
+  width: 100%;
+  text-shadow: 0 3px 12px rgba(0, 0, 0, 0.95), 0 1px 3px rgba(0, 0, 0, 0.9);
+  letter-spacing: 0.3px;
+}
 
     /* Speaker lower third banner (Pastor / Mensajero / Evento) */
     .speaker-card {
@@ -151,11 +153,208 @@
       opacity: 0 !important;
       transition: opacity 0.2s ease;
     }
+    /* Pantalla de bienvenida de la iglesia para OBS */
+.obs-standby {
+  position: absolute;
+inset: 0;
+width: 100%;
+height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 40px;
+  z-index: 5;
+  pointer-events: none;
+  background: transparent;
+}
+.obs-standby.hidden {
+  display: none !important;
+}
+
+.obs-standby-logo {
+  width: 140px;
+  height: 140px;
+  margin-bottom: 24px;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 25px rgba(0,0,0,0.7));
+}
+
+.obs-standby-title {
+  font-size: 48px;
+  font-weight: 800;
+  color: #f8fafc;
+  text-shadow: 0 4px 16px rgba(0,0,0,0.9);
+  margin-bottom: 8px;
+}
+
+.obs-standby-subtitle {
+  font-size: 24px;
+  font-weight: 700;
+  color: #fbbf24;
+  margin-bottom: 16px;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.9);
+}
+
+.obs-standby-verse {
+  font-size: 20px;
+  font-style: italic;
+  color: #cbd5e1;
+  max-width: 900px;
+  line-height: 1.5;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.9);
+}
+
+.obs-standby-credit {
+  margin-top: 22px;
+  font-size: 13px;
+  color: #94a3b8;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  opacity: 0.85;
+}
+/* Capa de texto independiente sobre imágenes */
+.obs-text-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0 80px 55px;
+  z-index: 9;
+  pointer-events: none;
+}
+
+.obs-text-layer.hidden {
+  display: none !important;
+}
+
+/* Fondo independiente para OBS */
+.obs-background {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  pointer-events: none;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+/* Reproductor multimedia para OBS */
+.obs-media-stage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: transparent;
+  z-index: 8;
+  pointer-events: none;
+}
+
+.obs-media-stage.hidden {
+  display: none !important;
+}
+
+.obs-media-img {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.obs-media-video {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  background: transparent;
+}
+
+.obs-media-youtube {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: transparent;
+  pointer-events: auto;
+}
+
+.obs-media-img.hidden,
+.obs-media-video.hidden,
+.obs-media-youtube.hidden {
+  display: none !important;
+}
   </style>
+  
 </head>
 <body>
   <div id="obs-stage">
-    
+    <!-- Bienvenida de Iglesia Cristiana Cuadrangular -->
+<div id="obs-standby" class="obs-standby">
+  <img
+    src="assets/logo_cuadrangular_icono.png"
+    alt="Cuadrangular"
+    class="obs-standby-logo"
+  >
+  <h1 class="obs-standby-title">Iglesia Cristiana Cuadrangular</h1>
+  <h2 class="obs-standby-subtitle">Barrio Las Brisas • Proyector ICC</h2>
+  <p class="obs-standby-verse">
+    "Jesucristo es el mismo ayer, y hoy, y por los siglos." — Hebreos 13:8
+  </p>
+  <div class="obs-standby-credit">Creado por: LuftmandMauricio</div>
+</div>
+<!-- Fondo independiente para OBS -->
+<div id="obs-background" class="obs-background"></div>
+<!-- Reproductor multimedia para OBS -->
+<div id="obs-media-stage" class="obs-media-stage hidden">
+  <img
+    id="obs-projector-image"
+    class="obs-media-img hidden"
+    alt="Imagen de proyección"
+  >
+
+  <video
+    id="obs-projector-video"
+    class="obs-media-video hidden"
+    playsinline
+    loop
+  ></video>
+
+  <iframe
+    id="obs-projector-youtube"
+    class="obs-media-youtube hidden"
+    referrerpolicy="strict-origin-when-cross-origin"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+    allowfullscreen
+  ></iframe>
+</div>
+<!-- Capa independiente para texto sobre imágenes -->
+<div id="obs-text-layer" class="obs-text-layer hidden">
+  <div class="lower-third-wrap">
+    <div class="lower-third-card">
+      <div class="cuadrangular-bar"></div>
+      <div class="header-row">
+        <div id="obs-citation-badge" class="citation-pill"></div>
+        <div class="church-watermark">
+          <span class="church-dot"></span>
+          ICC
+        </div>
+      </div>
+      <div id="obs-lyrics" class="lyrics-text"></div>
+    </div>
+  </div>
+</div>
+
     <!-- Standard Lyrics / Bible Verses Lower Third -->
     <div id="lower-third" class="lower-third-wrap hidden">
       <div class="lower-third-card">
@@ -186,6 +385,7 @@
 
   <script>
     const stageEl = document.getElementById('obs-stage');
+    const standbyEl = document.getElementById('obs-standby');
     const lowerThirdEl = document.getElementById('lower-third');
     const lyricsEl = document.getElementById('lyrics-content');
     const citationBadgeEl = document.getElementById('citation-badge');
@@ -195,7 +395,26 @@
     const speakerNameEl = document.getElementById('speaker-name');
     const speakerRoleEl = document.getElementById('speaker-role');
 
-    let isBlackout = false;
+   // Elementos multimedia para OBS
+   const mediaStageEl = document.getElementById('obs-media-stage');
+   const backgroundEl = document.getElementById('obs-background');
+   const textLayerEl = document.getElementById('obs-text-layer');
+   const overlayLyricsEl = document.getElementById('obs-lyrics');
+   const overlayCitationEl = document.getElementById('obs-citation-badge');
+   const projectorImgEl = document.getElementById('obs-projector-image');
+   const projectorVideoEl = document.getElementById('obs-projector-video');
+   const projectorYoutubeEl = document.getElementById('obs-projector-youtube');
+   let youtubePlayer = null;
+   let youtubeApiLista = false;
+   let youtubeVideoPendiente = null;
+   function onYouTubeIframeAPIReady() {
+  youtubeApiLista = true;
+
+  if (youtubeVideoPendiente) {
+    reproducirYouTubeOBS(youtubeVideoPendiente);
+  }
+}
+   let isBlackout = false;
 
     // Dual channel: BroadcastChannel + localStorage
     const canal = new BroadcastChannel('proyector_lbc');
@@ -203,10 +422,37 @@
     function procesarMensaje(data) {
       if (!data) return;
 
-      if (data.accion === 'mostrar') {
-        aplicarBlackout(false);
-        mostrarContenido(data.texto, data.pie, data.tipo);
-      } else if (data.accion === 'mostrarSpeaker') {
+if (data.accion === 'fondo') {
+  aplicarBlackout(false);
+  detenerMedia();
+
+  if (data.fondo && backgroundEl) {
+    const esImagen =
+      data.fondo.startsWith('data:image/') ||
+      data.fondo.startsWith('http://') ||
+      data.fondo.startsWith('https://');
+
+    if (esImagen) {
+      backgroundEl.style.background = `url("${data.fondo}")`;
+    } else {
+      backgroundEl.style.background = data.fondo;
+    }
+
+    backgroundEl.style.backgroundSize = data.modoAjuste || 'cover';
+    backgroundEl.style.backgroundPosition = 'center center';
+    backgroundEl.style.backgroundRepeat = 'no-repeat';
+  }
+
+} else if (data.accion === 'mostrar') {
+
+  aplicarBlackout(false);
+  mostrarContenido(data.texto, data.pie, data.tipo);
+
+} else if (data.accion === 'mostrarMedia') {
+  aplicarBlackout(false);
+  mostrarMedia(data);
+
+} else if (data.accion === 'mostrarSpeaker') {
         aplicarBlackout(false);
         mostrarSpeaker(data.nombre, data.cargo);
       } else if (data.accion === 'limpiar' || data.accion === 'detenerMedia') {
@@ -222,6 +468,45 @@
     }
 
     canal.onmessage = (e) => procesarMensaje(e.data);
+    // Conexión con el servidor de Proyector LBC para recibir mensajes por red
+let conexionWS = null;
+
+function conectarWebSocket() {
+  try {
+    conexionWS = new WebSocket(
+      'ws://' + window.location.hostname + ':3001/ws'
+    );
+
+    conexionWS.onopen = () => {
+      console.log('Conectado al servidor de Proyector LBC');
+    };
+
+    conexionWS.onmessage = (e) => {
+      try {
+        const data = JSON.parse(e.data);
+        procesarMensaje(data);
+      } catch (err) {
+        console.error('Error al procesar mensaje WebSocket:', err);
+      }
+    };
+
+    conexionWS.onclose = () => {
+      console.log('Conexión perdida. Reintentando...');
+      setTimeout(conectarWebSocket, 2000);
+    };
+
+    conexionWS.onerror = (err) => {
+      console.error('Error de conexión WebSocket:', err);
+      conexionWS.close();
+    };
+
+  } catch (err) {
+    console.error('No se pudo conectar al servidor:', err);
+    setTimeout(conectarWebSocket, 2000);
+  }
+}
+
+conectarWebSocket();
 
     window.addEventListener('storage', (e) => {
       if (e.key === 'proyector_lbc_msg' && e.newValue) {
@@ -232,53 +517,204 @@
     });
 
     function mostrarContenido(textoCompleto, pieOpcional, tipo) {
-      if (!textoCompleto) {
-        limpiarOverlay();
-        return;
-      }
+  if (!textoCompleto) {
+    limpiarOverlay();
+    return;
+  }
 
-      speakerWrapEl.classList.add('hidden');
+  standbyEl.classList.add('hidden');
+  speakerWrapEl.classList.add('hidden');
 
-      let textoPrincipal = textoCompleto;
-      let pie = pieOpcional || "";
+  let textoPrincipal = textoCompleto;
+  let pie = pieOpcional || "";
 
-      if (!pie && textoCompleto.includes('\n\n— ')) {
-        const partes = textoCompleto.split('\n\n— ');
-        textoPrincipal = partes[0].replace(/^["']|["']$/g, '');
-        pie = partes[1];
-      } else if (!pie && textoCompleto.includes('\n\n🎵 ')) {
-        const partes = textoCompleto.split('\n\n🎵 ');
-        textoPrincipal = partes[0];
-        pie = '🎵 ' + partes[1];
-      }
+  if (!pie && textoCompleto.includes('\n\n— ')) {
+    const partes = textoCompleto.split('\n\n— ');
+    textoPrincipal = partes[0].replace(/^["']|["']$/g, '');
+    pie = partes[1];
+  } else if (!pie && textoCompleto.includes('\n\n🎵 ')) {
+    const partes = textoCompleto.split('\n\n🎵 ');
+    textoPrincipal = partes[0];
+    pie = '🎵 ' + partes[1];
+  }
 
-      lyricsEl.innerText = textoPrincipal;
+  const hayImagenActiva =
+    !mediaStageEl.classList.contains('hidden') &&
+    !projectorImgEl.classList.contains('hidden');
 
-      if (pie) {
-        citationLabelEl.innerText = pie;
-        citationBadgeEl.style.display = 'inline-flex';
-      } else {
-        citationBadgeEl.style.display = 'none';
-      }
+  const hayFondoActivo =
+    backgroundEl && backgroundEl.style.background !== '';
 
-      lowerThirdEl.classList.remove('hidden');
+  if (hayImagenActiva || hayFondoActivo) {
+    overlayLyricsEl.innerText = textoPrincipal;
+
+    if (pie) {
+      overlayCitationEl.innerText = pie;
+      overlayCitationEl.style.display = 'inline-flex';
+    } else {
+      overlayCitationEl.style.display = 'none';
     }
 
+    textLayerEl.classList.remove('hidden');
+    lowerThirdEl.classList.add('hidden');
+    return;
+  }
+
+  detenerMedia();
+  textLayerEl.classList.add('hidden');
+
+  lyricsEl.innerText = textoPrincipal;
+
+  if (pie) {
+    citationLabelEl.innerText = pie;
+    citationBadgeEl.style.display = 'inline-flex';
+  } else {
+    citationBadgeEl.style.display = 'none';
+  }
+
+  lowerThirdEl.classList.remove('hidden');
+}
+
     function mostrarSpeaker(nombre, cargo) {
-      lowerThirdEl.classList.add('hidden');
+  standbyEl.classList.add('hidden');
+  lowerThirdEl.classList.add('hidden');
+  detenerMedia();
       speakerNameEl.innerText = nombre || '';
       speakerRoleEl.innerText = cargo || 'MINISTERIO';
       speakerWrapEl.classList.remove('hidden');
     }
+    
+function reproducirYouTubeOBS(videoId) {
+  if (!videoId) return;
+
+  if (!youtubeApiLista) {
+    youtubeVideoPendiente = videoId;
+    return;
+  }
+
+  youtubeVideoPendiente = null;
+
+  if (youtubePlayer && typeof youtubePlayer.loadVideoById === 'function') {
+    youtubePlayer.loadVideoById(videoId);
+    return;
+  }
+
+  projectorYoutubeEl.src =
+    'https://www.youtube.com/embed/' +
+    encodeURIComponent(videoId) +
+    '?enablejsapi=1' +
+    '&origin=' + encodeURIComponent(window.location.origin) +
+    '&autoplay=1' +
+    '&controls=0' +
+    '&playsinline=1' +
+    '&rel=0';
+
+  youtubePlayer = new YT.Player(projectorYoutubeEl, {
+    events: {
+      onReady: function(event) {
+        event.target.playVideo();
+      }
+    }
+  });
+}
+
+// Reproductor multimedia para OBS
+
+function detenerReproductoresVideo() {
+  if (projectorVideoEl) {
+    projectorVideoEl.pause();
+    projectorVideoEl.removeAttribute('src');
+    projectorVideoEl.load();
+    projectorVideoEl.classList.add('hidden');
+  }
+
+  if (youtubePlayer && typeof youtubePlayer.stopVideo === 'function') {
+    youtubePlayer.stopVideo();
+  }
+
+  if (projectorYoutubeEl) {
+    projectorYoutubeEl.classList.add('hidden');
+  }
+
+  youtubeVideoPendiente = null;
+}
+
+function detenerMedia() {
+  detenerReproductoresVideo();
+
+  if (projectorImgEl) {
+    projectorImgEl.src = '';
+    projectorImgEl.classList.add('hidden');
+  }
+
+  mediaStageEl.classList.add('hidden');
+}
+
+function mostrarMedia(data) {
+  if (!data || !data.tipo || !data.url && data.tipo !== 'youtube') return;
+
+  standbyEl.classList.add('hidden');
+  lowerThirdEl.classList.add('hidden');
+  speakerWrapEl.classList.add('hidden');
+
+  detenerReproductoresVideo();
+
+  projectorImgEl.src = '';
+  projectorImgEl.classList.add('hidden');
+
+  mediaStageEl.classList.remove('hidden');
+
+  if (data.tipo === 'imagen') {
+    projectorImgEl.src = data.url;
+
+    const modo = data.modoAjuste ||
+      localStorage.getItem('lbc_modo_ajuste_diapositiva') ||
+      'contain';
+
+    projectorImgEl.style.objectFit =
+      modo === 'fill' ? 'fill' :
+      modo === 'cover' ? 'cover' : 'contain';
+
+    projectorImgEl.classList.remove('hidden');
+
+  } else if (data.tipo === 'video') {
+    projectorVideoEl.src = data.url;
+    projectorVideoEl.loop = data.loop !== false;
+    projectorVideoEl.muted = !data.conAudio;
+
+    if (data.volumen !== undefined) {
+      projectorVideoEl.volume = data.volumen;
+    }
+
+    projectorVideoEl.classList.remove('hidden');
+    projectorVideoEl.play().catch(() => {});
+
+      } else if (data.tipo === 'youtube') {
+    if (!data.youtubeId) return;
+
+    projectorYoutubeEl.classList.remove('hidden');
+    reproducirYouTubeOBS(data.youtubeId);
+  }
+}
 
     function limpiarOverlay() {
-      lowerThirdEl.classList.add('hidden');
-      speakerWrapEl.classList.add('hidden');
-      setTimeout(() => {
-        lyricsEl.innerText = '';
-        citationBadgeEl.style.display = 'none';
-      }, 350);
-    }
+  detenerMedia();
+
+  lowerThirdEl.classList.add('hidden');
+  textLayerEl.classList.add('hidden');
+
+  speakerWrapEl.classList.add('hidden');
+  standbyEl.classList.remove('hidden');
+
+  setTimeout(() => {
+    lyricsEl.innerText = '';
+    citationBadgeEl.style.display = 'none';
+
+    overlayLyricsEl.innerText = '';
+    overlayCitationEl.innerText = '';
+    overlayCitationEl.style.display = 'none';
+  }, 350);
+}
 
     function aplicarBlackout(activo) {
       isBlackout = (activo !== undefined) ? activo : !isBlackout;
@@ -300,5 +736,6 @@
       }
     } catch (e) {}
   </script>
+<script src="https://www.youtube.com/iframe_api"></script>
 </body>
 </html>
